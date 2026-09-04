@@ -1,9 +1,12 @@
+"use strict";
 
 // =========================================
 // CAMPUS2CAREER USER PROFILE JAVASCRIPT
 // JWT AUTHENTICATED + PUBLIC VIEW MODE
 // BACKEND CONTROLLED CONNECTIONS / RATING / GRADE
 // =========================================
+
+console.log("Profilecon.js loaded");
 
 
 // =========================================
@@ -19,13 +22,19 @@ const MY_PROFILE_API =
 const PUBLIC_PROFILE_API =
     `${API_BASE_URL}/user-profile`;
 
+const INDUSTRY_READINESS_API =
+    `${API_BASE_URL}/industry-readiness/latest`;
+
 
 // =========================================
 // JWT STORAGE KEY
 // =========================================
 
-const TOKEN_KEY = "authToken";
-const USER_ID_KEY = "userId";
+const TOKEN_KEY =
+    "authToken";
+
+const USER_ID_KEY =
+    "userId";
 
 
 // =========================================
@@ -39,28 +48,37 @@ let editMode = false;
 // PROFILE MODE
 // =========================================
 //
-// profile.html
+// Profile.html
 //      -> own profile
 //
-// profile.html?viewUserId=8
+// Profile.html?viewUserId=8
 //      -> public profile of user 8
 //
 // =========================================
 
 const urlParams =
-    new URLSearchParams(window.location.search);
+    new URLSearchParams(
+        window.location.search
+    );
 
 const viewedUserIdParam =
-    urlParams.get("viewUserId");
+    urlParams.get(
+        "viewUserId"
+    );
 
 
 // =========================================
 // LOGGED-IN USER ID
 // =========================================
 
+const storedLoggedInUserId =
+    localStorage.getItem(
+        USER_ID_KEY
+    );
+
 const loggedInUserId =
     Number(
-        localStorage.getItem(USER_ID_KEY)
+        storedLoggedInUserId
     );
 
 
@@ -69,38 +87,59 @@ const loggedInUserId =
 // =========================================
 
 let userId = null;
-let isOwnProfile = true;
+
+let isOwnProfile = false;
 
 
-// -----------------------------------------
-// OTHER USER PROFILE
-// -----------------------------------------
+// =========================================
+// PUBLIC PROFILE REQUEST
+// =========================================
 
 if (
     viewedUserIdParam &&
-    Number.isInteger(Number(viewedUserIdParam)) &&
+    Number.isInteger(
+        Number(viewedUserIdParam)
+    ) &&
     Number(viewedUserIdParam) > 0
 ) {
-    userId = Number(viewedUserIdParam);
+
+    userId =
+        Number(
+            viewedUserIdParam
+        );
+
 
     isOwnProfile =
-        Number.isInteger(loggedInUserId) &&
+        Number.isInteger(
+            loggedInUserId
+        ) &&
         loggedInUserId > 0 &&
         userId === loggedInUserId;
-} else {
 
-    // -------------------------------------
-    // OWN PROFILE
-    // -------------------------------------
+}
+
+
+// =========================================
+// OWN PROFILE REQUEST
+// =========================================
+
+else {
 
     if (
-        Number.isInteger(loggedInUserId) &&
+        Number.isInteger(
+            loggedInUserId
+        ) &&
         loggedInUserId > 0
     ) {
-        userId = loggedInUserId;
+
+        userId =
+            loggedInUserId;
+
+        isOwnProfile =
+            true;
+
     }
 
-    isOwnProfile = true;
 }
 
 
@@ -131,20 +170,6 @@ console.log(
 
 // =========================================
 // FIELD CONFIGURATION
-// =========================================
-//
-// IMPORTANT:
-// connections, rating and grade are intentionally
-// NOT included in the editable fields.
-//
-// They are read from the backend only.
-//
-// Required HTML IDs:
-//
-// view-connections
-// view-rating
-// view-grade
-//
 // =========================================
 
 const fields = [
@@ -244,19 +269,19 @@ const fields = [
 // =========================================
 // BACKEND CONTROLLED PROFILE FIELDS
 // =========================================
-//
-// These fields can NEVER be edited from the
-// profile page.
-//
-// Backend remains the source of truth.
-//
-// =========================================
 
 const backendControlledFields = {
+
     connections: [
         "connections",
         "connection_count",
         "connectionCount"
+    ],
+
+    followers: [
+        "followers",
+        "follower_count",
+        "followerCount"
     ],
 
     rating: [
@@ -282,7 +307,81 @@ const backendControlledFields = {
         "readinessScore",
         "percentage"
     ]
+
 };
+
+
+// =========================================
+// CURRENT PROFILE
+// =========================================
+
+let currentProfile = null;
+
+
+// =========================================
+// GET AUTH TOKEN
+// =========================================
+
+function getAuthToken() {
+
+    const token =
+        localStorage.getItem(
+            TOKEN_KEY
+        );
+
+
+    return (
+        token &&
+        token.trim()
+            ? token.trim()
+            : null
+    );
+
+}
+
+
+// =========================================
+// CHECK AUTHENTICATION
+// =========================================
+
+function isAuthenticated() {
+
+    return Boolean(
+        getAuthToken() &&
+        Number.isInteger(
+            loggedInUserId
+        ) &&
+        loggedInUserId > 0
+    );
+
+}
+
+
+// =========================================
+// REQUIRE AUTHENTICATION
+// =========================================
+
+function requireAuthentication() {
+
+    if (
+        !isAuthenticated()
+    ) {
+
+        alert(
+            "Please log in first."
+        );
+
+
+        window.location.href =
+            "login.html";
+
+
+        return false;
+    }
+
+
+    return true;
+}
 
 
 // =========================================
@@ -293,11 +392,20 @@ function getFirstAvailableValue(
     object,
     possibleKeys
 ) {
-    if (!object || typeof object !== "object") {
+
+    if (
+        !object ||
+        typeof object !== "object" ||
+        !Array.isArray(possibleKeys)
+    ) {
+
         return null;
     }
 
-    for (const key of possibleKeys) {
+
+    for (
+        const key of possibleKeys
+    ) {
 
         if (
             Object.prototype.hasOwnProperty.call(
@@ -305,17 +413,24 @@ function getFirstAvailableValue(
                 key
             )
         ) {
-            const value = object[key];
+
+            const value =
+                object[key];
+
 
             if (
                 value !== undefined &&
                 value !== null &&
                 String(value).trim() !== ""
             ) {
+
                 return value;
             }
+
         }
+
     }
+
 
     return null;
 }
@@ -325,57 +440,75 @@ function getFirstAvailableValue(
 // FORMAT CONNECTION COUNT
 // =========================================
 
-function formatConnections(value) {
+function formatConnections(
+    value
+) {
 
     if (
         value === null ||
         value === undefined ||
         value === ""
     ) {
+
         return "0";
     }
+
 
     const numericValue =
         Number(value);
 
+
     if (
-        Number.isFinite(numericValue)
+        Number.isFinite(
+            numericValue
+        )
     ) {
+
         return numericValue.toLocaleString();
     }
+
 
     return String(value);
 }
 
 
 // =========================================
-// FORMAT TEST RATING
+// FORMAT RATING
 // =========================================
 
-function formatRating(value) {
+function formatRating(
+    value
+) {
 
     if (
         value === null ||
         value === undefined ||
         value === ""
     ) {
+
         return "Not Rated";
     }
+
 
     const numericValue =
         Number(value);
 
+
     if (
-        Number.isFinite(numericValue)
+        Number.isFinite(
+            numericValue
+        )
     ) {
 
-        return numericValue
-            .toFixed(
-                Number.isInteger(numericValue)
-                    ? 0
-                    : 1
-            );
+        return numericValue.toFixed(
+            Number.isInteger(
+                numericValue
+            )
+                ? 0
+                : 1
+        );
     }
+
 
     return String(value);
 }
@@ -385,142 +518,261 @@ function formatRating(value) {
 // FORMAT GRADE
 // =========================================
 
-function formatGrade(value) {
+function formatGrade(
+    value
+) {
 
     if (
         value === null ||
         value === undefined ||
         value === ""
     ) {
+
         return "Not Available";
     }
 
-    return String(value);
+
+    return String(
+        value
+    );
 }
 
 
-function getBackendValue(profile, possibleKeys) {
-    if (!profile || !Array.isArray(possibleKeys)) {
-        return undefined;
-    }
+// =========================================
+// GET BACKEND VALUE
+// =========================================
 
-    for (const key of possibleKeys) {
-        if (
-            Object.prototype.hasOwnProperty.call(profile, key) &&
-            profile[key] !== undefined &&
-            profile[key] !== null &&
-            profile[key] !== ""
-        ) {
-            return profile[key];
-        }
-    }
+function getBackendValue(
+    profile,
+    possibleKeys
+) {
 
-    return undefined;
+    return getFirstAvailableValue(
+        profile,
+        possibleKeys
+    );
+
 }
+
 
 // =========================================
 // UPDATE BACKEND CONTROLLED STATS
 // =========================================
 
-function updateBackendControlledStats(profile) {
-    if (!profile) return;
+function updateBackendControlledStats(
+    profile
+) {
 
-    // -----------------------------
-    // CONNECTIONS
-    // -----------------------------
-    const connectionsValue = getBackendValue(
-        profile,
-        backendControlledFields.connections
-    );
+    if (
+        !profile ||
+        typeof profile !== "object"
+    ) {
 
-    if (connectionsValue !== undefined && connectionsValue !== null) {
-        const connectionElements = [
-            document.getElementById("view-connections"),
-            document.getElementById("connections-count")
-        ];
-
-        connectionElements.forEach(element => {
-            if (element) {
-               element.textContent =
-                formatConnections(connectionsValue);
-            }
-        });
+        return;
     }
 
-    // -----------------------------
-    // INDUSTRY READINESS SCORE
-    // -----------------------------
-    const scoreValue = getBackendValue(
-        profile,
-        backendControlledFields.score
+
+    // =====================================
+    // CONNECTIONS
+    // =====================================
+
+    const connectionsValue =
+        getBackendValue(
+            profile,
+            backendControlledFields.connections
+        );
+
+
+    const connectionElements = [
+
+        document.getElementById(
+            "view-connections"
+        ),
+
+        document.getElementById(
+            "connections-count"
+        )
+
+    ];
+
+
+    connectionElements.forEach(
+        element => {
+
+            if (!element) {
+                return;
+            }
+
+
+            element.textContent =
+                formatConnections(
+                    connectionsValue
+                );
+
+        }
     );
 
-    const scoreElement = document.getElementById("view-test-score");
+
+    // =====================================
+    // FOLLOWERS
+    // =====================================
+
+    const followersValue =
+        getBackendValue(
+            profile,
+            backendControlledFields.followers
+        );
+
+
+    const followerElements = [
+
+        document.getElementById(
+            "view-followers"
+        ),
+
+        document.getElementById(
+            "followers-count"
+        )
+
+    ];
+
+
+    followerElements.forEach(
+        element => {
+
+            if (!element) {
+                return;
+            }
+
+
+            element.textContent =
+                formatConnections(
+                    followersValue
+                );
+
+        }
+    );
+
+
+    // =====================================
+    // INDUSTRY READINESS SCORE
+    // =====================================
+
+    const scoreValue =
+        getBackendValue(
+            profile,
+            backendControlledFields.score
+        );
+
+
+    const scoreElement =
+        document.getElementById(
+            "view-test-score"
+        );
+
 
     if (scoreElement) {
+
         if (
             scoreValue !== undefined &&
             scoreValue !== null &&
             scoreValue !== ""
         ) {
-            const score = Number(scoreValue);
 
-            if (Number.isFinite(score)) {
+            const score =
+                Number(
+                    scoreValue
+                );
+
+
+            if (
+                Number.isFinite(
+                    score
+                )
+            ) {
+
                 scoreElement.textContent =
-                    `${Number(score.toFixed(2))}%`;
+                    `${Number(
+                        score.toFixed(
+                            2
+                        )
+                    )}%`;
+
             } else {
-                scoreElement.textContent = "Not tested";
+
+                scoreElement.textContent =
+                    "Not tested";
             }
+
         } else {
-            scoreElement.textContent = "Not tested";
+
+            scoreElement.textContent =
+                "Not tested";
         }
     }
 
-    // -----------------------------
-    // GRADE
-    // -----------------------------
-    const gradeValue = getBackendValue(
-        profile,
-        backendControlledFields.grade
-    );
 
-    const gradeElement = document.getElementById("view-grade");
+    // =====================================
+    // GRADE
+    // =====================================
+
+    const gradeValue =
+        getBackendValue(
+            profile,
+            backendControlledFields.grade
+        );
+
+
+    const gradeElement =
+        document.getElementById(
+            "view-grade"
+        );
+
 
     if (gradeElement) {
+
         gradeElement.textContent =
             gradeValue !== undefined &&
             gradeValue !== null &&
             gradeValue !== ""
-                ? String(gradeValue)
+                ? formatGrade(
+                    gradeValue
+                )
                 : "Not tested";
     }
 
-    // -----------------------------
-    // RATING
-    // -----------------------------
-    const ratingValue = getBackendValue(
-        profile,
-        backendControlledFields.rating
-    );
 
-    const ratingElement = document.getElementById("view-rating");
+    // =====================================
+    // RATING
+    // =====================================
+
+    const ratingValue =
+        getBackendValue(
+            profile,
+            backendControlledFields.rating
+        );
+
+
+    const ratingElement =
+        document.getElementById(
+            "view-rating"
+        );
+
 
     if (ratingElement) {
-        const rating = Number(ratingValue);
 
-        if (
+        ratingElement.textContent =
             ratingValue !== undefined &&
             ratingValue !== null &&
-            ratingValue !== "" &&
-            Number.isFinite(rating)
-        ) {
-            ratingElement.textContent =
-                `${rating.toFixed(1)} / 5`;
-        } else {
-            ratingElement.textContent = "Not tested";
-        }
+            ratingValue !== ""
+                ? `${formatRating(
+                    ratingValue
+                )} / 5`
+                : "Not tested";
     }
+
 }
+
 
 // =========================================
 // AUTHENTICATED FETCH
@@ -534,6 +786,7 @@ async function authenticatedFetch(
     const token =
         getAuthToken();
 
+
     if (!token) {
 
         throw new Error(
@@ -541,7 +794,9 @@ async function authenticatedFetch(
         );
     }
 
+
     const headers = {
+
         ...(options.headers || {}),
 
         "Accept":
@@ -549,7 +804,9 @@ async function authenticatedFetch(
 
         "Authorization":
             `Bearer ${token}`
+
     };
+
 
     return fetch(
         url,
@@ -558,6 +815,62 @@ async function authenticatedFetch(
             headers
         }
     );
+
+}
+
+
+// =========================================
+// PUBLIC FETCH
+// =========================================
+
+async function publicFetch(
+    url,
+    options = {}
+) {
+
+    const headers = {
+
+        ...(options.headers || {}),
+
+        "Accept":
+            "application/json"
+
+    };
+
+
+    return fetch(
+        url,
+        {
+            ...options,
+            headers
+        }
+    );
+
+}
+
+
+// =========================================
+// CLEAR AUTH DATA
+// =========================================
+
+function clearAuthenticationData() {
+
+    localStorage.removeItem(
+        TOKEN_KEY
+    );
+
+    localStorage.removeItem(
+        USER_ID_KEY
+    );
+
+    localStorage.removeItem(
+        "username"
+    );
+
+    localStorage.removeItem(
+        "loginEmail"
+    );
+
 }
 
 
@@ -566,7 +879,8 @@ async function authenticatedFetch(
 // =========================================
 
 function handleAuthenticationError(
-    status
+    status,
+    redirect = true
 ) {
 
     if (
@@ -574,25 +888,113 @@ function handleAuthenticationError(
         status === 403
     ) {
 
-        localStorage.removeItem(
-            TOKEN_KEY
-        );
+        clearAuthenticationData();
 
-        localStorage.removeItem(
-            USER_ID_KEY
-        );
 
-        alert(
-            "Your login session has expired. Please log in again."
-        );
+        if (redirect) {
 
-        window.location.href =
-            "login.html";
+            alert(
+                "Your login session has expired. Please log in again."
+            );
+
+
+            window.location.href =
+                "login.html";
+        }
+
 
         return true;
     }
 
+
     return false;
+}
+
+
+// =========================================
+// READ RESPONSE
+// =========================================
+
+async function readResponse(
+    response
+) {
+
+    const contentType =
+        response.headers.get(
+            "content-type"
+        ) || "";
+
+
+    if (
+        contentType
+            .toLowerCase()
+            .includes(
+                "application/json"
+            )
+    ) {
+
+        try {
+
+            return await response.json();
+
+        } catch (error) {
+
+            console.error(
+                "JSON parse error:",
+                error
+            );
+
+            return {};
+
+        }
+
+    }
+
+
+    const text =
+        await response.text();
+
+
+    return text || "";
+
+}
+
+
+// =========================================
+// GET ERROR MESSAGE
+// =========================================
+
+function getErrorMessage(
+    data,
+    fallback
+) {
+
+    if (
+        data &&
+        typeof data === "object"
+    ) {
+
+        return (
+            data.error ||
+            data.message ||
+            data.detail ||
+            fallback
+        );
+
+    }
+
+
+    if (
+        typeof data === "string" &&
+        data.trim() !== ""
+    ) {
+
+        return data.trim();
+
+    }
+
+
+    return fallback;
 }
 
 
@@ -615,38 +1017,50 @@ function updateProfile() {
                     field.edit
                 );
 
+
             if (
                 !view ||
                 !edit
             ) {
+
                 return;
             }
+
 
             const value =
                 edit.value.trim();
 
-            if (value !== "") {
+
+            if (
+                value !== ""
+            ) {
 
                 view.textContent =
                     value;
+
             }
+
         }
     );
 
 
     // -------------------------------------
-    // Always restore backend values
+    // Restore backend-controlled values
     // -------------------------------------
 
-    if (currentProfile) {
+    if (
+        currentProfile
+    ) {
 
         updateBackendControlledStats(
             currentProfile
         );
+
     }
 
 
     updateProfileCompletion();
+
 }
 
 
@@ -657,15 +1071,25 @@ function updateProfile() {
 async function loadIndustryReadinessScore() {
 
     const scoreElement =
-        document.getElementById("view-industry-readiness");
+        document.getElementById(
+            "view-industry-readiness"
+        );
 
     const percentageElement =
-        document.getElementById("view-industry-percentage");
+        document.getElementById(
+            "view-industry-percentage"
+        );
 
     const progressElement =
-        document.getElementById("industry-readiness-progress");
+        document.getElementById(
+            "industry-readiness-progress"
+        );
 
-    if (!scoreElement) {
+
+    if (
+        !scoreElement
+    ) {
+
         console.warn(
             "view-industry-readiness element not found."
         );
@@ -673,94 +1097,244 @@ async function loadIndustryReadinessScore() {
         return;
     }
 
+
+    // =====================================
+    // THIS ENDPOINT IS AUTHENTICATED
+    // =====================================
+
+    if (
+        !isAuthenticated()
+    ) {
+
+        scoreElement.textContent =
+            "Not Tested";
+
+
+        if (
+            percentageElement
+        ) {
+
+            percentageElement.textContent =
+                "Login required";
+        }
+
+
+        if (
+            progressElement
+        ) {
+
+            progressElement.style.width =
+                "0%";
+        }
+
+
+        return;
+    }
+
+
     try {
 
         const response =
             await authenticatedFetch(
-                `${API_BASE_URL}/industry-readiness/latest`,
+                INDUSTRY_READINESS_API,
                 {
                     method: "GET"
                 }
             );
 
-        // Authentication error
+
         if (
             handleAuthenticationError(
                 response.status
             )
         ) {
+
             return;
         }
 
-        const result =
-            await readResponse(response);
 
-        if (!response.ok) {
+        const result =
+            await readResponse(
+                response
+            );
+
+
+        if (
+            !response.ok
+        ) {
 
             throw new Error(
-                result.message ||
-                `Server returned HTTP ${response.status}`
+                getErrorMessage(
+                    result,
+                    `Server returned HTTP ${response.status}.`
+                )
             );
         }
 
-        // -----------------------------------------
-        // NO TEST TAKEN
-        // -----------------------------------------
 
-        if (!result.hasScore) {
+        // =================================
+        // NO TEST
+        // =================================
+
+        if (
+            !result.hasScore
+        ) {
 
             scoreElement.textContent =
                 "Not Tested";
 
-            if (percentageElement) {
+
+            if (
+                percentageElement
+            ) {
+
                 percentageElement.textContent =
                     "No assessment completed";
             }
 
-            if (progressElement) {
+
+            if (
+                progressElement
+            ) {
+
                 progressElement.style.width =
                     "0%";
             }
 
+
             return;
         }
 
-        // -----------------------------------------
+
+        // =================================
         // SCORE
-        // -----------------------------------------
+        // =================================
 
         const score =
-            Number(result.score);
+            Number(
+                result.score
+            );
 
         const total =
-            Number(result.totalQuestions);
+            Number(
+                result.totalQuestions
+            );
 
         const percentage =
-            Number(result.percentage);
+            Number(
+                result.percentage
+            );
 
-        scoreElement.textContent =
-            `${score}/${total}`;
 
-        if (percentageElement) {
+        if (
+            Number.isFinite(score) &&
+            Number.isFinite(total)
+        ) {
 
-            percentageElement.textContent =
-                `${percentage.toFixed(0)}%`;
+            scoreElement.textContent =
+                `${score}/${total}`;
+
+        } else {
+
+            scoreElement.textContent =
+                "Available";
         }
 
-        if (progressElement) {
+
+        if (
+            percentageElement
+        ) {
+
+            if (
+                Number.isFinite(
+                    percentage
+                )
+            ) {
+
+                percentageElement.textContent =
+                    `${percentage.toFixed(0)}%`;
+
+            } else {
+
+                percentageElement.textContent =
+                    "Available";
+            }
+
+        }
+
+
+        if (
+            progressElement
+        ) {
+
+            const safePercentage =
+                Number.isFinite(
+                    percentage
+                )
+                    ? Math.max(
+                        0,
+                        Math.min(
+                            100,
+                            percentage
+                        )
+                    )
+                    : 0;
+
 
             progressElement.style.width =
-                `${percentage}%`;
+                `${safePercentage}%`;
         }
+
+
+        // =================================
+        // KEEP GRADE / RATING SYNCHRONIZED
+        // =================================
+
+        if (
+            currentProfile &&
+            typeof currentProfile === "object"
+        ) {
+
+            if (
+                result.grade !== undefined
+            ) {
+
+                currentProfile.grade =
+                    result.grade;
+            }
+
+
+            if (
+                result.testRating !== undefined
+            ) {
+
+                currentProfile.test_rating =
+                    result.testRating;
+            }
+
+
+            if (
+                result.percentage !== undefined
+            ) {
+
+                currentProfile.test_score =
+                    Number(
+                        result.percentage
+                    );
+            }
+
+
+            updateBackendControlledStats(
+                currentProfile
+            );
+        }
+
 
         console.log(
             "Industry Readiness:",
-            {
-                score,
-                total,
-                percentage
-            }
+            result
         );
+
 
     } catch (error) {
 
@@ -769,9 +1343,11 @@ async function loadIndustryReadinessScore() {
             error
         );
 
+
         scoreElement.textContent =
             "Unavailable";
     }
+
 }
 
 
@@ -798,33 +1374,34 @@ function configureProfileAccess() {
 
 
     // =====================================
-    // OTHER PERSON
+    // PUBLIC PROFILE
     // =====================================
 
-    if (!isOwnProfile) {
+    if (
+        !isOwnProfile
+    ) {
 
-        editMode = false;
+        editMode =
+            false;
 
 
-        // Hide edit button
-
-        if (editButton) {
+        if (
+            editButton
+        ) {
 
             editButton.style.display =
                 "none";
         }
 
 
-        // Hide save button
-
-        if (saveButton) {
+        if (
+            saveButton
+        ) {
 
             saveButton.style.display =
                 "none";
         }
 
-
-        // Hide all regular editable inputs
 
         editInputs.forEach(
             input => {
@@ -832,12 +1409,11 @@ function configureProfileAccess() {
                 input.style.display =
                     "none";
 
-                input.disabled = true;
+                input.disabled =
+                    true;
             }
         );
 
-
-        // Hide all upload inputs
 
         document
             .querySelectorAll(
@@ -855,14 +1431,15 @@ function configureProfileAccess() {
             );
 
 
-        // Hide upload section completely
-
         const uploadSection =
             document.getElementById(
                 "profileUploadControls"
             );
 
-        if (uploadSection) {
+
+        if (
+            uploadSection
+        ) {
 
             uploadSection.classList.remove(
                 "show-profile-uploads"
@@ -873,10 +1450,6 @@ function configureProfileAccess() {
         }
 
 
-        console.log(
-            "Profile is in VIEW-ONLY mode."
-        );
-
         return;
     }
 
@@ -885,7 +1458,9 @@ function configureProfileAccess() {
     // OWN PROFILE
     // =====================================
 
-    if (editButton) {
+    if (
+        editButton
+    ) {
 
         editButton.style.display =
             "block";
@@ -894,9 +1469,6 @@ function configureProfileAccess() {
 
     editInputs.forEach(
         input => {
-
-            // Do not allow backend controlled fields
-            // to become editable.
 
             if (
                 input.id === "edit-connections" ||
@@ -914,21 +1486,28 @@ function configureProfileAccess() {
                 return;
             }
 
-            input.disabled =
-                !editMode;
+
+            if (
+                input.classList.contains(
+                    "achievement-upload"
+                )
+            ) {
+
+                return;
+            }
+
 
             input.style.display =
                 editMode
                     ? "block"
                     : "none";
+
+            input.disabled =
+                !editMode;
+
         }
     );
 
-
-    // -------------------------------------
-    // Make sure backend-controlled fields
-    // never have editable inputs
-    // -------------------------------------
 
     document
         .querySelectorAll(
@@ -942,8 +1521,10 @@ function configureProfileAccess() {
 
                 element.disabled =
                     true;
+
             }
         );
+
 }
 
 
@@ -953,11 +1534,9 @@ function configureProfileAccess() {
 
 function toggleEditMode() {
 
-    // =====================================
-    // NEVER EDIT SOMEONE ELSE
-    // =====================================
-
-    if (!isOwnProfile) {
+    if (
+        !isOwnProfile
+    ) {
 
         alert(
             "You can only edit your own profile."
@@ -967,7 +1546,10 @@ function toggleEditMode() {
     }
 
 
-    if (!requireAuthentication()) {
+    if (
+        !requireAuthentication()
+    ) {
+
         return;
     }
 
@@ -981,30 +1563,25 @@ function toggleEditMode() {
             ".edit-input"
         );
 
-
     const saveBtn =
         document.getElementById(
             "saveBtn"
         );
-
 
     const editBtn =
         document.getElementById(
             "toggleEditBtn"
         );
 
-
     const profilePicInput =
         document.getElementById(
             "profilePicInput"
         );
 
-
     const bannerUpload =
         document.getElementById(
             "bannerUpload"
         );
-
 
     const uploadSection =
         document.getElementById(
@@ -1019,9 +1596,6 @@ function toggleEditMode() {
     inputs.forEach(
         input => {
 
-            // Never expose backend-controlled
-            // values for editing.
-
             if (
                 input.id === "edit-connections" ||
                 input.id === "edit-followers" ||
@@ -1039,14 +1613,12 @@ function toggleEditMode() {
             }
 
 
-            // Achievement upload inputs are handled
-            // separately.
-
             if (
                 input.classList.contains(
                     "achievement-upload"
                 )
             ) {
+
                 return;
             }
 
@@ -1066,7 +1638,9 @@ function toggleEditMode() {
     // SAVE BUTTON
     // =====================================
 
-    if (saveBtn) {
+    if (
+        saveBtn
+    ) {
 
         saveBtn.style.display =
             editMode
@@ -1079,7 +1653,9 @@ function toggleEditMode() {
     // EDIT BUTTON
     // =====================================
 
-    if (editBtn) {
+    if (
+        editBtn
+    ) {
 
         editBtn.textContent =
             editMode
@@ -1092,23 +1668,20 @@ function toggleEditMode() {
     // UPLOAD SECTION
     // =====================================
 
-    if (uploadSection) {
+    if (
+        uploadSection
+    ) {
 
         uploadSection.classList.toggle(
             "show-profile-uploads",
             editMode
         );
 
-        if (editMode) {
 
-            uploadSection.style.display =
-                "flex";
-
-        } else {
-
-            uploadSection.style.display =
-                "none";
-        }
+        uploadSection.style.display =
+            editMode
+                ? "flex"
+                : "none";
     }
 
 
@@ -1116,7 +1689,9 @@ function toggleEditMode() {
     // PROFILE PICTURE INPUT
     // =====================================
 
-    if (profilePicInput) {
+    if (
+        profilePicInput
+    ) {
 
         profilePicInput.style.display =
             editMode
@@ -1132,7 +1707,9 @@ function toggleEditMode() {
     // BANNER INPUT
     // =====================================
 
-    if (bannerUpload) {
+    if (
+        bannerUpload
+    ) {
 
         bannerUpload.style.display =
             editMode
@@ -1175,16 +1752,19 @@ function toggleEditMode() {
             "profilePic"
         );
 
-
     const placeholder =
         document.getElementById(
             "dpPlaceholder"
         );
 
 
-    if (profilePic) {
+    if (
+        profilePic
+    ) {
 
-        if (editMode) {
+        if (
+            editMode
+        ) {
 
             profilePic.style.display =
                 "none";
@@ -1196,6 +1776,7 @@ function toggleEditMode() {
                     "src"
                 );
 
+
             profilePic.style.display =
                 src
                     ? "block"
@@ -1204,7 +1785,9 @@ function toggleEditMode() {
     }
 
 
-    if (placeholder) {
+    if (
+        placeholder
+    ) {
 
         placeholder.style.display =
             editMode
@@ -1214,7 +1797,7 @@ function toggleEditMode() {
 
 
     // =====================================
-    // BODY EDITING CLASS
+    // BODY CLASS
     // =====================================
 
     document.body.classList.toggle(
@@ -1224,50 +1807,34 @@ function toggleEditMode() {
 
 
     // =====================================
-    // RESTORE BACKEND VALUES
+    // RESTORE BACKEND STATS
     // =====================================
 
-    if (currentProfile) {
+    if (
+        currentProfile
+    ) {
 
         updateBackendControlledStats(
             currentProfile
         );
     }
+
 }
 
 
 // =========================================
-// HTML COMPATIBILITY FUNCTION
-// =========================================
-//
-// Your current HTML uses:
-//
-// onclick="handleProfileEdit()"
-//
-// This function keeps that working.
-//
+// HTML COMPATIBILITY
 // =========================================
 
 function handleProfileEdit() {
 
     toggleEditMode();
+
 }
 
 
 // =========================================
 // COLLECT PROFILE DATA
-// =========================================
-//
-// IMPORTANT:
-// Connections
-// Rating
-// Grade
-// Followers
-//
-// are deliberately NOT included.
-//
-// The backend must calculate/control them.
-//
 // =========================================
 
 function collectProfileData() {
@@ -1283,9 +1850,14 @@ function collectProfileData() {
                     field.edit
                 );
 
-            if (!element) {
+
+            if (
+                !element
+            ) {
+
                 return;
             }
+
 
             data[field.key] =
                 element.value.trim();
@@ -1293,18 +1865,23 @@ function collectProfileData() {
     );
 
 
-    // -------------------------------------
-    // Explicitly prevent frontend changes
-    // to backend-controlled fields.
-    // -------------------------------------
+    // =====================================
+    // NEVER SEND BACKEND CONTROLLED VALUES
+    // =====================================
 
     delete data.connections;
+
     delete data.followers;
+
     delete data.rating;
+
     delete data.grade;
+
+    delete data.score;
 
 
     return data;
+
 }
 
 
@@ -1312,12 +1889,18 @@ function collectProfileData() {
 // EMAIL VALIDATION
 // =========================================
 
-function isValidEmail(email) {
+function isValidEmail(
+    email
+) {
 
     const emailRegex =
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    return emailRegex.test(email);
+
+    return emailRegex.test(
+        email
+    );
+
 }
 
 
@@ -1325,58 +1908,18 @@ function isValidEmail(email) {
 // PHONE VALIDATION
 // =========================================
 
-function isValidPhone(phone) {
+function isValidPhone(
+    phone
+) {
 
     const phoneRegex =
         /^[0-9+\-\s()]{7,20}$/;
 
-    return phoneRegex.test(phone);
-}
 
-
-// =========================================
-// READ RESPONSE
-// =========================================
-
-async function readResponse(response) {
-
-    const text =
-        await response.text();
-
-    console.log(
-        "HTTP Status:",
-        response.status
+    return phoneRegex.test(
+        phone
     );
 
-    console.log(
-        "Server response:",
-        text
-    );
-
-
-    if (
-        !text ||
-        text.trim() === ""
-    ) {
-        return {};
-    }
-
-
-    try {
-
-        return JSON.parse(text);
-
-    } catch (error) {
-
-        console.error(
-            "Invalid JSON:",
-            text
-        );
-
-        throw new Error(
-            "Server returned HTML/text instead of JSON."
-        );
-    }
 }
 
 
@@ -1384,7 +1927,9 @@ async function readResponse(response) {
 // GET IMAGE DATA
 // =========================================
 
-function getImageData(elementId) {
+function getImageData(
+    elementId
+) {
 
     const image =
         document.getElementById(
@@ -1392,7 +1937,10 @@ function getImageData(elementId) {
         );
 
 
-    if (!image) {
+    if (
+        !image
+    ) {
+
         return null;
     }
 
@@ -1405,13 +1953,17 @@ function getImageData(elementId) {
 
     if (
         src &&
-        src.startsWith("data:image/")
+        src.startsWith(
+            "data:image/"
+        )
     ) {
+
         return src;
     }
 
 
     return null;
+
 }
 
 
@@ -1422,10 +1974,12 @@ function getImageData(elementId) {
 async function saveProfile() {
 
     // =====================================
-    // ABSOLUTE OWN-PROFILE CHECK
+    // ONLY OWNER MAY SAVE
     // =====================================
 
-    if (!isOwnProfile) {
+    if (
+        !isOwnProfile
+    ) {
 
         alert(
             "You are not allowed to edit this profile."
@@ -1435,12 +1989,26 @@ async function saveProfile() {
     }
 
 
+    if (
+        !requireAuthentication()
+    ) {
+
+        return;
+    }
+
+
+    const saveBtn =
+        document.getElementById(
+            "saveBtn"
+        );
+
+
+    const originalSaveText =
+        saveBtn?.textContent ||
+        "Save";
+
+
     try {
-
-        if (!requireAuthentication()) {
-            return;
-        }
-
 
         // =================================
         // COLLECT DATA
@@ -1451,12 +2019,14 @@ async function saveProfile() {
 
 
         // =================================
-        // EMAIL
+        // VALIDATE EMAIL
         // =================================
 
         if (
             data.email &&
-            !isValidEmail(data.email)
+            !isValidEmail(
+                data.email
+            )
         ) {
 
             alert(
@@ -1468,12 +2038,14 @@ async function saveProfile() {
 
 
         // =================================
-        // PHONE
+        // VALIDATE PHONE
         // =================================
 
         if (
             data.phone &&
-            !isValidPhone(data.phone)
+            !isValidPhone(
+                data.phone
+            )
         ) {
 
             alert(
@@ -1494,7 +2066,9 @@ async function saveProfile() {
             );
 
 
-        if (profilePicData) {
+        if (
+            profilePicData
+        ) {
 
             data.profilePic =
                 profilePicData;
@@ -1511,7 +2085,9 @@ async function saveProfile() {
             );
 
 
-        if (bannerData) {
+        if (
+            bannerData
+        ) {
 
             data.bannerImage =
                 bannerData;
@@ -1534,7 +2110,9 @@ async function saveProfile() {
                 );
 
 
-            if (imageData) {
+            if (
+                imageData
+            ) {
 
                 data[
                     `achievement_${i}`
@@ -1545,49 +2123,84 @@ async function saveProfile() {
 
 
         // =================================
-        // IMPORTANT:
+        // SECURITY:
         // DO NOT SEND USER ID
         // =================================
 
         delete data.userId;
+
         delete data.id;
 
 
         // =================================
-        // IMPORTANT:
-        // DO NOT SEND BACKEND CONTROLLED
-        // FIELDS
+        // DO NOT SEND BACKEND FIELDS
         // =================================
 
         delete data.connections;
+
         delete data.followers;
+
         delete data.rating;
+
         delete data.grade;
+
+        delete data.score;
 
 
         console.log(
-            "Saving OWN profile:",
-            data
+            "Saving profile:",
+            {
+                ...data,
+                profilePic:
+                    data.profilePic
+                        ? "[image data]"
+                        : undefined,
+                bannerImage:
+                    data.bannerImage
+                        ? "[image data]"
+                        : undefined
+            }
         );
 
 
         // =================================
-        // SAVE TO API
+        // BUTTON STATE
+        // =================================
+
+        if (
+            saveBtn
+        ) {
+
+            saveBtn.disabled =
+                true;
+
+            saveBtn.textContent =
+                "Saving...";
+        }
+
+
+        // =================================
+        // SEND UPDATE
         // =================================
 
         const response =
             await authenticatedFetch(
                 MY_PROFILE_API,
                 {
-                    method: "PUT",
+                    method:
+                        "PUT",
 
                     headers: {
+
                         "Content-Type":
                             "application/json"
+
                     },
 
                     body:
-                        JSON.stringify(data)
+                        JSON.stringify(
+                            data
+                        )
                 }
             );
 
@@ -1601,360 +2214,10 @@ async function saveProfile() {
                 response.status
             )
         ) {
-            return;
-        }
-
-
-        // =================================
-        // READ SERVER RESPONSE
-        // =================================
-
-        const result =
-            await readResponse(
-                response
-            );
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                result.error ||
-                `Server returned HTTP ${response.status}.`
-            );
-        }
-
-
-        // =================================
-        // GET PROFILE FROM RESPONSE
-        // =================================
-
-        let returnedProfile =
-            result.profile ||
-            result.data ||
-            null;
-
-
-        // ---------------------------------
-        // If backend returns only updated
-        // fields, merge them with existing
-        // profile.
-        // ---------------------------------
-
-        if (
-            returnedProfile &&
-            typeof returnedProfile === "object"
-        ) {
-
-            returnedProfile = {
-                ...(currentProfile || {}),
-                ...returnedProfile,
-                ...data
-            };
-
-        } else {
-
-            returnedProfile = {
-                ...(currentProfile || {}),
-                ...data
-            };
-        }
-
-
-        // =================================
-        // IMPORTANT:
-        // Keep backend controlled values
-        // already returned by backend.
-        // =================================
-
-        currentProfile =
-            returnedProfile;
-
-
-        // =================================
-        // SAVE LOCAL COPY
-        // =================================
-
-        localStorage.setItem(
-            "userProfile",
-            JSON.stringify(
-                returnedProfile
-            )
-        );
-
-
-        // =================================
-        // UPDATE SCREEN
-        // =================================
-
-        updateProfile();
-
-
-        updateBackendControlledStats(
-            returnedProfile
-        );
-
-
-        updateProfileCompletion();
-
-
-        // =================================
-        // EXIT EDIT MODE
-        // =================================
-
-        if (editMode) {
-
-            toggleEditMode();
-        }
-
-
-        alert(
-            "Profile saved successfully!"
-        );
-
-
-        // =================================
-        // OPTIONAL SERVER REFRESH
-        // =================================
-        //
-        // This guarantees that Grade,
-        // Rating and Connections shown on
-        // screen are the latest backend values.
-        //
-        // =================================
-
-        await refreshBackendControlledStats();
-
-
-    } catch (error) {
-
-        console.error(
-            "SAVE PROFILE ERROR:",
-            error
-        );
-
-
-        alert(
-            "Unable to save profile.\n\n" +
-            error.message
-        );
-    }
-}
-
-
-// =========================================
-// REFRESH BACKEND CONTROLLED STATS
-// =========================================
-
-async function refreshBackendControlledStats() {
-
-    if (!requireAuthentication()) {
-        return;
-    }
-
-
-    if (!userId) {
-        return;
-    }
-
-
-    try {
-
-        let url;
-
-
-        // ---------------------------------
-        // Own profile
-        // ---------------------------------
-
-        if (isOwnProfile) {
-
-            url =
-                MY_PROFILE_API;
-
-        } else {
-
-            // -----------------------------
-            // Public profile
-            // -----------------------------
-
-            url =
-                `${PUBLIC_PROFILE_API}/${userId}`;
-        }
-
-
-        const response =
-            await authenticatedFetch(
-                url,
-                {
-                    method: "GET"
-                }
-            );
-
-
-        if (
-            handleAuthenticationError(
-                response.status
-            )
-        ) {
-            return;
-        }
-
-
-        if (!response.ok) {
-
-            console.warn(
-                "Unable to refresh backend statistics."
-            );
 
             return;
         }
 
-
-        const result =
-            await readResponse(
-                response
-            );
-
-
-        const profile =
-            result.profile ||
-            result.data ||
-            result;
-
-
-        if (
-            profile &&
-            typeof profile === "object"
-        ) {
-
-            currentProfile = {
-                ...(currentProfile || {}),
-                ...profile
-            };
-
-
-            updateBackendControlledStats(
-                currentProfile
-            );
-
-
-            console.log(
-                "Backend controlled statistics refreshed."
-            );
-        }
-
-    } catch (error) {
-
-        console.warn(
-            "STAT REFRESH ERROR:",
-            error
-        );
-    }
-}
-
-
-// =========================================
-// CURRENT PROFILE OBJECT
-// =========================================
-
-let currentProfile = null;
-
-
-// =========================================
-// LOAD PROFILE
-// =========================================
-
-async function loadProfile() {
-
-    if (!requireAuthentication()) {
-        return null;
-    }
-
-    // =====================================
-    // DETERMINE API
-    // =====================================
-
-    let url;
-
-    if (isOwnProfile) {
-
-        // ---------------------------------
-        // OWN PROFILE
-        // ---------------------------------
-
-        url = MY_PROFILE_API;
-
-    } else {
-
-        // ---------------------------------
-        // OTHER USER
-        // ---------------------------------
-
-        url = `${PUBLIC_PROFILE_API}/${userId}`;
-    }
-
-    console.log(
-        "Loading profile from:",
-        url
-    );
-
-    try {
-
-        const response =
-            await authenticatedFetch(
-                url,
-                {
-                    method: "GET"
-                }
-            );
-
-        // =================================
-        // AUTH ERROR
-        // =================================
-
-        if (
-            handleAuthenticationError(
-                response.status
-            )
-        ) {
-            return null;
-        }
-
-        // =================================
-        // NOT FOUND
-        // =================================
-
-        if (
-            response.status === 404
-        ) {
-
-            if (isOwnProfile) {
-
-                console.log(
-                    "No profile exists yet."
-                );
-
-                currentProfile = null;
-
-                clearProfileFields();
-
-                updateBackendControlledStats(
-                    {}
-                );
-
-                configureProfileAccess();
-
-                updateProfileCompletion();
-
-                return null;
-            }
-
-            alert(
-                "This user profile could not be found."
-            );
-
-            return null;
-        }
 
         // =================================
         // READ RESPONSE
@@ -1965,136 +2228,62 @@ async function loadProfile() {
                 response
             );
 
-        if (!response.ok) {
+
+        if (
+            !response.ok
+        ) {
 
             throw new Error(
-                result.error ||
-                result.message ||
-                `Server returned HTTP ${response.status}.`
+                getErrorMessage(
+                    result,
+                    `Server returned HTTP ${response.status}.`
+                )
             );
         }
 
+
         // =================================
-        // EXTRACT PROFILE
+        // GET UPDATED PROFILE
         // =================================
 
-        const profile =
-            result.profile ||
-            result.data ||
-            result;
+        const returnedProfile =
+            result?.profile ||
+            result?.data ||
+            null;
+
 
         if (
-            !profile ||
-            typeof profile !== "object"
+            returnedProfile &&
+            typeof returnedProfile ===
+                "object"
         ) {
 
-            console.warn(
-                "No valid profile object returned."
-            );
+            currentProfile =
+                returnedProfile;
 
-            return null;
-        }
-        if (
-    !profile.profilePic &&
-    profile.profile_picture
-) {
-    profile.profilePic =
-        profile.profile_picture;
-}
+        } else {
 
-if (
-    !profile.bannerImage &&
-    profile.banner
-) {
-    profile.bannerImage =
-        profile.banner;
-}
-
-if (
-    profile.testScore === undefined &&
-    profile.test_score !== undefined
-) {
-    profile.testScore =
-        profile.test_score;
-}
-
-if (
-    profile.testRating === undefined &&
-    profile.test_rating !== undefined
-) {
-    profile.testRating =
-        profile.test_rating;
-}
-
-        // =================================
-        // NORMALIZE BACKEND FIELD NAMES
-        // =================================
-        //
-        // The backend may return:
-        //
-        // profile_picture
-        // banner
-        // test_score
-        // test_rating
-        //
-        // while the existing frontend uses:
-        //
-        // profilePic
-        // bannerImage
-        //
-        // Keep both available so existing
-        // profile code continues working.
-        // =================================
-
-        if (
-            !profile.profilePic &&
-            profile.profile_picture
-        ) {
-
-            profile.profilePic =
-                profile.profile_picture;
+            currentProfile = {
+                ...(currentProfile || {}),
+                ...data
+            };
         }
 
-        if (
-            !profile.bannerImage &&
-            profile.banner
-        ) {
-
-            profile.bannerImage =
-                profile.banner;
-        }
-
-        if (
-            profile.testScore === undefined &&
-            profile.test_score !== undefined
-        ) {
-
-            profile.testScore =
-                profile.test_score;
-        }
-
-        if (
-            profile.testRating === undefined &&
-            profile.test_rating !== undefined
-        ) {
-
-            profile.testRating =
-                profile.test_rating;
-        }
 
         // =================================
-        // SET CURRENT PROFILE
+        // STORE LOCAL COPY
         // =================================
 
-        currentProfile = profile;
-
-        console.log(
-            "Loaded profile:",
-            profile
+        localStorage.setItem(
+            "userProfile",
+            JSON.stringify(
+                currentProfile
+            )
         );
 
+
         // =================================
-        // FILL VIEW / EDIT FIELDS
+        // UPDATE SCREEN
         // =================================
 
         fields.forEach(
@@ -2110,105 +2299,279 @@ if (
                         field.view
                     );
 
-                if (!edit) {
+
+                if (
+                    !edit
+                ) {
+
                     return;
                 }
 
-                const value =
-                    profile[field.key];
 
-                if (
+                const value =
+                    currentProfile[
+                        field.key
+                    ];
+
+
+                edit.value =
                     value !== undefined &&
                     value !== null
+                        ? String(value)
+                        : "";
+
+
+                if (
+                    view
                 ) {
 
-                    edit.value =
-                        String(value);
-
-                    if (view) {
-
-                        view.textContent =
-                            String(value);
-                    }
-
-                } else {
-
-                    edit.value = "";
-
-                    if (view) {
-
-                        view.textContent = "";
-                    }
+                    view.textContent =
+                        edit.value;
                 }
+
             }
         );
 
+
+        updateBackendControlledStats(
+            currentProfile
+        );
+
+
+        updateProfileCompletion();
+
+
         // =================================
-        // UPDATE BACKEND CONTROLLED STATS
+        // EXIT EDIT MODE
         // =================================
+
+        if (
+            editMode
+        ) {
+
+            toggleEditMode();
+        }
+
+
+        alert(
+            result?.message ||
+            "Profile saved successfully!"
+        );
+
+
+        // =================================
+        // REFRESH SERVER DATA
+        // =================================
+
+        await refreshOwnProfile();
+
+
+    } catch (error) {
+
+        console.error(
+            "SAVE PROFILE ERROR:",
+            error
+        );
+
+
+        alert(
+            "Unable to save profile.\n\n" +
+            (
+                error.message ||
+                "Unknown error."
+            )
+        );
+
+
+    } finally {
+
+        if (
+            saveBtn
+        ) {
+
+            saveBtn.disabled =
+                false;
+
+            saveBtn.textContent =
+                originalSaveText;
+        }
+
+    }
+
+}
+
+
+// =========================================
+// REFRESH OWN PROFILE FROM SERVER
+// =========================================
+
+async function refreshOwnProfile() {
+
+    if (
+        !isOwnProfile ||
+        !isAuthenticated()
+    ) {
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await authenticatedFetch(
+                MY_PROFILE_API,
+                {
+                    method:
+                        "GET"
+                }
+            );
+
+
+        if (
+            handleAuthenticationError(
+                response.status,
+                false
+            )
+        ) {
+
+            return;
+        }
+
+
+        if (
+            !response.ok
+        ) {
+
+            return;
+        }
+
+
+        const result =
+            await readResponse(
+                response
+            );
+
+
+        const profile =
+            result?.profile ||
+            result?.data ||
+            null;
+
+
+        if (
+            !profile ||
+            typeof profile !== "object"
+        ) {
+
+            return;
+        }
+
+
+        currentProfile =
+            profile;
+
+
+        // ---------------------------------
+        // Update all fields
+        // ---------------------------------
+
+        fields.forEach(
+            field => {
+
+                const edit =
+                    document.getElementById(
+                        field.edit
+                    );
+
+                const view =
+                    document.getElementById(
+                        field.view
+                    );
+
+
+                if (
+                    edit
+                ) {
+
+                    const value =
+                        profile[
+                            field.key
+                        ];
+
+
+                    edit.value =
+                        value !== undefined &&
+                        value !== null
+                            ? String(value)
+                            : "";
+
+
+                    if (
+                        view
+                    ) {
+
+                        view.textContent =
+                            edit.value;
+                    }
+                }
+
+            }
+        );
+
+
+        // ---------------------------------
+        // Backend stats
+        // ---------------------------------
 
         updateBackendControlledStats(
             profile
         );
 
-        // =================================
-        // PROFILE PICTURE
-        // =================================
 
-        const profilePicture =
-            profile.profilePic ||
-            profile.profile_picture;
+        // ---------------------------------
+        // Images
+        // ---------------------------------
 
-        if (profilePicture) {
+        if (
+            profile.profilePic
+        ) {
 
             setProfileImage(
                 "profilePic",
                 "dpPlaceholder",
-                profilePicture
+                profile.profilePic
             );
 
-        } else {
-
-            hideProfileImage();
         }
 
-        // =================================
-        // BANNER
-        // =================================
 
-        const bannerImage =
-            profile.bannerImage ||
-            profile.banner;
+        if (
+            profile.bannerImage
+        ) {
 
-        const banner =
-            document.getElementById(
-                "bannerImage"
-            );
+            const banner =
+                document.getElementById(
+                    "bannerImage"
+                );
 
-        if (banner) {
 
-            if (bannerImage) {
+            if (
+                banner
+            ) {
 
                 banner.src =
-                    bannerImage;
+                    profile.bannerImage;
 
                 banner.style.display =
                     "block";
-
-            } else {
-
-                banner.removeAttribute(
-                    "src"
-                );
-
-                banner.style.display =
-                    "none";
             }
         }
 
-        // =================================
-        // ACHIEVEMENT IMAGES
-        // =================================
+
+        // ---------------------------------
+        // Achievements
+        // ---------------------------------
 
         for (
             let i = 1;
@@ -2221,10 +2584,12 @@ if (
                     `achievement-img-${i}`
                 );
 
+
             const value =
                 profile[
                     `achievement_${i}`
                 ];
+
 
             if (
                 image &&
@@ -2236,135 +2601,686 @@ if (
 
                 image.style.display =
                     "block";
-
-            } else if (image) {
-
-                image.removeAttribute(
-                    "src"
-                );
-
-                image.style.display =
-                    "none";
             }
         }
 
+
+        localStorage.setItem(
+            "userProfile",
+            JSON.stringify(
+                profile
+            )
+        );
+
+
+        updateProfileCompletion();
+
+
+    } catch (error) {
+
+        console.warn(
+            "REFRESH PROFILE ERROR:",
+            error
+        );
+
+    }
+
+}
+
+
+// =========================================
+// LOAD PROFILE
+// =========================================
+
+async function loadProfile() {
+
+    // =====================================
+    // PUBLIC PROFILE
+    // =====================================
+
+    if (
+        !isOwnProfile
+    ) {
+
+        if (
+            !userId
+        ) {
+
+            console.error(
+                "No valid public profile user ID."
+            );
+
+            return null;
+        }
+
+
+        const url =
+            `${PUBLIC_PROFILE_API}/${userId}`;
+
+
+        console.log(
+            "Loading public profile:",
+            url
+        );
+
+
+        try {
+
+            const response =
+                await publicFetch(
+                    url,
+                    {
+                        method:
+                            "GET"
+                    }
+                );
+
+
+            console.log(
+                "Public profile HTTP status:",
+                response.status
+            );
+
+
+            const result =
+                await readResponse(
+                    response
+                );
+
+
+            if (
+                !response.ok
+            ) {
+
+                throw new Error(
+                    getErrorMessage(
+                        result,
+                        `Server returned HTTP ${response.status}.`
+                    )
+                );
+            }
+
+
+            const profile =
+                result?.profile ||
+                result?.data ||
+                null;
+
+
+            if (
+                !profile ||
+                typeof profile !== "object"
+            ) {
+
+                throw new Error(
+                    "No valid public profile was returned."
+                );
+            }
+
+
+            currentProfile =
+                profile;
+
+
+            populateProfile(
+                profile
+            );
+
+
+            configureProfileAccess();
+
+
+            updateProfileCompletion();
+
+
+            updateProfileTitle(
+                profile
+            );
+
+
+            return profile;
+
+
+        } catch (error) {
+
+            console.error(
+                "LOAD PUBLIC PROFILE ERROR:",
+                error
+            );
+
+
+            return null;
+        }
+
+    }
+
+
+    // =====================================
+    // OWN PROFILE
+    // =====================================
+
+    if (
+        !requireAuthentication()
+    ) {
+
+        return null;
+    }
+
+
+    const url =
+        MY_PROFILE_API;
+
+
+    console.log(
+        "Loading own profile:",
+        url
+    );
+
+
+    try {
+
+        const response =
+            await authenticatedFetch(
+                url,
+                {
+                    method:
+                        "GET"
+                }
+            );
+
+
         // =================================
-        // SAVE LOCAL COPY
-        // =================================
-        //
-        // Only save the currently logged-in
-        // user's profile.
+        // AUTH ERROR
         // =================================
 
-        if (isOwnProfile) {
+        if (
+            handleAuthenticationError(
+                response.status
+            )
+        ) {
 
-            localStorage.setItem(
-                "userProfile",
-                JSON.stringify(profile)
+            return null;
+        }
+
+
+        // =================================
+        // NOT FOUND
+        // =================================
+
+        if (
+            response.status === 404
+        ) {
+
+            console.log(
+                "No profile exists yet."
+            );
+
+
+            currentProfile =
+                null;
+
+
+            clearProfileFields();
+
+
+            updateBackendControlledStats(
+                {}
+            );
+
+
+            configureProfileAccess();
+
+
+            updateProfileCompletion();
+
+
+            return null;
+        }
+
+
+        // =================================
+        // READ RESPONSE
+        // =================================
+
+        const result =
+            await readResponse(
+                response
+            );
+
+
+        if (
+            !response.ok
+        ) {
+
+            throw new Error(
+                getErrorMessage(
+                    result,
+                    `Server returned HTTP ${response.status}.`
+                )
             );
         }
 
+
         // =================================
-        // PROFILE ACCESS
+        // EXTRACT PROFILE
         // =================================
+
+        const profile =
+            result?.profile ||
+            result?.data ||
+            null;
+
+
+        if (
+            !profile ||
+            typeof profile !== "object"
+        ) {
+
+            throw new Error(
+                "No valid profile was returned."
+            );
+        }
+
+
+        // =================================
+        // SET CURRENT PROFILE
+        // =================================
+
+        currentProfile =
+            profile;
+
+
+        console.log(
+            "Loaded own profile:",
+            profile
+        );
+
+
+        populateProfile(
+            profile
+        );
+
 
         configureProfileAccess();
 
-        // =================================
-        // COMPLETION
-        // =================================
 
         updateProfileCompletion();
-        return profile;
 
-        // =================================
-        // PROFILE TITLE
-        // =================================
 
         updateProfileTitle(
             profile
         );
 
+
         // =================================
-        // MAKE SURE BACKEND VALUES ARE
-        // DISPLAYED AFTER ALL DOM UPDATES
+        // SAVE LOCAL COPY
         // =================================
 
-        updateBackendControlledStats(
-            profile
+        localStorage.setItem(
+            "userProfile",
+            JSON.stringify(
+                profile
+            )
         );
 
-        // =================================
-        // RETURN PROFILE
-        // =================================
 
         return profile;
+
 
     } catch (error) {
 
         console.error(
-            "LOAD PROFILE ERROR:",
+            "LOAD OWN PROFILE ERROR:",
             error
         );
 
-        // ---------------------------------
-        // ONLY OWN PROFILE MAY USE
-        // LOCAL BACKUP
-        // ---------------------------------
 
-        if (isOwnProfile) {
+        // =================================
+        // OWN PROFILE ONLY:
+        // LOCAL FALLBACK
+        // =================================
 
-            console.warn(
-                "Using local profile backup."
-            );
+        const localProfile =
+            loadLocalProfile();
 
-            const localProfile =
-                loadLocalProfile();
 
-            if (
-                localProfile &&
-                typeof localProfile === "object"
-            ) {
+        if (
+            localProfile
+        ) {
 
-                currentProfile =
-                    localProfile;
-
-                updateBackendControlledStats(
-                    localProfile
-                );
-
-                updateProfileCompletion();
-
-                updateProfileTitle(
-                    localProfile
-                );
-
-                return localProfile;
-            }
+            return localProfile;
         }
+
 
         return null;
     }
+
 }
 
+
 // =========================================
-// UPDATE PROFILE TITLE
+// POPULATE PROFILE
 // =========================================
 
-function updateProfileTitle(profile) {
+function populateProfile(
+    profile
+) {
 
-    if (!profile) {
+    if (
+        !profile
+    ) {
+
         return;
     }
 
 
-    const name =
-        profile.name ||
-        "Professional Profile";
+    // =====================================
+    // NORMALIZE FIELD NAMES
+    // =====================================
+
+    normalizeProfileFields(
+        profile
+    );
 
 
-    document.title =
-        `${name} | Campus2Career`;
+    // =====================================
+    // TEXT FIELDS
+    // =====================================
+
+    fields.forEach(
+        field => {
+
+            const edit =
+                document.getElementById(
+                    field.edit
+                );
+
+            const view =
+                document.getElementById(
+                    field.view
+                );
+
+
+            if (
+                !edit &&
+                !view
+            ) {
+
+                return;
+            }
+
+
+            const value =
+                profile[
+                    field.key
+                ];
+
+
+            const text =
+                value !== undefined &&
+                value !== null
+                    ? String(value)
+                    : "";
+
+
+            if (
+                edit
+            ) {
+
+                edit.value =
+                    text;
+            }
+
+
+            if (
+                view
+            ) {
+
+                view.textContent =
+                    text;
+            }
+
+        }
+    );
+
+
+    // =====================================
+    // BACKEND CONTROLLED STATS
+    // =====================================
+
+    updateBackendControlledStats(
+        profile
+    );
+
+
+    // =====================================
+    // PROFILE IMAGE
+    // =====================================
+
+    const profilePicture =
+        profile.profilePic;
+
+
+    if (
+        profilePicture
+    ) {
+
+        setProfileImage(
+            "profilePic",
+            "dpPlaceholder",
+            profilePicture
+        );
+
+    } else {
+
+        hideProfileImage();
+    }
+
+
+    // =====================================
+    // BANNER
+    // =====================================
+
+    const bannerImage =
+        profile.bannerImage;
+
+
+    const banner =
+        document.getElementById(
+            "bannerImage"
+        );
+
+
+    if (
+        banner
+    ) {
+
+        if (
+            bannerImage
+        ) {
+
+            banner.src =
+                bannerImage;
+
+            banner.style.display =
+                "block";
+
+        } else {
+
+            banner.removeAttribute(
+                "src"
+            );
+
+            banner.style.display =
+                "none";
+        }
+    }
+
+
+    // =====================================
+    // ACHIEVEMENT IMAGES
+    // =====================================
+
+    for (
+        let i = 1;
+        i <= 6;
+        i++
+    ) {
+
+        const image =
+            document.getElementById(
+                `achievement-img-${i}`
+            );
+
+
+        const value =
+            profile[
+                `achievement_${i}`
+            ];
+
+
+        if (
+            image &&
+            value
+        ) {
+
+            image.src =
+                value;
+
+            image.style.display =
+                "block";
+
+        } else if (
+            image
+        ) {
+
+            image.removeAttribute(
+                "src"
+            );
+
+            image.style.display =
+                "none";
+        }
+    }
+
+}
+
+
+// =========================================
+// NORMALIZE BACKEND FIELD NAMES
+// =========================================
+
+function normalizeProfileFields(
+    profile
+) {
+
+    // -------------------------------------
+    // PROFILE PICTURE
+    // -------------------------------------
+
+    if (
+        !profile.profilePic &&
+        profile.profile_picture
+    ) {
+
+        profile.profilePic =
+            profile.profile_picture;
+    }
+
+
+    // -------------------------------------
+    // BANNER
+    // -------------------------------------
+
+    if (
+        !profile.bannerImage &&
+        profile.banner_image
+    ) {
+
+        profile.bannerImage =
+            profile.banner_image;
+    }
+
+
+    if (
+        !profile.bannerImage &&
+        profile.banner
+    ) {
+
+        profile.bannerImage =
+            profile.banner;
+    }
+
+
+    // -------------------------------------
+    // SCORE
+    // -------------------------------------
+
+    if (
+        profile.testScore === undefined &&
+        profile.test_score !== undefined
+    ) {
+
+        profile.testScore =
+            profile.test_score;
+    }
+
+
+    // -------------------------------------
+    // RATING
+    // -------------------------------------
+
+    if (
+        profile.testRating === undefined &&
+        profile.test_rating !== undefined
+    ) {
+
+        profile.testRating =
+            profile.test_rating;
+    }
+
+
+    // -------------------------------------
+    // CONNECTIONS
+    // -------------------------------------
+
+    if (
+        profile.connections === undefined &&
+        profile.connection_count !== undefined
+    ) {
+
+        profile.connections =
+            profile.connection_count;
+    }
+
+
+    // -------------------------------------
+    // FOLLOWERS
+    // -------------------------------------
+
+    if (
+        profile.followers === undefined &&
+        profile.follower_count !== undefined
+    ) {
+
+        profile.followers =
+            profile.follower_count;
+    }
+
+
+    // -------------------------------------
+    // READINESS SCORE
+    // -------------------------------------
+
+    if (
+        profile.readinessScore === undefined &&
+        profile.readiness_score !== undefined
+    ) {
+
+        profile.readinessScore =
+            profile.readiness_score;
+    }
+
 }
 
 
@@ -2383,30 +3299,35 @@ function clearProfileFields() {
                 );
 
 
-            if (edit) {
-
-                edit.value =
-                    "";
-            }
-
-
             const view =
                 document.getElementById(
                     field.view
                 );
 
 
-            if (view) {
+            if (
+                edit
+            ) {
+
+                edit.value =
+                    "";
+            }
+
+
+            if (
+                view
+            ) {
 
                 view.textContent =
                     "";
             }
+
         }
     );
 
 
     // -------------------------------------
-    // Clear backend-controlled fields
+    // Backend values
     // -------------------------------------
 
     const connectionsView =
@@ -2414,9 +3335,27 @@ function clearProfileFields() {
             "view-connections"
         );
 
-    if (connectionsView) {
+
+    if (
+        connectionsView
+    ) {
 
         connectionsView.textContent =
+            "0";
+    }
+
+
+    const followersView =
+        document.getElementById(
+            "view-followers"
+        );
+
+
+    if (
+        followersView
+    ) {
+
+        followersView.textContent =
             "0";
     }
 
@@ -2426,7 +3365,10 @@ function clearProfileFields() {
             "view-rating"
         );
 
-    if (ratingView) {
+
+    if (
+        ratingView
+    ) {
 
         ratingView.textContent =
             "Not Rated";
@@ -2438,14 +3380,52 @@ function clearProfileFields() {
             "view-grade"
         );
 
-    if (gradeView) {
+
+    if (
+        gradeView
+    ) {
 
         gradeView.textContent =
             "Not Available";
     }
 
 
+    const testScoreView =
+        document.getElementById(
+            "view-test-score"
+        );
+
+
+    if (
+        testScoreView
+    ) {
+
+        testScoreView.textContent =
+            "Not tested";
+    }
+
+
     hideProfileImage();
+
+
+    const banner =
+        document.getElementById(
+            "bannerImage"
+        );
+
+
+    if (
+        banner
+    ) {
+
+        banner.removeAttribute(
+            "src"
+        );
+
+        banner.style.display =
+            "none";
+    }
+
 }
 
 
@@ -2471,25 +3451,51 @@ function setProfileImage(
         );
 
 
-    if (image && source) {
+    if (
+        image &&
+        source
+    ) {
 
         image.src =
             source;
+
 
         image.style.display =
             editMode
                 ? "none"
                 : "block";
+
+
+        image.onerror =
+            () => {
+
+                image.style.display =
+                    "none";
+
+
+                if (
+                    placeholder
+                ) {
+
+                    placeholder.style.display =
+                        editMode
+                            ? "none"
+                            : "flex";
+                }
+            };
     }
 
 
-    if (placeholder) {
+    if (
+        placeholder
+    ) {
 
         placeholder.style.display =
             editMode
                 ? "none"
                 : "flex";
     }
+
 }
 
 
@@ -2511,7 +3517,9 @@ function hideProfileImage() {
         );
 
 
-    if (image) {
+    if (
+        image
+    ) {
 
         image.removeAttribute(
             "src"
@@ -2522,18 +3530,21 @@ function hideProfileImage() {
     }
 
 
-    if (placeholder) {
+    if (
+        placeholder
+    ) {
 
         placeholder.style.display =
             editMode
                 ? "none"
                 : "flex";
     }
+
 }
 
 
 // =========================================
-// LOCAL PROFILE
+// LOCAL PROFILE FALLBACK
 // =========================================
 
 function loadLocalProfile() {
@@ -2544,150 +3555,57 @@ function loadLocalProfile() {
         );
 
 
-    if (!saved) {
+    if (
+        !saved
+    ) {
 
-        updateProfileCompletion();
-
-        return;
+        return null;
     }
 
 
     try {
 
         const profile =
-            JSON.parse(saved);
+            JSON.parse(
+                saved
+            );
+
+
+        if (
+            !profile ||
+            typeof profile !== "object"
+        ) {
+
+            return null;
+        }
 
 
         currentProfile =
             profile;
 
 
-        fields.forEach(
-            field => {
-
-                const edit =
-                    document.getElementById(
-                        field.edit
-                    );
-
-
-                const view =
-                    document.getElementById(
-                        field.view
-                    );
-
-
-                if (!edit) {
-                    return;
-                }
-
-
-                const value =
-                    profile[
-                        field.key
-                    ];
-
-
-                if (
-                    value !== undefined &&
-                    value !== null
-                ) {
-
-                    edit.value =
-                        String(value);
-
-
-                    if (view) {
-
-                        view.textContent =
-                            String(value);
-                    }
-                }
-            }
-        );
-
-
-        // ---------------------------------
-        // Restore backend fields from
-        // locally saved server response.
-        // ---------------------------------
-
-        updateBackendControlledStats(
+        populateProfile(
             profile
         );
 
 
-        // ---------------------------------
-        // Profile image
-        // ---------------------------------
-
-        if (profile.profilePic) {
-
-            setProfileImage(
-                "profilePic",
-                "dpPlaceholder",
-                profile.profilePic
-            );
-        }
-
-
-        // ---------------------------------
-        // Banner
-        // ---------------------------------
-
-        if (profile.bannerImage) {
-
-            const banner =
-                document.getElementById(
-                    "bannerImage"
-                );
-
-
-            if (banner) {
-
-                banner.src =
-                    profile.bannerImage;
-
-                banner.style.display =
-                    "block";
-            }
-        }
-
-
-        // ---------------------------------
-        // Achievement images
-        // ---------------------------------
-
-        for (
-            let i = 1;
-            i <= 6;
-            i++
-        ) {
-
-            const image =
-                document.getElementById(
-                    `achievement-img-${i}`
-                );
-
-
-            const value =
-                profile[
-                    `achievement_${i}`
-                ];
-
-
-            if (
-                image &&
-                value
-            ) {
-
-                image.src =
-                    value;
-            }
-        }
+        configureProfileAccess();
 
 
         updateProfileCompletion();
+
+
+        updateProfileTitle(
+            profile
+        );
+
+
+        console.warn(
+            "Using locally cached profile."
+        );
+
+
+        return profile;
 
 
     } catch (error) {
@@ -2696,7 +3614,16 @@ function loadLocalProfile() {
             "LOCAL PROFILE ERROR:",
             error
         );
+
+
+        localStorage.removeItem(
+            "userProfile"
+        );
+
+
+        return null;
     }
+
 }
 
 
@@ -2724,7 +3651,10 @@ function setupProfilePicture() {
         );
 
 
-    if (!input) {
+    if (
+        !input
+    ) {
+
         return;
     }
 
@@ -2749,7 +3679,10 @@ function setupProfilePicture() {
                 event.target.files[0];
 
 
-            if (!file) {
+            if (
+                !file
+            ) {
+
                 return;
             }
 
@@ -2764,8 +3697,10 @@ function setupProfilePicture() {
                     "Please select an image file."
                 );
 
+
                 input.value =
                     "";
+
 
                 return;
             }
@@ -2778,7 +3713,9 @@ function setupProfilePicture() {
             reader.onload =
                 readerEvent => {
 
-                    if (image) {
+                    if (
+                        image
+                    ) {
 
                         image.src =
                             readerEvent.target.result;
@@ -2788,16 +3725,13 @@ function setupProfilePicture() {
                     }
 
 
-                    if (placeholder) {
+                    if (
+                        placeholder
+                    ) {
 
                         placeholder.style.display =
                             "none";
                     }
-
-
-                    console.log(
-                        "Profile image selected."
-                    );
                 };
 
 
@@ -2808,6 +3742,7 @@ function setupProfilePicture() {
                         "Unable to read the selected image."
                     );
 
+
                     input.value =
                         "";
                 };
@@ -2816,8 +3751,10 @@ function setupProfilePicture() {
             reader.readAsDataURL(
                 file
             );
+
         }
     );
+
 }
 
 
@@ -2833,7 +3770,10 @@ function setupBannerUpload() {
         );
 
 
-    if (!input) {
+    if (
+        !input
+    ) {
+
         return;
     }
 
@@ -2858,7 +3798,10 @@ function setupBannerUpload() {
                 event.target.files[0];
 
 
-            if (!file) {
+            if (
+                !file
+            ) {
+
                 return;
             }
 
@@ -2873,8 +3816,10 @@ function setupBannerUpload() {
                     "Please select an image file."
                 );
 
+
                 input.value =
                     "";
+
 
                 return;
             }
@@ -2893,7 +3838,9 @@ function setupBannerUpload() {
                         );
 
 
-                    if (banner) {
+                    if (
+                        banner
+                    ) {
 
                         banner.src =
                             readerEvent.target.result;
@@ -2902,10 +3849,6 @@ function setupBannerUpload() {
                             "block";
                     }
 
-
-                    console.log(
-                        "Banner image selected."
-                    );
                 };
 
 
@@ -2916,6 +3859,7 @@ function setupBannerUpload() {
                         "Unable to read the selected banner image."
                     );
 
+
                     input.value =
                         "";
                 };
@@ -2924,8 +3868,10 @@ function setupBannerUpload() {
             reader.readAsDataURL(
                 file
             );
+
         }
     );
+
 }
 
 
@@ -2967,7 +3913,10 @@ function setupAchievementUploads() {
                         event.target.files[0];
 
 
-                    if (!file) {
+                    if (
+                        !file
+                    ) {
+
                         return;
                     }
 
@@ -2982,8 +3931,10 @@ function setupAchievementUploads() {
                             "Please select an image file."
                         );
 
+
                         input.value =
                             "";
+
 
                         return;
                     }
@@ -3002,7 +3953,9 @@ function setupAchievementUploads() {
                                 );
 
 
-                            if (image) {
+                            if (
+                                image
+                            ) {
 
                                 image.src =
                                     readerEvent.target.result;
@@ -3010,6 +3963,7 @@ function setupAchievementUploads() {
                                 image.style.display =
                                     "block";
                             }
+
                         };
 
 
@@ -3020,6 +3974,7 @@ function setupAchievementUploads() {
                                 "Unable to read the achievement image."
                             );
 
+
                             input.value =
                                 "";
                         };
@@ -3028,25 +3983,24 @@ function setupAchievementUploads() {
                     reader.readAsDataURL(
                         file
                     );
+
                 }
             );
+
         }
     );
+
 }
 
 
 // =========================================
 // PROFILE COMPLETION
 // =========================================
-//
-// Backend controlled fields are NOT counted
-// as editable profile completion fields.
-//
-// =========================================
 
 function updateProfileCompletion() {
 
-    let completed = 0;
+    let completed =
+        0;
 
 
     fields.forEach(
@@ -3065,6 +4019,7 @@ function updateProfileCompletion() {
 
                 completed++;
             }
+
         }
     );
 
@@ -3096,28 +4051,31 @@ function updateProfileCompletion() {
         );
 
 
-    if (progress) {
+    if (
+        progress
+    ) {
 
         progress.style.width =
             `${percentage}%`;
 
+
         progress.setAttribute(
             "aria-valuenow",
-            String(percentage)
+            String(
+                percentage
+            )
         );
     }
 
 
-    if (completionText) {
+    if (
+        completionText
+    ) {
 
         completionText.textContent =
             `${percentage}%`;
     }
 
-
-    // -------------------------------------
-    // Additional IDs/classes if present
-    // -------------------------------------
 
     document
         .querySelectorAll(
@@ -3144,15 +4102,11 @@ function updateProfileCompletion() {
             }
         );
 
-
-    console.log(
-        `Profile completion: ${percentage}%`
-    );
 }
 
 
 // =========================================
-// AUTO RESIZE TEXTAREAS
+// AUTO RESIZE
 // =========================================
 
 function setupAutoResize() {
@@ -3164,10 +4118,9 @@ function setupAutoResize() {
         .forEach(
             textarea => {
 
-                // Initial resize
-
                 textarea.style.height =
                     "auto";
+
 
                 textarea.style.height =
                     `${textarea.scrollHeight}px`;
@@ -3180,19 +4133,23 @@ function setupAutoResize() {
                         textarea.style.height =
                             "auto";
 
+
                         textarea.style.height =
                             `${textarea.scrollHeight}px`;
+
 
                         updateProfileCompletion();
                     }
                 );
+
             }
         );
+
 }
 
 
 // =========================================
-// LIVE PROFILE COMPLETION UPDATES
+// COMPLETION LISTENERS
 // =========================================
 
 function setupCompletionListeners() {
@@ -3204,15 +4161,13 @@ function setupCompletionListeners() {
         .forEach(
             input => {
 
-                // Never use backend controlled
-                // fields for manual editing.
-
                 if (
                     input.id === "edit-connections" ||
                     input.id === "edit-followers" ||
                     input.id === "edit-rating" ||
                     input.id === "edit-grade"
                 ) {
+
                     return;
                 }
 
@@ -3222,27 +4177,28 @@ function setupCompletionListeners() {
                     updateProfileCompletion
                 );
 
+
                 input.addEventListener(
                     "change",
                     updateProfileCompletion
                 );
+
             }
         );
+
 }
 
 
 // =========================================
-// CANCEL EDIT SAFELY
-// =========================================
-//
-// Re-load backend/local profile before leaving
-// edit mode so unsaved changes disappear.
-//
+// CANCEL EDIT
 // =========================================
 
 async function cancelEditMode() {
 
-    if (!editMode) {
+    if (
+        !editMode
+    ) {
+
         return;
     }
 
@@ -3256,109 +4212,41 @@ async function cancelEditMode() {
     );
 
 
-    const uploadSection =
-        document.getElementById(
-            "profileUploadControls"
-        );
+    // =====================================
+    // RESTORE LAST SERVER PROFILE
+    // =====================================
 
+    if (
+        currentProfile
+    ) {
 
-    if (uploadSection) {
-
-        uploadSection.classList.remove(
-            "show-profile-uploads"
-        );
-
-        uploadSection.style.display =
-            "none";
-    }
-
-
-    const saveBtn =
-        document.getElementById(
-            "saveBtn"
-        );
-
-
-    if (saveBtn) {
-
-        saveBtn.style.display =
-            "none";
-    }
-
-
-    const editBtn =
-        document.getElementById(
-            "toggleEditBtn"
-        );
-
-
-    if (editBtn) {
-
-        editBtn.textContent =
-            "Edit Profile";
-    }
-
-
-    // -------------------------------------
-    // Restore most recently loaded profile
-    // -------------------------------------
-
-    if (currentProfile) {
-
-        fields.forEach(
-            field => {
-
-                const edit =
-                    document.getElementById(
-                        field.edit
-                    );
-
-
-                const view =
-                    document.getElementById(
-                        field.view
-                    );
-
-
-                const value =
-                    currentProfile[field.key];
-
-
-                if (edit) {
-
-                    edit.value =
-                        value !== undefined &&
-                        value !== null
-                            ? String(value)
-                            : "";
-                }
-
-
-                if (view) {
-
-                    view.textContent =
-                        value !== undefined &&
-                        value !== null
-                            ? String(value)
-                            : "";
-                }
-            }
-        );
-
-
-        // Restore backend statistics
-
-        updateBackendControlledStats(
+        populateProfile(
             currentProfile
         );
     }
 
 
-    configureProfileAccess();
-
     hidePendingUploadControls();
 
+
+    configureProfileAccess();
+
+
     updateProfileCompletion();
+
+
+    // =====================================
+    // RELOAD FROM SERVER
+    // =====================================
+
+    if (
+        isOwnProfile &&
+        isAuthenticated()
+    ) {
+
+        await refreshOwnProfile();
+    }
+
 }
 
 
@@ -3380,7 +4268,9 @@ function hidePendingUploadControls() {
         );
 
 
-    if (profilePicInput) {
+    if (
+        profilePicInput
+    ) {
 
         profilePicInput.value =
             "";
@@ -3393,7 +4283,9 @@ function hidePendingUploadControls() {
     }
 
 
-    if (bannerUpload) {
+    if (
+        bannerUpload
+    ) {
 
         bannerUpload.value =
             "";
@@ -3421,6 +4313,7 @@ function hidePendingUploadControls() {
 
                 input.disabled =
                     true;
+
             }
         );
 
@@ -3431,28 +4324,24 @@ function hidePendingUploadControls() {
         );
 
 
-    if (uploadSection) {
+    if (
+        uploadSection
+    ) {
 
         uploadSection.classList.remove(
             "show-profile-uploads"
         );
 
+
         uploadSection.style.display =
             "none";
     }
+
 }
 
 
 // =========================================
-// IMPROVED EDIT HANDLER
-// =========================================
-//
-// If currently editing:
-//      Cancel
-//
-// Otherwise:
-//      Enter edit mode
-//
+// IMPROVED EDIT BUTTON
 // =========================================
 
 function handleEditButtonClick() {
@@ -3469,6 +4358,7 @@ function handleEditButtonClick() {
 
 
     toggleEditMode();
+
 }
 
 
@@ -3480,9 +4370,9 @@ document.addEventListener(
     "keydown",
     event => {
 
-        // ---------------------------------
-        // Ctrl + S
-        // ---------------------------------
+        // =================================
+        // CTRL + S
+        // =================================
 
         if (
             event.ctrlKey &&
@@ -3499,12 +4389,13 @@ document.addEventListener(
 
                 saveProfile();
             }
+
         }
 
 
-        // ---------------------------------
-        // Escape
-        // ---------------------------------
+        // =================================
+        // ESCAPE
+        // =================================
 
         if (
             event.key === "Escape" &&
@@ -3513,8 +4404,10 @@ document.addEventListener(
 
             event.preventDefault();
 
+
             cancelEditMode();
         }
+
     }
 );
 
@@ -3525,26 +4418,13 @@ document.addEventListener(
 
 function handleResponsiveLayout() {
 
-    if (
+    document.body.classList.toggle(
+        "mobile-layout",
         window.innerWidth < 768
-    ) {
+    );
 
-        document.body.classList.add(
-            "mobile-layout"
-        );
-
-    } else {
-
-        document.body.classList.remove(
-            "mobile-layout"
-        );
-    }
 }
 
-
-// =========================================
-// RESPONSIVE EVENT
-// =========================================
 
 window.addEventListener(
     "resize",
@@ -3561,21 +4441,38 @@ document.addEventListener(
     async () => {
 
         console.log(
+            "========================================="
+        );
+
+
+        console.log(
             "Profile page initializing..."
         );
 
 
-        // ---------------------------------
-        // Start in view mode
-        // ---------------------------------
+        console.log(
+            "Displayed user ID:",
+            userId
+        );
+
+
+        console.log(
+            "Own profile:",
+            isOwnProfile
+        );
+
+
+        // =================================
+        // START IN VIEW MODE
+        // =================================
 
         editMode =
             false;
 
 
-        // ---------------------------------
-        // Hide save button
-        // ---------------------------------
+        // =================================
+        // HIDE SAVE BUTTON
+        // =================================
 
         const saveBtn =
             document.getElementById(
@@ -3583,77 +4480,72 @@ document.addEventListener(
             );
 
 
-        if (saveBtn) {
+        if (
+            saveBtn
+        ) {
 
             saveBtn.style.display =
                 "none";
         }
 
 
-        // ---------------------------------
-        // Hide edit inputs
-        // ---------------------------------
+        // =================================
+        // HIDE EDIT INPUTS
+        // =================================
 
-        const editInputs =
-            document.querySelectorAll(
+        document
+            .querySelectorAll(
                 ".edit-input"
+            )
+            .forEach(
+                input => {
+
+                    if (
+                        input.id === "edit-connections" ||
+                        input.id === "edit-followers" ||
+                        input.id === "edit-rating" ||
+                        input.id === "edit-grade"
+                    ) {
+
+                        input.style.display =
+                            "none";
+
+                        input.disabled =
+                            true;
+
+                        return;
+                    }
+
+
+                    if (
+                        input.classList.contains(
+                            "achievement-upload"
+                        )
+                    ) {
+
+                        input.style.display =
+                            "none";
+
+                        input.disabled =
+                            true;
+
+                        return;
+                    }
+
+
+                    input.style.display =
+                        "none";
+
+                    input.disabled =
+                        true;
+
+                }
             );
 
 
-        editInputs.forEach(
-            input => {
-
-                // Backend-controlled fields
-                // must never be visible.
-
-                if (
-                    input.id === "edit-connections" ||
-                    input.id === "edit-followers" ||
-                    input.id === "edit-rating" ||
-                    input.id === "edit-grade"
-                ) {
-
-                    input.style.display =
-                        "none";
-
-                    input.disabled =
-                        true;
-
-                    return;
-                }
-
-
-                // Achievement uploads are handled
-                // independently.
-
-                if (
-                    input.classList.contains(
-                        "achievement-upload"
-                    )
-                ) {
-
-                    input.style.display =
-                        "none";
-
-                    input.disabled =
-                        true;
-
-                    return;
-                }
-
-
-                input.style.display =
-                    "none";
-
-                input.disabled =
-                    true;
-            }
-        );
-
-
-        // ---------------------------------
-        // Hide upload section
-        // ---------------------------------
+        // =================================
+        // HIDE UPLOAD SECTION
+        // =================================
 
         const uploadSection =
             document.getElementById(
@@ -3661,34 +4553,49 @@ document.addEventListener(
             );
 
 
-        if (uploadSection) {
+        if (
+            uploadSection
+        ) {
 
             uploadSection.classList.remove(
                 "show-profile-uploads"
             );
+
 
             uploadSection.style.display =
                 "none";
         }
 
 
-        // ---------------------------------
-        // Configure owner/viewer access
-        // ---------------------------------
+        // =================================
+        // CONFIGURE ACCESS
+        // =================================
 
         configureProfileAccess();
 
 
-        // ---------------------------------
-        // Load correct profile
-        // ---------------------------------
+        // =================================
+        // LOAD PROFILE
+        // =================================
 
         await loadProfile();
-      
 
-        // ---------------------------------
-        // Setup uploads
-        // ---------------------------------
+
+        // =================================
+        // LOAD INDUSTRY READINESS
+        // =================================
+
+        if (
+            isOwnProfile
+        ) {
+
+            await loadIndustryReadinessScore();
+        }
+
+
+        // =================================
+        // SETUP UPLOADS
+        // =================================
 
         setupProfilePicture();
 
@@ -3697,9 +4604,9 @@ document.addEventListener(
         setupAchievementUploads();
 
 
-        // ---------------------------------
-        // Other functionality
-        // ---------------------------------
+        // =================================
+        // OTHER UI
+        // =================================
 
         setupAutoResize();
 
@@ -3708,25 +4615,16 @@ document.addEventListener(
         handleResponsiveLayout();
 
 
-        // ---------------------------------
-        // Completion
-        // ---------------------------------
+        // =================================
+        // FINAL UPDATE
+        // =================================
 
         updateProfileCompletion();
 
 
-        // ---------------------------------
-        // Final access configuration
-        // ---------------------------------
-
-        configureProfileAccess();
-
-
-        // ---------------------------------
-        // Backend statistics
-        // ---------------------------------
-
-        if (currentProfile) {
+        if (
+            currentProfile
+        ) {
 
             updateBackendControlledStats(
                 currentProfile
@@ -3734,9 +4632,18 @@ document.addEventListener(
         }
 
 
+        configureProfileAccess();
+
+
         console.log(
             "Profile page ready."
         );
+
+
+        console.log(
+            "========================================="
+        );
+
     }
 );
 
@@ -3763,9 +4670,14 @@ window.saveProfile =
 window.loadProfile =
     loadProfile;
 
+window.refreshOwnProfile =
+    refreshOwnProfile;
+
 window.refreshBackendControlledStats =
     refreshBackendControlledStats;
 
 window.updateBackendControlledStats =
     updateBackendControlledStats;
 
+window.loadIndustryReadinessScore =
+    loadIndustryReadinessScore;

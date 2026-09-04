@@ -1,4 +1,3 @@
-
 // =========================================
 // CAMPUS2CAREER LOGIN JAVASCRIPT
 // JWT AUTHENTICATION
@@ -11,8 +10,11 @@ console.log("Backend.js loaded");
 // API URL
 // =========================================
 
+const API_BASE_URL =
+    "https://campus2career-0pi8.onrender.com";
+
 const API_URL =
-   "https://campus2career-0pi8.onrender.com/api/login";
+    `${API_BASE_URL}/api/login`;
 
 
 // =========================================
@@ -35,10 +37,6 @@ const EMAIL_KEY =
 // =========================================
 // MAIN PORTAL PAGE
 // =========================================
-//
-// Change this filename if your main portal
-// is named differently.
-// =========================================
 
 const MAIN_PORTAL =
     "MainPortal.html";
@@ -52,6 +50,13 @@ document.addEventListener(
     "DOMContentLoaded",
     function () {
 
+        console.log("Login page initialized.");
+
+
+        // =====================================
+        // GET FORM ELEMENTS
+        // =====================================
+
         const loginForm =
             document.getElementById(
                 "loginForm"
@@ -64,7 +69,7 @@ document.addEventListener(
 
 
         // =====================================
-        // CHECK HTML
+        // CHECK HTML ELEMENTS
         // =====================================
 
         if (!loginForm) {
@@ -74,7 +79,6 @@ document.addEventListener(
             );
 
             return;
-
         }
 
 
@@ -85,7 +89,6 @@ document.addEventListener(
             );
 
             return;
-
         }
 
 
@@ -100,9 +103,9 @@ document.addEventListener(
                 event.preventDefault();
 
 
-                // ---------------------------------
-                // Get input fields
-                // ---------------------------------
+                // =================================
+                // GET INPUT ELEMENTS
+                // =================================
 
                 const emailElement =
                     document.getElementById(
@@ -120,19 +123,22 @@ document.addEventListener(
                     !passwordElement
                 ) {
 
+                    console.error(
+                        "Login input fields are missing."
+                    );
+
                     showMessage(
                         "Login fields are missing.",
                         "red"
                     );
 
                     return;
-
                 }
 
 
-                // ---------------------------------
-                // Read values
-                // ---------------------------------
+                // =================================
+                // GET INPUT VALUES
+                // =================================
 
                 const email =
                     emailElement.value
@@ -143,13 +149,13 @@ document.addEventListener(
                     passwordElement.value;
 
 
-                // ---------------------------------
-                // Clear previous message
-                // ---------------------------------
+                // =================================
+                // CLEAR PREVIOUS MESSAGE
+                // =================================
 
                 showMessage(
                     "",
-                    "red"
+                    ""
                 );
 
 
@@ -168,15 +174,14 @@ document.addEventListener(
                         "red"
                     );
 
-                    return;
+                    emailElement.focus();
 
+                    return;
                 }
 
 
                 if (
-                    !emailPattern.test(
-                        email
-                    )
+                    !emailPattern.test(email)
                 ) {
 
                     showMessage(
@@ -184,8 +189,9 @@ document.addEventListener(
                         "red"
                     );
 
-                    return;
+                    emailElement.focus();
 
+                    return;
                 }
 
 
@@ -200,8 +206,9 @@ document.addEventListener(
                         "red"
                     );
 
-                    return;
+                    passwordElement.focus();
 
+                    return;
                 }
 
 
@@ -212,8 +219,9 @@ document.addEventListener(
                         "red"
                     );
 
-                    return;
+                    passwordElement.focus();
 
+                    return;
                 }
 
 
@@ -223,6 +231,9 @@ document.addEventListener(
 
                 signInBtn.disabled =
                     true;
+
+                const originalButtonText =
+                    signInBtn.textContent;
 
                 signInBtn.textContent =
                     "Signing In...";
@@ -237,7 +248,7 @@ document.addEventListener(
                 try {
 
                     // =================================
-                    // SEND LOGIN REQUEST
+                    // CHECK API URL
                     // =================================
 
                     console.log(
@@ -246,6 +257,10 @@ document.addEventListener(
                     );
 
 
+                    // =================================
+                    // SEND LOGIN REQUEST
+                    // =================================
+
                     const response =
                         await fetch(
                             API_URL,
@@ -253,32 +268,24 @@ document.addEventListener(
                                 method: "POST",
 
                                 headers: {
-
                                     "Content-Type":
                                         "application/json",
 
                                     "Accept":
                                         "application/json"
-
                                 },
 
                                 body:
                                     JSON.stringify({
-
-                                        email:
-                                            email,
-
-                                        password:
-                                            password
-
+                                        email: email,
+                                        password: password
                                     })
-
                             }
                         );
 
 
                     // =================================
-                    // READ SERVER RESPONSE
+                    // READ RESPONSE
                     // =================================
 
                     const responseText =
@@ -286,16 +293,19 @@ document.addEventListener(
 
 
                     console.log(
-                        "HTTP status:",
+                        "Login HTTP status:",
                         response.status
                     );
 
-
                     console.log(
-                        "Server response:",
+                        "Login server response:",
                         responseText
                     );
 
+
+                    // =================================
+                    // PARSE JSON RESPONSE
+                    // =================================
 
                     let data = {};
 
@@ -315,36 +325,81 @@ document.addEventListener(
                         } catch (jsonError) {
 
                             console.error(
-                                "Invalid JSON from server:",
+                                "Invalid JSON returned by server:",
+                                jsonError
+                            );
+
+                            console.error(
+                                "Raw server response:",
                                 responseText
                             );
 
-
                             throw new Error(
-                                "The server returned HTML/text instead of JSON."
+                                "The server returned an invalid response."
                             );
-
                         }
-
                     }
 
 
                     // =================================
-                    // HANDLE SERVER ERROR
+                    // HANDLE HTTP ERRORS
                     // =================================
 
                     if (!response.ok) {
 
+                        let errorMessage =
+                            "Invalid email or password.";
+
+
+                        if (
+                            data &&
+                            typeof data.error === "string" &&
+                            data.error.trim() !== ""
+                        ) {
+
+                            errorMessage =
+                                data.error;
+                        }
+
+                        else if (
+                            data &&
+                            typeof data.message === "string" &&
+                            data.message.trim() !== ""
+                        ) {
+
+                            errorMessage =
+                                data.message;
+                        }
+
+                        else if (
+                            data &&
+                            typeof data.detail === "string" &&
+                            data.detail.trim() !== ""
+                        ) {
+
+                            errorMessage =
+                                data.detail;
+                        }
+
+
                         throw new Error(
-
-                            data.error ||
-
-                            data.detail ||
-
-                            "Invalid email or password."
-
+                            errorMessage
                         );
+                    }
 
+
+                    // =================================
+                    // VERIFY LOGIN SUCCESS
+                    // =================================
+
+                    if (
+                        !data ||
+                        typeof data !== "object"
+                    ) {
+
+                        throw new Error(
+                            "The server returned an invalid login response."
+                        );
                     }
 
 
@@ -354,15 +409,18 @@ document.addEventListener(
 
                     if (
                         !data.token ||
-                        typeof data.token !==
-                        "string" ||
+                        typeof data.token !== "string" ||
                         data.token.trim() === ""
                     ) {
+
+                        console.error(
+                            "Login response does not contain a valid token:",
+                            data
+                        );
 
                         throw new Error(
                             "Login succeeded, but the server did not return an authentication token."
                         );
-
                     }
 
 
@@ -371,21 +429,44 @@ document.addEventListener(
                     // =================================
 
                     if (
-                        data.userId ===
-                        undefined ||
-                        data.userId ===
-                        null
+                        data.userId === undefined ||
+                        data.userId === null ||
+                        String(data.userId).trim() === ""
                     ) {
+
+                        console.error(
+                            "Login response does not contain userId:",
+                            data
+                        );
 
                         throw new Error(
                             "Login succeeded, but the server did not return a user ID."
                         );
-
                     }
 
 
                     // =================================
-                    // CLEAR OLD LOGIN INFORMATION
+                    // PREPARE USER DATA
+                    // =================================
+
+                    const userId =
+                        String(
+                            data.userId
+                        );
+
+                    const username =
+                        data.username
+                            ? String(data.username)
+                            : "";
+
+                    const loginEmail =
+                        data.email
+                            ? String(data.email)
+                            : email;
+
+
+                    // =================================
+                    // CLEAR OLD LOGIN DATA
                     // =================================
 
                     localStorage.removeItem(
@@ -406,7 +487,7 @@ document.addEventListener(
 
 
                     // =================================
-                    // STORE JWT
+                    // STORE JWT TOKEN
                     // =================================
 
                     localStorage.setItem(
@@ -421,9 +502,7 @@ document.addEventListener(
 
                     localStorage.setItem(
                         USER_ID_KEY,
-                        String(
-                            data.userId
-                        )
+                        userId
                     );
 
 
@@ -431,15 +510,12 @@ document.addEventListener(
                     // STORE USERNAME
                     // =================================
 
-                    if (
-                        data.username
-                    ) {
+                    if (username !== "") {
 
                         localStorage.setItem(
                             USERNAME_KEY,
-                            data.username
+                            username
                         );
-
                     }
 
 
@@ -449,13 +525,12 @@ document.addEventListener(
 
                     localStorage.setItem(
                         EMAIL_KEY,
-                        data.email ||
-                        email
+                        loginEmail
                     );
 
 
                     // =================================
-                    // VERIFY STORAGE
+                    // VERIFY LOCAL STORAGE
                     // =================================
 
                     const savedToken =
@@ -463,32 +538,59 @@ document.addEventListener(
                             TOKEN_KEY
                         );
 
+                    const savedUserId =
+                        localStorage.getItem(
+                            USER_ID_KEY
+                        );
+
 
                     if (
-                        !savedToken
+                        !savedToken ||
+                        savedToken.trim() === ""
                     ) {
 
                         throw new Error(
                             "The authentication token could not be stored."
                         );
-
                     }
 
+
+                    if (
+                        !savedUserId ||
+                        savedUserId.trim() === ""
+                    ) {
+
+                        throw new Error(
+                            "The user ID could not be stored."
+                        );
+                    }
+
+
+                    // =================================
+                    // DEBUG INFORMATION
+                    // =================================
+
+                    console.log(
+                        "Login successful."
+                    );
 
                     console.log(
                         "JWT stored successfully."
                     );
 
-
                     console.log(
                         "Logged-in user ID:",
-                        data.userId
+                        savedUserId
                     );
-
 
                     console.log(
                         "Username:",
-                        data.username
+                        username
+                    );
+
+                    console.log(
+                        "Email:",
+                        loginEmail
                     );
 
 
@@ -505,12 +607,6 @@ document.addEventListener(
                     // =================================
                     // REDIRECT TO MAIN PORTAL
                     // =================================
-                    //
-                    // The JWT remains in localStorage
-                    // so the main portal can fetch the
-                    // logged-in user's data.
-                    //
-                    // =================================
 
                     setTimeout(
                         function () {
@@ -519,11 +615,15 @@ document.addEventListener(
                                 MAIN_PORTAL;
 
                         },
-                        1000
+                        800
                     );
 
 
                 } catch (error) {
+
+                    // =================================
+                    // LOGIN ERROR
+                    // =================================
 
                     console.error(
                         "LOGIN ERROR:",
@@ -531,23 +631,30 @@ document.addEventListener(
                     );
 
 
+                    // =================================
+                    // SHOW USER ERROR
+                    // =================================
+
                     showMessage(
                         "❌ " +
-                        error.message,
+                        (
+                            error.message ||
+                            "Unable to sign in. Please try again."
+                        ),
                         "red"
                     );
 
 
-                    // ---------------------------------
-                    // Enable login button again
-                    // ---------------------------------
+                    // =================================
+                    // ENABLE BUTTON
+                    // =================================
 
                     signInBtn.disabled =
                         false;
 
                     signInBtn.textContent =
+                        originalButtonText ||
                         "Sign In";
-
                 }
 
             }
@@ -572,23 +679,44 @@ function showMessage(
         );
 
 
+    // =====================================
+    // MESSAGE ELEMENT NOT FOUND
+    // =====================================
+
     if (!message) {
 
-        console.log(
-            text
-        );
+        if (text) {
+
+            console.log(
+                text
+            );
+        }
 
         return;
-
     }
 
+
+    // =====================================
+    // SET MESSAGE TEXT
+    // =====================================
 
     message.textContent =
         text;
 
 
-    message.style.color =
-        color;
+    // =====================================
+    // SET MESSAGE COLOR
+    // =====================================
+
+    if (color) {
+
+        message.style.color =
+            color;
+
+    } else {
+
+        message.style.color =
+            "";
+    }
 
 }
-

@@ -7006,7 +7006,301 @@ app.post(
 // ======================================================
 // DELETE POST
 // ======================================================
+// ======================================================
+// LIKE / UNLIKE POST
+// ======================================================
 
+app.post(
+    "/api/posts/:id/like",
+    authenticateToken,
+    (req, res) => {
+
+        const postId =
+            Number(
+                req.params.id
+            );
+
+        const userId =
+            Number(
+                req.user.id
+            );
+
+        // -----------------------------
+        // VALIDATE IDS
+        // -----------------------------
+
+        if (
+            !Number.isInteger(postId) ||
+            postId <= 0
+        ) {
+
+            return res.status(400).json({
+                success: false,
+                error: "Invalid post ID."
+            });
+        }
+
+        if (
+            !Number.isInteger(userId) ||
+            userId <= 0
+        ) {
+
+            return res.status(401).json({
+                success: false,
+                error: "Invalid authenticated user."
+            });
+        }
+
+        // -----------------------------
+        // CHECK POST EXISTS
+        // -----------------------------
+
+        query(
+            `
+                SELECT id
+                FROM posts
+                WHERE id = ?
+                LIMIT 1
+            `,
+            [
+                postId
+            ],
+            (
+                postError,
+                postRows
+            ) => {
+
+                if (postError) {
+
+                    console.error(
+                        "LIKE POST LOOKUP ERROR:",
+                        postError
+                    );
+
+                    return res.status(500).json({
+                        success: false,
+                        error: postError.message
+                    });
+                }
+
+                if (
+                    postRows.length === 0
+                ) {
+
+                    return res.status(404).json({
+                        success: false,
+                        error: "Post not found."
+                    });
+                }
+
+                // -----------------------------
+                // CHECK EXISTING LIKE
+                // -----------------------------
+
+                query(
+                    `
+                        SELECT id
+                        FROM post_likes
+                        WHERE post_id = ?
+                          AND user_id = ?
+                        LIMIT 1
+                    `,
+                    [
+                        postId,
+                        userId
+                    ],
+                    (
+                        likeError,
+                        likeRows
+                    ) => {
+
+                        if (likeError) {
+
+                            console.error(
+                                "CHECK EXISTING LIKE ERROR:",
+                                likeError
+                            );
+
+                            return res.status(500).json({
+                                success: false,
+                                error: likeError.message
+                            });
+                        }
+
+                        // =================================
+                        // ALREADY LIKED → UNLIKE
+                        // =================================
+
+                        if (
+                            likeRows.length > 0
+                        ) {
+
+                            query(
+                                `
+                                    DELETE FROM post_likes
+                                    WHERE post_id = ?
+                                      AND user_id = ?
+                                `,
+                                [
+                                    postId,
+                                    userId
+                                ],
+                                (
+                                    deleteError,
+                                    deleteResult
+                                ) => {
+
+                                    if (deleteError) {
+
+                                        console.error(
+                                            "UNLIKE ERROR:",
+                                            deleteError
+                                        );
+
+                                        return res.status(500).json({
+                                            success: false,
+                                            error: deleteError.message
+                                        });
+                                    }
+
+                                    query(
+                                        `
+                                            SELECT COUNT(*) AS count
+                                            FROM post_likes
+                                            WHERE post_id = ?
+                                        `,
+                                        [
+                                            postId
+                                        ],
+                                        (
+                                            countError,
+                                            countRows
+                                        ) => {
+
+                                            if (countError) {
+
+                                                console.error(
+                                                    "LIKE COUNT ERROR:",
+                                                    countError
+                                                );
+
+                                                return res.status(500).json({
+                                                    success: false,
+                                                    error: countError.message
+                                                });
+                                            }
+
+                                            return res.json({
+                                                success: true,
+                                                liked: false,
+                                                likes_count:
+                                                    Number(
+                                                        countRows[0].count
+                                                    ),
+                                                removed:
+                                                    deleteResult.affectedRows > 0
+                                            });
+
+                                        }
+                                    );
+
+                                }
+                            );
+
+                            return;
+                        }
+
+                        // =================================
+                        // NOT LIKED → ADD LIKE
+                        // =================================
+
+                        query(
+                            `
+                                INSERT INTO post_likes
+                                (
+                                    post_id,
+                                    user_id,
+                                    created_at
+                                )
+                                VALUES
+                                (
+                                    ?, ?, NOW()
+                                )
+                            `,
+                            [
+                                postId,
+                                userId
+                            ],
+                            (
+                                insertError,
+                                insertResult
+                            ) => {
+
+                                if (insertError) {
+
+                                    console.error(
+                                        "ADD LIKE ERROR:",
+                                        insertError
+                                    );
+
+                                    return res.status(500).json({
+                                        success: false,
+                                        error: insertError.message
+                                    });
+                                }
+
+                                query(
+                                    `
+                                        SELECT COUNT(*) AS count
+                                        FROM post_likes
+                                        WHERE post_id = ?
+                                    `,
+                                    [
+                                        postId
+                                    ],
+                                    (
+                                        countError,
+                                        countRows
+                                    ) => {
+
+                                        if (countError) {
+
+                                            console.error(
+                                                "LIKE COUNT ERROR:",
+                                                countError
+                                            );
+
+                                            return res.status(500).json({
+                                                success: false,
+                                                error: countError.message
+                                            });
+                                        }
+
+                                        return res.status(201).json({
+                                            success: true,
+                                            liked: true,
+                                            likes_count:
+                                                Number(
+                                                    countRows[0].count
+                                                ),
+                                            likeId:
+                                                insertResult.insertId
+                                        });
+
+                                    }
+                                );
+
+                            }
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+    }
+);
 
 // ======================================================
 // UNLIKE POST

@@ -9,7 +9,7 @@
 // =========================================
 
 const COURSES_API =
-    "http://localhost:5000/api/courses";
+    "https://campus2career-0pi8.onrender.com/api/courses";
 
 
 // =========================================

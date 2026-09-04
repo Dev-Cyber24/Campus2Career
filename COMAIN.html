@@ -1,22 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Company Portal | Campus2Career</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>
+        Company Portal | Campus2Career
+    </title>
+
+
+    <!-- =====================================================
+         GOOGLE FONT
+    ====================================================== -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet"
     >
 
-    <link rel="stylesheet" href="CoMain.css">
+
+    <!-- =====================================================
+         COMPANY PORTAL CSS
+         Actual project filename: CoMain.css
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="CoMain.css"
+    >
+
 </head>
 
+
 <body>
+
 
 <!-- =========================================================
      HEADER
@@ -26,39 +60,134 @@
 
     <div class="header-left">
 
-        <a href="company-portal.html" class="brand">
-            <img src="logo.png" alt="Campus2Career">
+
+        <!-- =================================================
+             BRAND
+             Correct project filename: COMAIN.html
+        ================================================== -->
+
+        <a
+            href="COMAIN.html"
+            class="brand"
+            aria-label="Campus2Career Company Portal"
+        >
+
+            <img
+                src="logo.png"
+                alt="Campus2Career"
+            >
+
         </a>
 
+
+        <!-- =================================================
+             GLOBAL SEARCH
+        ================================================== -->
+
         <div class="global-search">
-            <span class="search-icon">⌕</span>
+
+            <span
+                class="search-icon"
+                aria-hidden="true"
+            >
+                ⌕
+            </span>
+
             <input
-                type="text"
+                type="search"
                 id="globalSearch"
                 placeholder="Search candidates, jobs..."
                 autocomplete="off"
+                aria-label="Search candidates and jobs"
             >
+
         </div>
 
     </div>
 
+
     <div class="header-right">
 
-        <button class="header-action" id="notificationBtn" title="Notifications">
-            <span>🔔</span>
-            <span class="notification-badge">4</span>
+
+        <!-- =================================================
+             NOTIFICATIONS
+        ================================================== -->
+
+        <button
+            type="button"
+            class="header-action"
+            id="notificationBtn"
+            title="Notifications"
+            aria-label="Notifications"
+        >
+
+            <span aria-hidden="true">
+                🔔
+            </span>
+
+            <span
+                class="notification-badge"
+                aria-label="4 notifications"
+            >
+                4
+            </span>
+
         </button>
 
-        <button class="header-action" id="messagesBtn" title="Messages">
-            <span>✉</span>
-            <span class="notification-badge">2</span>
+
+        <!-- =================================================
+             MESSAGES
+        ================================================== -->
+
+        <button
+            type="button"
+            class="header-action"
+            id="messagesBtn"
+            title="Messages"
+            aria-label="Messages"
+        >
+
+            <span aria-hidden="true">
+                ✉
+            </span>
+
+            <span
+                class="notification-badge"
+                aria-label="2 messages"
+            >
+                2
+            </span>
+
         </button>
 
-        <button class="theme-button" id="themeToggle" title="Toggle theme">
+
+        <!-- =================================================
+             THEME
+        ================================================== -->
+
+        <button
+            type="button"
+            class="theme-button"
+            id="themeToggle"
+            title="Toggle theme"
+            aria-label="Toggle theme"
+        >
             ☾
         </button>
 
-        <div class="company-header-profile" id="headerCompanyProfile">
+
+        <!-- =================================================
+             COMPANY PROFILE DROPDOWN TRIGGER
+        ================================================== -->
+
+        <button
+            type="button"
+            class="company-header-profile"
+            id="headerCompanyProfile"
+            aria-label="Open company account menu"
+            aria-haspopup="true"
+            aria-expanded="false"
+        >
 
             <img
                 id="headerCompanyLogo"
@@ -66,26 +195,55 @@
                 alt="Company Logo"
             >
 
-            <div class="header-company-name">
-                <strong id="headerCompanyName">Your Company</strong>
-                <span>Recruiter Account</span>
-            </div>
+            <span class="header-company-name">
 
-            <span class="header-chevron">⌄</span>
+                <strong id="headerCompanyName">
+                    Your Company
+                </strong>
 
-        </div>
+                <span>
+                    Recruiter Account
+                </span>
 
-        <div class="header-dropdown" id="headerDropdown">
+            </span>
 
-            <button data-action="company-profile">
+            <span
+                class="header-chevron"
+                aria-hidden="true"
+            >
+                ⌄
+            </span>
+
+        </button>
+
+
+        <!-- =================================================
+             HEADER DROPDOWN
+        ================================================== -->
+
+        <div
+            class="header-dropdown"
+            id="headerDropdown"
+        >
+
+            <button
+                type="button"
+                data-action="company-profile"
+            >
                 🏢 Company Profile
             </button>
 
-            <button data-action="settings">
+            <button
+                type="button"
+                data-action="settings"
+            >
                 ⚙ Settings
             </button>
 
-            <button data-action="logout">
+            <button
+                type="button"
+                data-action="logout"
+            >
                 ↪ Logout
             </button>
 
@@ -96,17 +254,24 @@
 </header>
 
 
+
 <!-- =========================================================
-     MAIN LAYOUT
+     MAIN PORTAL LAYOUT
 ========================================================= -->
 
 <div class="portal-layout">
+
 
     <!-- =====================================================
          SIDEBAR
     ====================================================== -->
 
     <aside class="sidebar">
+
+
+        <!-- =================================================
+             COMPANY SUMMARY
+        ================================================== -->
 
         <div class="company-sidebar-card">
 
@@ -115,24 +280,36 @@
             <div class="company-sidebar-content">
 
                 <div class="sidebar-logo-wrapper">
+
                     <img
                         id="sidebarCompanyLogo"
                         src="https://via.placeholder.com/100"
                         alt="Company Logo"
                     >
+
                 </div>
 
-                <h2 id="sidebarCompanyName">Your Company</h2>
+
+                <h2 id="sidebarCompanyName">
+                    Your Company
+                </h2>
+
 
                 <p id="sidebarCompanyIndustry">
                     Technology
                 </p>
 
+
                 <p class="company-location">
-                    <span>📍</span>
+
+                    <span aria-hidden="true">
+                        📍
+                    </span>
+
                     <span id="sidebarCompanyLocation">
                         Kolkata, India
                     </span>
+
                 </p>
 
             </div>
@@ -140,71 +317,180 @@
         </div>
 
 
-        <nav class="sidebar-navigation">
+        <!-- =================================================
+             SIDEBAR NAVIGATION
+        ================================================== -->
+
+        <nav
+            class="sidebar-navigation"
+            aria-label="Company portal navigation"
+        >
+
 
             <button
+                type="button"
                 class="sidebar-link active"
                 data-section="dashboardSection"
             >
-                <span class="sidebar-icon">⌂</span>
-                <span>Dashboard</span>
+
+                <span
+                    class="sidebar-icon"
+                    aria-hidden="true"
+                >
+                    ⌂
+                </span>
+
+                <span>
+                    Dashboard
+                </span>
+
             </button>
 
+
             <button
+                type="button"
                 class="sidebar-link"
                 data-section="jobsSection"
             >
-                <span class="sidebar-icon">▣</span>
-                <span>Jobs & Internships</span>
+
+                <span
+                    class="sidebar-icon"
+                    aria-hidden="true"
+                >
+                    ▣
+                </span>
+
+                <span>
+                    Jobs &amp; Internships
+                </span>
+
             </button>
 
+
             <button
+                type="button"
                 class="sidebar-link"
                 data-section="applicantsSection"
             >
-                <span class="sidebar-icon">♙</span>
-                <span>Applicants</span>
-                <span class="sidebar-count" id="sidebarApplicantCount">0</span>
+
+                <span
+                    class="sidebar-icon"
+                    aria-hidden="true"
+                >
+                    ♙
+                </span>
+
+                <span>
+                    Applicants
+                </span>
+
+                <span
+                    class="sidebar-count"
+                    id="sidebarApplicantCount"
+                >
+                    0
+                </span>
+
             </button>
 
+
             <button
+                type="button"
                 class="sidebar-link"
                 data-section="pipelineSection"
             >
-                <span class="sidebar-icon">⇢</span>
-                <span>Hiring Pipeline</span>
+
+                <span
+                    class="sidebar-icon"
+                    aria-hidden="true"
+                >
+                    ⇢
+                </span>
+
+                <span>
+                    Hiring Pipeline
+                </span>
+
             </button>
 
+
             <button
+                type="button"
                 class="sidebar-link"
                 data-section="candidateSearchSection"
             >
-                <span class="sidebar-icon">⌕</span>
-                <span>Candidate Search</span>
+
+                <span
+                    class="sidebar-icon"
+                    aria-hidden="true"
+                >
+                    ⌕
+                </span>
+
+                <span>
+                    Candidate Search
+                </span>
+
             </button>
 
+
             <button
+                type="button"
                 class="sidebar-link"
                 data-section="analyticsSection"
             >
-                <span class="sidebar-icon">▥</span>
-                <span>Analytics</span>
+
+                <span
+                    class="sidebar-icon"
+                    aria-hidden="true"
+                >
+                    ▥
+                </span>
+
+                <span>
+                    Analytics
+                </span>
+
             </button>
 
+
             <button
+                type="button"
                 class="sidebar-link"
                 data-section="companyProfileSection"
             >
-                <span class="sidebar-icon">🏢</span>
-                <span>Company Profile</span>
+
+                <span
+                    class="sidebar-icon"
+                    aria-hidden="true"
+                >
+                    🏢
+                </span>
+
+                <span>
+                    Company Profile
+                </span>
+
             </button>
 
+
             <button
+                type="button"
                 class="sidebar-link"
                 data-section="settingsSection"
             >
-                <span class="sidebar-icon">⚙</span>
-                <span>Settings</span>
+
+                <span
+                    class="sidebar-icon"
+                    aria-hidden="true"
+                >
+                    ⚙
+                </span>
+
+                <span>
+                    Settings
+                </span>
+
             </button>
 
         </nav>
@@ -213,36 +499,77 @@
         <div class="sidebar-divider"></div>
 
 
+        <!-- =================================================
+             SIDEBAR STATS
+        ================================================== -->
+
         <div class="sidebar-stats">
 
             <div class="sidebar-stat">
-                <span>Active Jobs</span>
-                <strong id="sidebarJobCount">0</strong>
+
+                <span>
+                    Active Jobs
+                </span>
+
+                <strong id="sidebarJobCount">
+                    0
+                </strong>
+
             </div>
 
-            <div class="sidebar-stat">
-                <span>Applications</span>
-                <strong id="sidebarApplicationsCount">0</strong>
-            </div>
 
             <div class="sidebar-stat">
-                <span>Selected</span>
-                <strong id="sidebarSelectedCount">0</strong>
+
+                <span>
+                    Applications
+                </span>
+
+                <strong id="sidebarApplicationsCount">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="sidebar-stat">
+
+                <span>
+                    Selected
+                </span>
+
+                <strong id="sidebarSelectedCount">
+                    0
+                </strong>
+
             </div>
 
         </div>
 
 
-        <button class="logout-sidebar" id="logoutSidebarBtn">
-            <span>↪</span>
+        <!-- =================================================
+             SIDEBAR LOGOUT
+        ================================================== -->
+
+        <button
+            type="button"
+            class="logout-sidebar"
+            id="logoutSidebarBtn"
+        >
+
+            <span aria-hidden="true">
+                ↪
+            </span>
+
             Logout
+
         </button>
 
     </aside>
 
 
+
     <!-- =====================================================
-         CONTENT
+         MAIN CONTENT
     ====================================================== -->
 
     <main class="main-content">
@@ -252,15 +579,22 @@
              DASHBOARD
         ================================================== -->
 
-        <section id="dashboardSection" class="portal-section active-section">
+        <section
+            id="dashboardSection"
+            class="portal-section active-section"
+        >
 
             <div class="section-header">
 
                 <div>
-                    <span class="eyebrow">COMPANY DASHBOARD</span>
+
+                    <span class="eyebrow">
+                        COMPANY DASHBOARD
+                    </span>
 
                     <h1>
-                        Welcome, <span id="dashboardCompanyName">
+                        Welcome,
+                        <span id="dashboardCompanyName">
                             Your Company
                         </span>
                     </h1>
@@ -269,18 +603,23 @@
                         Manage your hiring activities, job openings,
                         and candidates from one place.
                     </p>
+
                 </div>
+
 
                 <div class="header-actions">
 
                     <button
+                        type="button"
                         class="secondary-button"
                         id="viewApplicantsDashboardBtn"
                     >
                         View Applicants
                     </button>
 
+
                     <button
+                        type="button"
                         class="primary-button"
                         id="postJobDashboardBtn"
                     >
@@ -292,22 +631,34 @@
             </div>
 
 
-            <!-- Stats -->
+            <!-- =================================================
+                 DASHBOARD STATS
+            ================================================== -->
 
             <div class="stats-grid">
+
 
                 <div class="stat-card">
 
                     <div class="stat-card-top">
-                        <span class="stat-icon blue">▣</span>
-                        <span class="stat-trend positive">+12%</span>
+
+                        <span class="stat-icon blue">
+                            ▣
+                        </span>
+
+                        <span class="stat-trend positive">
+                            +12%
+                        </span>
+
                     </div>
 
                     <span class="stat-label">
                         Active Jobs
                     </span>
 
-                    <strong id="activeJobsCount">0</strong>
+                    <strong id="activeJobsCount">
+                        0
+                    </strong>
 
                     <span class="stat-description">
                         Currently accepting applications
@@ -319,15 +670,24 @@
                 <div class="stat-card">
 
                     <div class="stat-card-top">
-                        <span class="stat-icon purple">♙</span>
-                        <span class="stat-trend positive">+18%</span>
+
+                        <span class="stat-icon purple">
+                            ♙
+                        </span>
+
+                        <span class="stat-trend positive">
+                            +18%
+                        </span>
+
                     </div>
 
                     <span class="stat-label">
                         Total Applications
                     </span>
 
-                    <strong id="totalApplicantsCount">0</strong>
+                    <strong id="totalApplicantsCount">
+                        0
+                    </strong>
 
                     <span class="stat-description">
                         Applications received
@@ -339,15 +699,24 @@
                 <div class="stat-card">
 
                     <div class="stat-card-top">
-                        <span class="stat-icon orange">★</span>
-                        <span class="stat-trend positive">+8%</span>
+
+                        <span class="stat-icon orange">
+                            ★
+                        </span>
+
+                        <span class="stat-trend positive">
+                            +8%
+                        </span>
+
                     </div>
 
                     <span class="stat-label">
                         Shortlisted
                     </span>
 
-                    <strong id="shortlistedCount">0</strong>
+                    <strong id="shortlistedCount">
+                        0
+                    </strong>
 
                     <span class="stat-description">
                         Candidates under consideration
@@ -359,15 +728,24 @@
                 <div class="stat-card">
 
                     <div class="stat-card-top">
-                        <span class="stat-icon green">✓</span>
-                        <span class="stat-trend positive">+5%</span>
+
+                        <span class="stat-icon green">
+                            ✓
+                        </span>
+
+                        <span class="stat-trend positive">
+                            +5%
+                        </span>
+
                     </div>
 
                     <span class="stat-label">
                         Selected
                     </span>
 
-                    <strong id="selectedCount">0</strong>
+                    <strong id="selectedCount">
+                        0
+                    </strong>
 
                     <span class="stat-description">
                         Candidates successfully hired
@@ -378,7 +756,9 @@
             </div>
 
 
-            <!-- Dashboard Grid -->
+            <!-- =================================================
+                 DASHBOARD CARDS
+            ================================================== -->
 
             <div class="dashboard-grid">
 
@@ -390,11 +770,20 @@
                     <div class="card-header">
 
                         <div>
-                            <h2>Active Hiring</h2>
-                            <p>Your current job openings</p>
+
+                            <h2>
+                                Active Hiring
+                            </h2>
+
+                            <p>
+                                Your current job openings
+                            </p>
+
                         </div>
 
+
                         <button
+                            type="button"
                             class="text-button"
                             data-open-section="jobsSection"
                         >
@@ -403,8 +792,11 @@
 
                     </div>
 
-                    <div id="dashboardJobs" class="dashboard-job-list">
-                    </div>
+
+                    <div
+                        id="dashboardJobs"
+                        class="dashboard-job-list"
+                    ></div>
 
                 </div>
 
@@ -416,11 +808,20 @@
                     <div class="card-header">
 
                         <div>
-                            <h2>Recent Applicants</h2>
-                            <p>Latest candidates who applied</p>
+
+                            <h2>
+                                Recent Applicants
+                            </h2>
+
+                            <p>
+                                Latest candidates who applied
+                            </p>
+
                         </div>
 
+
                         <button
+                            type="button"
                             class="text-button"
                             data-open-section="applicantsSection"
                         >
@@ -429,24 +830,36 @@
 
                     </div>
 
-                    <div id="dashboardApplicants"
-                         class="dashboard-applicant-list">
-                    </div>
+
+                    <div
+                        id="dashboardApplicants"
+                        class="dashboard-applicant-list"
+                    ></div>
 
                 </div>
 
             </div>
 
 
-            <!-- Hiring Overview -->
+            <!-- =================================================
+                 HIRING OVERVIEW
+            ================================================== -->
 
             <div class="dashboard-card overview-card">
 
                 <div class="card-header">
 
                     <div>
-                        <h2>Hiring Overview</h2>
-                        <p>Candidate movement through your hiring process</p>
+
+                        <h2>
+                            Hiring Overview
+                        </h2>
+
+                        <p>
+                            Candidate movement through your
+                            hiring process
+                        </p>
+
                     </div>
 
                 </div>
@@ -454,30 +867,92 @@
 
                 <div class="overview-pipeline">
 
+
                     <div class="overview-stage">
-                        <div class="overview-number" id="overviewPending">0</div>
-                        <span>Pending Review</span>
+
+                        <div
+                            class="overview-number"
+                            id="overviewPending"
+                        >
+                            0
+                        </div>
+
+                        <span>
+                            Pending Review
+                        </span>
+
                     </div>
 
-                    <div class="overview-arrow">→</div>
 
-                    <div class="overview-stage">
-                        <div class="overview-number" id="overviewShortlisted">0</div>
-                        <span>Shortlisted</span>
+                    <div
+                        class="overview-arrow"
+                        aria-hidden="true"
+                    >
+                        →
                     </div>
 
-                    <div class="overview-arrow">→</div>
 
                     <div class="overview-stage">
-                        <div class="overview-number" id="overviewInterview">0</div>
-                        <span>Interview</span>
+
+                        <div
+                            class="overview-number"
+                            id="overviewShortlisted"
+                        >
+                            0
+                        </div>
+
+                        <span>
+                            Shortlisted
+                        </span>
+
                     </div>
 
-                    <div class="overview-arrow">→</div>
+
+                    <div
+                        class="overview-arrow"
+                        aria-hidden="true"
+                    >
+                        →
+                    </div>
+
 
                     <div class="overview-stage">
-                        <div class="overview-number" id="overviewSelected">0</div>
-                        <span>Selected</span>
+
+                        <div
+                            class="overview-number"
+                            id="overviewInterview"
+                        >
+                            0
+                        </div>
+
+                        <span>
+                            Interview
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="overview-arrow"
+                        aria-hidden="true"
+                    >
+                        →
+                    </div>
+
+
+                    <div class="overview-stage">
+
+                        <div
+                            class="overview-number"
+                            id="overviewSelected"
+                        >
+                            0
+                        </div>
+
+                        <span>
+                            Selected
+                        </span>
+
                     </div>
 
                 </div>
@@ -487,26 +962,38 @@
         </section>
 
 
+
         <!-- =================================================
-             JOBS
+             JOBS & INTERNSHIPS
         ================================================== -->
 
-        <section id="jobsSection" class="portal-section">
+        <section
+            id="jobsSection"
+            class="portal-section"
+        >
 
             <div class="section-header">
 
                 <div>
-                    <span class="eyebrow">RECRUITMENT</span>
 
-                    <h1>Jobs & Internships</h1>
+                    <span class="eyebrow">
+                        RECRUITMENT
+                    </span>
+
+                    <h1>
+                        Jobs &amp; Internships
+                    </h1>
 
                     <p>
                         Create and manage opportunities for students
                         and professionals.
                     </p>
+
                 </div>
 
+
                 <button
+                    type="button"
                     class="primary-button"
                     id="postJobBtn"
                 >
@@ -518,58 +1005,109 @@
 
             <div class="filter-bar">
 
+
                 <div class="filter-search">
 
-                    <span>⌕</span>
+                    <span aria-hidden="true">
+                        ⌕
+                    </span>
 
                     <input
-                        type="text"
+                        type="search"
                         id="jobSearch"
                         placeholder="Search jobs..."
+                        autocomplete="off"
+                        aria-label="Search jobs"
                     >
 
                 </div>
 
-                <select id="jobTypeFilter">
-                    <option value="all">All Types</option>
-                    <option value="Full Time">Full Time</option>
-                    <option value="Part Time">Part Time</option>
-                    <option value="Internship">Internship</option>
-                    <option value="Contract">Contract</option>
+
+                <select
+                    id="jobTypeFilter"
+                    aria-label="Filter jobs by type"
+                >
+
+                    <option value="all">
+                        All Types
+                    </option>
+
+                    <option value="Full Time">
+                        Full Time
+                    </option>
+
+                    <option value="Part Time">
+                        Part Time
+                    </option>
+
+                    <option value="Internship">
+                        Internship
+                    </option>
+
+                    <option value="Contract">
+                        Contract
+                    </option>
+
                 </select>
 
-                <select id="jobStatusFilter">
-                    <option value="all">All Status</option>
-                    <option value="Active">Active</option>
-                    <option value="Closed">Closed</option>
+
+                <select
+                    id="jobStatusFilter"
+                    aria-label="Filter jobs by status"
+                >
+
+                    <option value="all">
+                        All Status
+                    </option>
+
+                    <option value="Active">
+                        Active
+                    </option>
+
+                    <option value="Closed">
+                        Closed
+                    </option>
+
                 </select>
 
             </div>
 
 
-            <div id="jobsGrid" class="jobs-grid">
-            </div>
+            <div
+                id="jobsGrid"
+                class="jobs-grid"
+            ></div>
 
         </section>
+
 
 
         <!-- =================================================
              APPLICANTS
         ================================================== -->
 
-        <section id="applicantsSection" class="portal-section">
+        <section
+            id="applicantsSection"
+            class="portal-section"
+        >
 
             <div class="section-header">
 
                 <div>
-                    <span class="eyebrow">CANDIDATE MANAGEMENT</span>
 
-                    <h1>Applicants</h1>
+                    <span class="eyebrow">
+                        CANDIDATE MANAGEMENT
+                    </span>
+
+                    <h1>
+                        Applicants
+                    </h1>
 
                     <p>
                         Review applications and manage candidates
                         throughout your hiring process.
                     </p>
+
                 </div>
 
             </div>
@@ -577,30 +1115,69 @@
 
             <div class="applicant-controls">
 
+
                 <div class="filter-search">
 
-                    <span>⌕</span>
+                    <span aria-hidden="true">
+                        ⌕
+                    </span>
 
                     <input
-                        type="text"
+                        type="search"
                         id="applicantSearch"
                         placeholder="Search applicants..."
+                        autocomplete="off"
+                        aria-label="Search applicants"
                     >
 
                 </div>
 
-                <select id="applicantStatusFilter">
-                    <option value="all">All Status</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Reviewed">Reviewed</option>
-                    <option value="Shortlisted">Shortlisted</option>
-                    <option value="Interview">Interview</option>
-                    <option value="Selected">Selected</option>
-                    <option value="Rejected">Rejected</option>
+
+                <select
+                    id="applicantStatusFilter"
+                    aria-label="Filter applicants by status"
+                >
+
+                    <option value="all">
+                        All Status
+                    </option>
+
+                    <option value="Pending">
+                        Pending
+                    </option>
+
+                    <option value="Reviewed">
+                        Reviewed
+                    </option>
+
+                    <option value="Shortlisted">
+                        Shortlisted
+                    </option>
+
+                    <option value="Interview">
+                        Interview
+                    </option>
+
+                    <option value="Selected">
+                        Selected
+                    </option>
+
+                    <option value="Rejected">
+                        Rejected
+                    </option>
+
                 </select>
 
-                <select id="applicantJobFilter">
-                    <option value="all">All Jobs</option>
+
+                <select
+                    id="applicantJobFilter"
+                    aria-label="Filter applicants by job"
+                >
+
+                    <option value="all">
+                        All Jobs
+                    </option>
+
                 </select>
 
             </div>
@@ -615,18 +1192,39 @@
                         <thead>
 
                             <tr>
-                                <th>Candidate</th>
-                                <th>Applied For</th>
-                                <th>Experience</th>
-                                <th>Applied</th>
-                                <th>Status</th>
-                                <th>Action</th>
+
+                                <th scope="col">
+                                    Candidate
+                                </th>
+
+                                <th scope="col">
+                                    Applied For
+                                </th>
+
+                                <th scope="col">
+                                    Experience
+                                </th>
+
+                                <th scope="col">
+                                    Applied
+                                </th>
+
+                                <th scope="col">
+                                    Status
+                                </th>
+
+                                <th scope="col">
+                                    Action
+                                </th>
+
                             </tr>
 
                         </thead>
 
-                        <tbody id="applicantTableBody">
-                        </tbody>
+
+                        <tbody
+                            id="applicantTableBody"
+                        ></tbody>
 
                     </table>
 
@@ -637,22 +1235,32 @@
         </section>
 
 
+
         <!-- =================================================
              HIRING PIPELINE
         ================================================== -->
 
-        <section id="pipelineSection" class="portal-section">
+        <section
+            id="pipelineSection"
+            class="portal-section"
+        >
 
             <div class="section-header">
 
                 <div>
-                    <span class="eyebrow">HIRING PROCESS</span>
 
-                    <h1>Hiring Pipeline</h1>
+                    <span class="eyebrow">
+                        HIRING PROCESS
+                    </span>
+
+                    <h1>
+                        Hiring Pipeline
+                    </h1>
 
                     <p>
                         Track every candidate from application to hiring.
                     </p>
+
                 </div>
 
             </div>
@@ -660,20 +1268,29 @@
 
             <div class="pipeline-board">
 
+
                 <div class="pipeline-column">
 
                     <div class="pipeline-column-header">
-                        <span>Pending Review</span>
-                        <span class="pipeline-count" id="pendingPipelineCount">
+
+                        <span>
+                            Pending Review
+                        </span>
+
+                        <span
+                            class="pipeline-count"
+                            id="pendingPipelineCount"
+                        >
                             0
                         </span>
+
                     </div>
+
 
                     <div
                         id="pendingPipeline"
                         class="pipeline-cards"
-                    >
-                    </div>
+                    ></div>
 
                 </div>
 
@@ -681,17 +1298,25 @@
                 <div class="pipeline-column">
 
                     <div class="pipeline-column-header">
-                        <span>Shortlisted</span>
-                        <span class="pipeline-count" id="shortlistedPipelineCount">
+
+                        <span>
+                            Shortlisted
+                        </span>
+
+                        <span
+                            class="pipeline-count"
+                            id="shortlistedPipelineCount"
+                        >
                             0
                         </span>
+
                     </div>
+
 
                     <div
                         id="shortlistedPipeline"
                         class="pipeline-cards"
-                    >
-                    </div>
+                    ></div>
 
                 </div>
 
@@ -699,17 +1324,25 @@
                 <div class="pipeline-column">
 
                     <div class="pipeline-column-header">
-                        <span>Interview</span>
-                        <span class="pipeline-count" id="interviewPipelineCount">
+
+                        <span>
+                            Interview
+                        </span>
+
+                        <span
+                            class="pipeline-count"
+                            id="interviewPipelineCount"
+                        >
                             0
                         </span>
+
                     </div>
+
 
                     <div
                         id="interviewPipeline"
                         class="pipeline-cards"
-                    >
-                    </div>
+                    ></div>
 
                 </div>
 
@@ -717,17 +1350,25 @@
                 <div class="pipeline-column">
 
                     <div class="pipeline-column-header">
-                        <span>Selected</span>
-                        <span class="pipeline-count" id="selectedPipelineCount">
+
+                        <span>
+                            Selected
+                        </span>
+
+                        <span
+                            class="pipeline-count"
+                            id="selectedPipelineCount"
+                        >
                             0
                         </span>
+
                     </div>
+
 
                     <div
                         id="selectedPipeline"
                         class="pipeline-cards"
-                    >
-                    </div>
+                    ></div>
 
                 </div>
 
@@ -736,23 +1377,33 @@
         </section>
 
 
+
         <!-- =================================================
              CANDIDATE SEARCH
         ================================================== -->
 
-        <section id="candidateSearchSection" class="portal-section">
+        <section
+            id="candidateSearchSection"
+            class="portal-section"
+        >
 
             <div class="section-header">
 
                 <div>
-                    <span class="eyebrow">TALENT DISCOVERY</span>
 
-                    <h1>Candidate Search</h1>
+                    <span class="eyebrow">
+                        TALENT DISCOVERY
+                    </span>
+
+                    <h1>
+                        Candidate Search
+                    </h1>
 
                     <p>
                         Discover candidates based on skills,
                         education, location and experience.
                     </p>
+
                 </div>
 
             </div>
@@ -760,33 +1411,81 @@
 
             <div class="candidate-search-box">
 
+
                 <div class="candidate-search-input">
 
-                    <span>⌕</span>
+                    <span aria-hidden="true">
+                        ⌕
+                    </span>
 
                     <input
                         id="candidateSearchInput"
-                        type="text"
+                        type="search"
                         placeholder="Search by name, skill, education..."
+                        autocomplete="off"
+                        aria-label="Search candidates"
                     >
 
                 </div>
 
-                <select id="candidateLocationFilter">
-                    <option value="all">All Locations</option>
-                    <option value="Kolkata">Kolkata</option>
-                    <option value="Bangalore">Bangalore</option>
-                    <option value="Delhi">Delhi</option>
-                    <option value="Mumbai">Mumbai</option>
-                    <option value="Hyderabad">Hyderabad</option>
+
+                <select
+                    id="candidateLocationFilter"
+                    aria-label="Filter candidates by location"
+                >
+
+                    <option value="all">
+                        All Locations
+                    </option>
+
+                    <option value="Kolkata">
+                        Kolkata
+                    </option>
+
+                    <option value="Bangalore">
+                        Bangalore
+                    </option>
+
+                    <option value="Delhi">
+                        Delhi
+                    </option>
+
+                    <option value="Mumbai">
+                        Mumbai
+                    </option>
+
+                    <option value="Hyderabad">
+                        Hyderabad
+                    </option>
+
                 </select>
 
-                <select id="candidateExperienceFilter">
-                    <option value="all">Any Experience</option>
-                    <option value="0">Fresher</option>
-                    <option value="1">1+ Years</option>
-                    <option value="2">2+ Years</option>
-                    <option value="3">3+ Years</option>
+
+                <select
+                    id="candidateExperienceFilter"
+                    aria-label="Filter candidates by experience"
+                >
+
+                    <option value="all">
+                        Any Experience
+                    </option>
+
+                    <option value="0">
+                        Fresher
+                    </option>
+
+                    <option value="1">
+                        1+ Years
+                    </option>
+
+                    <option value="2">
+                        2+ Years
+                    </option>
+
+                    <option value="3">
+                        3+ Years
+                    </option>
+
                 </select>
 
             </div>
@@ -795,34 +1494,57 @@
             <div
                 id="candidateSearchResults"
                 class="candidate-results"
-            >
-            </div>
+            ></div>
 
         </section>
+
 
 
         <!-- =================================================
              ANALYTICS
         ================================================== -->
 
-        <section id="analyticsSection" class="portal-section">
+        <section
+            id="analyticsSection"
+            class="portal-section"
+        >
 
             <div class="section-header">
 
                 <div>
-                    <span class="eyebrow">RECRUITMENT INSIGHTS</span>
 
-                    <h1>Hiring Analytics</h1>
+                    <span class="eyebrow">
+                        RECRUITMENT INSIGHTS
+                    </span>
+
+                    <h1>
+                        Hiring Analytics
+                    </h1>
 
                     <p>
                         Understand your recruitment performance.
                     </p>
+
                 </div>
 
-                <select id="analyticsPeriod">
-                    <option value="30">Last 30 Days</option>
-                    <option value="90">Last 90 Days</option>
-                    <option value="365">Last Year</option>
+
+                <select
+                    id="analyticsPeriod"
+                    aria-label="Analytics period"
+                >
+
+                    <option value="30">
+                        Last 30 Days
+                    </option>
+
+                    <option value="90">
+                        Last 90 Days
+                    </option>
+
+                    <option value="365">
+                        Last Year
+                    </option>
+
                 </select>
 
             </div>
@@ -830,9 +1552,12 @@
 
             <div class="analytics-grid">
 
+
                 <div class="analytics-card">
 
-                    <span>Applications</span>
+                    <span>
+                        Applications
+                    </span>
 
                     <strong id="analyticsApplications">
                         0
@@ -847,7 +1572,9 @@
 
                 <div class="analytics-card">
 
-                    <span>Shortlist Rate</span>
+                    <span>
+                        Shortlist Rate
+                    </span>
 
                     <strong id="analyticsShortlistRate">
                         0%
@@ -862,7 +1589,9 @@
 
                 <div class="analytics-card">
 
-                    <span>Selection Rate</span>
+                    <span>
+                        Selection Rate
+                    </span>
 
                     <strong id="analyticsSelectionRate">
                         0%
@@ -877,7 +1606,9 @@
 
                 <div class="analytics-card">
 
-                    <span>Open Positions</span>
+                    <span>
+                        Open Positions
+                    </span>
 
                     <strong id="analyticsOpenJobs">
                         0
@@ -894,22 +1625,30 @@
 
             <div class="analytics-panels">
 
+
                 <div class="dashboard-card">
 
                     <div class="card-header">
 
                         <div>
-                            <h2>Applications by Job</h2>
-                            <p>Candidate demand for your openings</p>
+
+                            <h2>
+                                Applications by Job
+                            </h2>
+
+                            <p>
+                                Candidate demand for your openings
+                            </p>
+
                         </div>
 
                     </div>
 
+
                     <div
                         id="applicationsByJob"
                         class="chart-list"
-                    >
-                    </div>
+                    ></div>
 
                 </div>
 
@@ -919,17 +1658,24 @@
                     <div class="card-header">
 
                         <div>
-                            <h2>Hiring Funnel</h2>
-                            <p>Candidate progression</p>
+
+                            <h2>
+                                Hiring Funnel
+                            </h2>
+
+                            <p>
+                                Candidate progression
+                            </p>
+
                         </div>
 
                     </div>
 
+
                     <div
                         id="analyticsFunnel"
                         class="funnel-list"
-                    >
-                    </div>
+                    ></div>
 
                 </div>
 
@@ -938,26 +1684,38 @@
         </section>
 
 
+
         <!-- =================================================
              COMPANY PROFILE
         ================================================== -->
 
-        <section id="companyProfileSection" class="portal-section">
+        <section
+            id="companyProfileSection"
+            class="portal-section"
+        >
 
             <div class="section-header">
 
                 <div>
-                    <span class="eyebrow">COMPANY INFORMATION</span>
 
-                    <h1>Company Profile</h1>
+                    <span class="eyebrow">
+                        COMPANY INFORMATION
+                    </span>
+
+                    <h1>
+                        Company Profile
+                    </h1>
 
                     <p>
                         Maintain the information candidates see
                         when exploring your company.
                     </p>
+
                 </div>
 
+
                 <button
+                    type="button"
                     class="primary-button"
                     id="saveCompanyBtn"
                 >
@@ -969,13 +1727,23 @@
 
             <div class="profile-editor">
 
+
                 <div class="profile-editor-main">
+
+
+                    <!-- =================================================
+                         BASIC INFORMATION
+                    ================================================== -->
 
                     <div class="editor-card">
 
-                        <h2>Basic Information</h2>
+                        <h2>
+                            Basic Information
+                        </h2>
+
 
                         <div class="logo-editor">
+
 
                             <img
                                 id="editorCompanyLogo"
@@ -983,11 +1751,16 @@
                                 alt="Company Logo"
                             >
 
+
                             <div>
 
-                                <label class="upload-button">
+                                <label
+                                    class="upload-button"
+                                    for="companyLogoUpload"
+                                >
 
                                     Change Logo
+
 
                                     <input
                                         type="file"
@@ -998,8 +1771,10 @@
 
                                 </label>
 
+
                                 <p>
-                                    Recommended size: 300 × 300 px
+                                    Recommended size:
+                                    300 × 300 px
                                 </p>
 
                             </div>
@@ -1009,9 +1784,12 @@
 
                         <div class="form-grid">
 
+
                             <div class="form-field">
 
-                                <label>
+                                <label
+                                    for="editCompanyName"
+                                >
                                     Company Name
                                 </label>
 
@@ -1019,6 +1797,7 @@
                                     id="editCompanyName"
                                     type="text"
                                     placeholder="Company name"
+                                    autocomplete="organization"
                                 >
 
                             </div>
@@ -1026,7 +1805,9 @@
 
                             <div class="form-field">
 
-                                <label>
+                                <label
+                                    for="editIndustry"
+                                >
                                     Industry
                                 </label>
 
@@ -1041,18 +1822,44 @@
 
                             <div class="form-field">
 
-                                <label>
+                                <label
+                                    for="editCompanySize"
+                                >
                                     Company Size
                                 </label>
 
-                                <select id="editCompanySize">
-                                    <option value="">Select</option>
-                                    <option>1-10 employees</option>
-                                    <option>11-50 employees</option>
-                                    <option>51-200 employees</option>
-                                    <option>201-500 employees</option>
-                                    <option>501-1000 employees</option>
-                                    <option>1000+ employees</option>
+                                <select
+                                    id="editCompanySize"
+                                >
+
+                                    <option value="">
+                                        Select
+                                    </option>
+
+                                    <option value="1-10 employees">
+                                        1-10 employees
+                                    </option>
+
+                                    <option value="11-50 employees">
+                                        11-50 employees
+                                    </option>
+
+                                    <option value="51-200 employees">
+                                        51-200 employees
+                                    </option>
+
+                                    <option value="201-500 employees">
+                                        201-500 employees
+                                    </option>
+
+                                    <option value="501-1000 employees">
+                                        501-1000 employees
+                                    </option>
+
+                                    <option value="1000+ employees">
+                                        1000+ employees
+                                    </option>
+
                                 </select>
 
                             </div>
@@ -1060,7 +1867,9 @@
 
                             <div class="form-field">
 
-                                <label>
+                                <label
+                                    for="editLocation"
+                                >
                                     Headquarters
                                 </label>
 
@@ -1068,6 +1877,7 @@
                                     id="editLocation"
                                     type="text"
                                     placeholder="City, Country"
+                                    autocomplete="address-level2"
                                 >
 
                             </div>
@@ -1075,7 +1885,9 @@
 
                             <div class="form-field">
 
-                                <label>
+                                <label
+                                    for="editWebsite"
+                                >
                                     Website
                                 </label>
 
@@ -1083,6 +1895,7 @@
                                     id="editWebsite"
                                     type="url"
                                     placeholder="https://example.com"
+                                    autocomplete="url"
                                 >
 
                             </div>
@@ -1090,7 +1903,9 @@
 
                             <div class="form-field">
 
-                                <label>
+                                <label
+                                    for="editEmail"
+                                >
                                     Contact Email
                                 </label>
 
@@ -1098,6 +1913,7 @@
                                     id="editEmail"
                                     type="email"
                                     placeholder="careers@example.com"
+                                    autocomplete="email"
                                 >
 
                             </div>
@@ -1107,13 +1923,22 @@
                     </div>
 
 
+                    <!-- =================================================
+                         ABOUT COMPANY
+                    ================================================== -->
+
                     <div class="editor-card">
 
-                        <h2>About Company</h2>
+                        <h2>
+                            About Company
+                        </h2>
+
 
                         <div class="form-field">
 
-                            <label>
+                            <label
+                                for="editAbout"
+                            >
                                 Company Description
                             </label>
 
@@ -1128,15 +1953,25 @@
                     </div>
 
 
+                    <!-- =================================================
+                         HIRING INFORMATION
+                    ================================================== -->
+
                     <div class="editor-card">
 
-                        <h2>Hiring Information</h2>
+                        <h2>
+                            Hiring Information
+                        </h2>
+
 
                         <div class="form-grid">
 
+
                             <div class="form-field">
 
-                                <label>
+                                <label
+                                    for="editCareersEmail"
+                                >
                                     Careers Email
                                 </label>
 
@@ -1144,6 +1979,7 @@
                                     id="editCareersEmail"
                                     type="email"
                                     placeholder="careers@example.com"
+                                    autocomplete="email"
                                 >
 
                             </div>
@@ -1151,7 +1987,9 @@
 
                             <div class="form-field">
 
-                                <label>
+                                <label
+                                    for="editLinkedin"
+                                >
                                     LinkedIn
                                 </label>
 
@@ -1166,7 +2004,9 @@
 
                             <div class="form-field full">
 
-                                <label>
+                                <label
+                                    for="editBenefits"
+                                >
                                     Benefits
                                 </label>
 
@@ -1185,13 +2025,21 @@
                 </div>
 
 
+                <!-- =================================================
+                     COMPANY PREVIEW
+                ================================================== -->
+
                 <aside class="profile-preview">
 
-                    <h3>Candidate Preview</h3>
+                    <h3>
+                        Candidate Preview
+                    </h3>
+
 
                     <div class="preview-company-card">
 
                         <div class="preview-cover"></div>
+
 
                         <img
                             id="previewCompanyLogo"
@@ -1199,19 +2047,24 @@
                             alt="Company"
                         >
 
+
                         <h2 id="previewCompanyName">
                             Your Company
                         </h2>
+
 
                         <p id="previewIndustry">
                             Technology
                         </p>
 
+
                         <p id="previewLocation">
                             Kolkata, India
                         </p>
 
+
                         <div class="preview-divider"></div>
+
 
                         <p
                             id="previewAbout"
@@ -1229,22 +2082,32 @@
         </section>
 
 
+
         <!-- =================================================
              SETTINGS
         ================================================== -->
 
-        <section id="settingsSection" class="portal-section">
+        <section
+            id="settingsSection"
+            class="portal-section"
+        >
 
             <div class="section-header">
 
                 <div>
-                    <span class="eyebrow">ACCOUNT SETTINGS</span>
 
-                    <h1>Settings</h1>
+                    <span class="eyebrow">
+                        ACCOUNT SETTINGS
+                    </span>
+
+                    <h1>
+                        Settings
+                    </h1>
 
                     <p>
                         Manage your company portal preferences.
                     </p>
+
                 </div>
 
             </div>
@@ -1252,14 +2115,21 @@
 
             <div class="settings-card">
 
+
                 <div class="setting-row">
 
                     <div>
-                        <h3>Email Notifications</h3>
+
+                        <h3>
+                            Email Notifications
+                        </h3>
+
                         <p>
                             Receive emails when candidates apply.
                         </p>
+
                     </div>
+
 
                     <label class="switch">
 
@@ -1269,7 +2139,10 @@
                             checked
                         >
 
-                        <span class="slider"></span>
+                        <span
+                            class="slider"
+                            aria-hidden="true"
+                        ></span>
 
                     </label>
 
@@ -1279,11 +2152,17 @@
                 <div class="setting-row">
 
                     <div>
-                        <h3>New Applicant Alerts</h3>
+
+                        <h3>
+                            New Applicant Alerts
+                        </h3>
+
                         <p>
                             Show alerts for new applications.
                         </p>
+
                     </div>
+
 
                     <label class="switch">
 
@@ -1293,7 +2172,10 @@
                             checked
                         >
 
-                        <span class="slider"></span>
+                        <span
+                            class="slider"
+                            aria-hidden="true"
+                        ></span>
 
                     </label>
 
@@ -1303,11 +2185,17 @@
                 <div class="setting-row">
 
                     <div>
-                        <h3>Candidate Recommendations</h3>
+
+                        <h3>
+                            Candidate Recommendations
+                        </h3>
+
                         <p>
                             Receive recommended candidate suggestions.
                         </p>
+
                     </div>
+
 
                     <label class="switch">
 
@@ -1317,7 +2205,10 @@
                             checked
                         >
 
-                        <span class="slider"></span>
+                        <span
+                            class="slider"
+                            aria-hidden="true"
+                        ></span>
 
                     </label>
 
@@ -1327,13 +2218,20 @@
                 <div class="setting-row danger-setting">
 
                     <div>
-                        <h3>Sign Out</h3>
+
+                        <h3>
+                            Sign Out
+                        </h3>
+
                         <p>
                             Sign out from this company account.
                         </p>
+
                     </div>
 
+
                     <button
+                        type="button"
                         class="danger-button"
                         id="logoutSettingsBtn"
                     >
@@ -1351,6 +2249,7 @@
 </div>
 
 
+
 <!-- =========================================================
      JOB MODAL
 ========================================================= -->
@@ -1358,15 +2257,21 @@
 <div
     class="modal-overlay"
     id="jobModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="jobModalTitle"
 >
 
     <div class="modal-card large-modal">
+
 
         <div class="modal-header">
 
             <div>
 
-                <span class="eyebrow">RECRUITMENT</span>
+                <span class="eyebrow">
+                    RECRUITMENT
+                </span>
 
                 <h2 id="jobModalTitle">
                     Post New Opportunity
@@ -1374,9 +2279,12 @@
 
             </div>
 
+
             <button
+                type="button"
                 class="modal-close"
                 id="closeJobModal"
+                aria-label="Close job modal"
             >
                 ×
             </button>
@@ -1394,9 +2302,12 @@
 
             <div class="form-grid">
 
+
                 <div class="form-field full">
 
-                    <label>
+                    <label
+                        for="jobTitle"
+                    >
                         Job / Internship Title *
                     </label>
 
@@ -1405,6 +2316,7 @@
                         id="jobTitle"
                         required
                         placeholder="e.g. Frontend Developer"
+                        autocomplete="off"
                     >
 
                 </div>
@@ -1412,15 +2324,33 @@
 
                 <div class="form-field">
 
-                    <label>
+                    <label
+                        for="jobType"
+                    >
                         Opportunity Type *
                     </label>
 
-                    <select id="jobType" required>
-                        <option value="Full Time">Full Time</option>
-                        <option value="Part Time">Part Time</option>
-                        <option value="Internship">Internship</option>
-                        <option value="Contract">Contract</option>
+                    <select
+                        id="jobType"
+                        required
+                    >
+
+                        <option value="Full Time">
+                            Full Time
+                        </option>
+
+                        <option value="Part Time">
+                            Part Time
+                        </option>
+
+                        <option value="Internship">
+                            Internship
+                        </option>
+
+                        <option value="Contract">
+                            Contract
+                        </option>
+
                     </select>
 
                 </div>
@@ -1428,14 +2358,28 @@
 
                 <div class="form-field">
 
-                    <label>
+                    <label
+                        for="jobWorkMode"
+                    >
                         Work Mode
                     </label>
 
-                    <select id="jobWorkMode">
-                        <option value="On-site">On-site</option>
-                        <option value="Hybrid">Hybrid</option>
-                        <option value="Remote">Remote</option>
+                    <select
+                        id="jobWorkMode"
+                    >
+
+                        <option value="On-site">
+                            On-site
+                        </option>
+
+                        <option value="Hybrid">
+                            Hybrid
+                        </option>
+
+                        <option value="Remote">
+                            Remote
+                        </option>
+
                     </select>
 
                 </div>
@@ -1443,7 +2387,9 @@
 
                 <div class="form-field">
 
-                    <label>
+                    <label
+                        for="jobLocation"
+                    >
                         Location
                     </label>
 
@@ -1458,7 +2404,9 @@
 
                 <div class="form-field">
 
-                    <label>
+                    <label
+                        for="jobExperience"
+                    >
                         Experience
                     </label>
 
@@ -1473,7 +2421,9 @@
 
                 <div class="form-field">
 
-                    <label>
+                    <label
+                        for="jobSalary"
+                    >
                         Salary / Stipend
                     </label>
 
@@ -1488,7 +2438,9 @@
 
                 <div class="form-field">
 
-                    <label>
+                    <label
+                        for="jobDeadline"
+                    >
                         Application Deadline
                     </label>
 
@@ -1502,7 +2454,9 @@
 
                 <div class="form-field full">
 
-                    <label>
+                    <label
+                        for="jobSkills"
+                    >
                         Required Skills
                     </label>
 
@@ -1517,7 +2471,9 @@
 
                 <div class="form-field full">
 
-                    <label>
+                    <label
+                        for="jobDescription"
+                    >
                         Job Description *
                     </label>
 
@@ -1543,6 +2499,7 @@
                     Cancel
                 </button>
 
+
                 <button
                     type="submit"
                     class="primary-button"
@@ -1559,6 +2516,7 @@
 </div>
 
 
+
 <!-- =========================================================
      APPLICANT MODAL
 ========================================================= -->
@@ -1566,9 +2524,13 @@
 <div
     class="modal-overlay"
     id="applicantModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="applicantModalTitle"
 >
 
     <div class="modal-card applicant-modal-card">
+
 
         <div class="modal-header">
 
@@ -1578,15 +2540,18 @@
                     CANDIDATE PROFILE
                 </span>
 
-                <h2>
+                <h2 id="applicantModalTitle">
                     Applicant Details
                 </h2>
 
             </div>
 
+
             <button
+                type="button"
                 class="modal-close"
                 id="closeApplicantModal"
+                aria-label="Close applicant modal"
             >
                 ×
             </button>
@@ -1601,6 +2566,7 @@
 </div>
 
 
+
 <!-- =========================================================
      NOTIFICATION PANEL
 ========================================================= -->
@@ -1608,44 +2574,106 @@
 <div
     class="notification-panel"
     id="notificationPanel"
+    aria-label="Notifications"
 >
 
     <div class="notification-panel-header">
-        <strong>Notifications</strong>
 
-        <button id="closeNotificationPanel">
+        <strong>
+            Notifications
+        </strong>
+
+
+        <button
+            type="button"
+            id="closeNotificationPanel"
+            aria-label="Close notifications"
+        >
             ×
         </button>
+
     </div>
 
-    <div class="notification-item">
-        <div class="notification-dot blue-dot"></div>
-        <div>
-            <strong>New application</strong>
-            <p>Rahul Sharma applied for Frontend Developer.</p>
-            <small>5 minutes ago</small>
-        </div>
-    </div>
 
     <div class="notification-item">
-        <div class="notification-dot green-dot"></div>
+
+        <div
+            class="notification-dot blue-dot"
+            aria-hidden="true"
+        ></div>
+
         <div>
-            <strong>Candidate shortlisted</strong>
-            <p>Priya Das was added to the interview stage.</p>
-            <small>1 hour ago</small>
+
+            <strong>
+                New application
+            </strong>
+
+            <p>
+                Rahul Sharma applied for Frontend Developer.
+            </p>
+
+            <small>
+                5 minutes ago
+            </small>
+
         </div>
+
     </div>
 
+
     <div class="notification-item">
-        <div class="notification-dot orange-dot"></div>
+
+        <div
+            class="notification-dot green-dot"
+            aria-hidden="true"
+        ></div>
+
         <div>
-            <strong>Application deadline</strong>
-            <p>Data Analyst applications close tomorrow.</p>
-            <small>3 hours ago</small>
+
+            <strong>
+                Candidate shortlisted
+            </strong>
+
+            <p>
+                Priya Das was added to the interview stage.
+            </p>
+
+            <small>
+                1 hour ago
+            </small>
+
         </div>
+
+    </div>
+
+
+    <div class="notification-item">
+
+        <div
+            class="notification-dot orange-dot"
+            aria-hidden="true"
+        ></div>
+
+        <div>
+
+            <strong>
+                Application deadline
+            </strong>
+
+            <p>
+                Data Analyst applications close tomorrow.
+            </p>
+
+            <small>
+                3 hours ago
+            </small>
+
+        </div>
+
     </div>
 
 </div>
+
 
 
 <!-- =========================================================
@@ -1655,14 +2683,29 @@
 <div
     id="toast"
     class="toast"
+    role="status"
+    aria-live="polite"
 >
+
     <span id="toastMessage">
         Operation completed.
     </span>
+
 </div>
 
 
-<script src="COMain.js"></script>
+
+<!-- =========================================================
+     COMPANY PORTAL JAVASCRIPT
+     Actual project filename: COMain.js
+========================================================= -->
+
+<script
+    src="COMain.js"
+    defer
+></script>
+
 
 </body>
+
 </html>

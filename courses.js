@@ -1,7 +1,29 @@
-
 // =========================================
-// CAMPUS2CAREER COURSES JAVASCRIPT
-// Fetches courses from Node.js + MySQL
+// CAMPUS2CAREER
+// COURSES JAVASCRIPT
+// =========================================
+// Fetches courses from:
+// Node.js + Express + MySQL
+//
+// Backend endpoint:
+// GET /api/courses
+//
+// Server response:
+// [
+//     {
+//         id,
+//         course_name,
+//         field,
+//         description,
+//         institution,
+//         level,
+//         mode,
+//         duration,
+//         course_url,
+//         created_at,
+//         updated_at
+//     }
+// ]
 // =========================================
 
 
@@ -14,7 +36,7 @@ const COURSES_API =
 
 
 // =========================================
-// GLOBAL COURSES
+// GLOBAL COURSE DATA
 // =========================================
 
 let allCourses = [];
@@ -28,30 +50,30 @@ document.addEventListener(
     "DOMContentLoaded",
     () => {
 
-        loadCourses();
-
         setupFilters();
+
+        loadCourses();
 
     }
 );
 
 
 // =========================================
-// GET COURSES FROM BACKEND
+// LOAD COURSES
 // =========================================
 
 async function loadCourses() {
 
     const courseGrid =
-        document.getElementById(
-            "courseGrid"
-        );
+        document.getElementById("courseGrid");
 
     const courseCount =
-        document.getElementById(
-            "courseCount"
-        );
+        document.getElementById("courseCount");
 
+
+    // -----------------------------------------
+    // Loading state
+    // -----------------------------------------
 
     if (courseGrid) {
 
@@ -60,6 +82,14 @@ async function loadCourses() {
                 Loading courses...
             </div>
         `;
+
+    }
+
+
+    if (courseCount) {
+
+        courseCount.textContent =
+            "Loading courses...";
 
     }
 
@@ -79,20 +109,17 @@ async function loadCourses() {
                     method: "GET",
 
                     headers: {
-                        "Accept":
+                        Accept:
                             "application/json"
-                    }
+                    },
+
+                    cache: "no-store"
                 }
             );
 
 
         // -----------------------------------------
-        // Read response as text first
-        // -----------------------------------------
-        //
-        // This makes errors such as:
-        // <!DOCTYPE html> is not valid JSON
-        // easier to diagnose.
+        // Read response
         // -----------------------------------------
 
         const responseText =
@@ -105,110 +132,99 @@ async function loadCourses() {
         );
 
 
-        console.log(
-            "Courses API response:",
-            responseText
-        );
-
-
-        let data = {};
-
-
-        if (
-            responseText &&
-            responseText.trim() !== ""
-        ) {
-
-            try {
-
-                data =
-                    JSON.parse(
-                        responseText
-                    );
-
-            } catch (error) {
-
-                console.error(
-                    "Invalid JSON received from courses API:",
-                    responseText
-                );
-
-
-                throw new Error(
-                    "The courses server returned HTML/text instead of JSON."
-                );
-
-            }
-
-        }
-
-
         // -----------------------------------------
-        // Handle HTTP errors
+        // Parse JSON
         // -----------------------------------------
 
-        if (!response.ok) {
+        let data;
+
+        try {
+
+            data =
+                responseText
+                    ? JSON.parse(responseText)
+                    : [];
+
+        } catch (parseError) {
+
+            console.error(
+                "Invalid courses API response:",
+                responseText
+            );
 
             throw new Error(
-
-                data.error ||
-                data.message ||
-                `Server returned HTTP ${response.status}.`
-
+                "The courses server returned an invalid response."
             );
 
         }
 
 
         // -----------------------------------------
-        // Accept either response format
-        // -----------------------------------------
-        //
-        // Format 1:
-        // [
-        //    {...},
-        //    {...}
-        // ]
-        //
-        // Format 2:
-        // {
-        //    success: true,
-        //    courses: [...]
-        // }
+        // HTTP error handling
         // -----------------------------------------
 
-        if (
-            Array.isArray(data)
-        ) {
+        if (!response.ok) {
 
-            allCourses =
-                data;
+            const serverMessage =
+                data &&
+                typeof data === "object"
+                    ? (
+                        data.error ||
+                        data.message ||
+                        ""
+                    )
+                    : "";
 
-        } else if (
-            Array.isArray(
-                data.courses
-            )
-        ) {
-
-            allCourses =
-                data.courses;
-
-        } else {
-
-            allCourses =
-                [];
+            throw new Error(
+                serverMessage ||
+                `Server returned HTTP ${response.status}.`
+            );
 
         }
 
 
+        // -----------------------------------------
+        // IMPORTANT:
+        // server.js returns a RAW ARRAY
+        //
+        // Correct:
+        // [
+        //   {...},
+        //   {...}
+        // ]
+        // -----------------------------------------
+
+        if (!Array.isArray(data)) {
+
+            console.error(
+                "Unexpected courses response:",
+                data
+            );
+
+            throw new Error(
+                "The courses server returned an unexpected data format."
+            );
+
+        }
+
+
+        // -----------------------------------------
+        // Store database results
+        // -----------------------------------------
+
+        allCourses =
+            data.map(
+                normalizeCourse
+            );
+
+
         console.log(
-            "Courses successfully loaded:",
-            allCourses
+            `Loaded ${allCourses.length} courses from database.`
         );
 
 
         // -----------------------------------------
-        // Build filter options from database data
+        // Build filters
         // -----------------------------------------
 
         populateFieldFilter();
@@ -233,6 +249,10 @@ async function loadCourses() {
         );
 
 
+        // Clear old data
+        allCourses = [];
+
+
         if (courseGrid) {
 
             courseGrid.innerHTML = `
@@ -245,16 +265,15 @@ async function loadCourses() {
 
                     <p>
                         ${escapeHTML(
-                            error.message
+                            error.message ||
+                            "Something went wrong while loading courses."
                         )}
                     </p>
 
-                    <br>
-
                     <button
                         type="button"
-                        onclick="loadCourses()"
                         class="reset-btn"
+                        onclick="loadCourses()"
                     >
                         Try Again
                     </button>
@@ -274,6 +293,89 @@ async function loadCourses() {
         }
 
     }
+
+}
+
+
+// =========================================
+// NORMALIZE COURSE
+// =========================================
+// Keeps the frontend aligned with the exact
+// database fields returned by server.js.
+// =========================================
+
+function normalizeCourse(course) {
+
+    if (
+        !course ||
+        typeof course !== "object"
+    ) {
+
+        return {
+
+            id: "",
+
+            course_name: "",
+
+            field: "",
+
+            description: "",
+
+            institution: "",
+
+            level: "",
+
+            mode: "",
+
+            duration: "",
+
+            course_url: "",
+
+            created_at: "",
+
+            updated_at: ""
+
+        };
+
+    }
+
+
+    return {
+
+        id:
+            course.id ?? "",
+
+        course_name:
+            course.course_name ?? "",
+
+        field:
+            course.field ?? "",
+
+        description:
+            course.description ?? "",
+
+        institution:
+            course.institution ?? "",
+
+        level:
+            course.level ?? "",
+
+        mode:
+            course.mode ?? "",
+
+        duration:
+            course.duration ?? "",
+
+        course_url:
+            course.course_url ?? "",
+
+        created_at:
+            course.created_at ?? "",
+
+        updated_at:
+            course.updated_at ?? ""
+
+    };
 
 }
 
@@ -378,46 +480,73 @@ function setupFilters() {
 
         resetFilters.addEventListener(
             "click",
-            () => {
-
-                if (courseSearch) {
-
-                    courseSearch.value =
-                        "";
-
-                }
-
-
-                if (fieldFilter) {
-
-                    fieldFilter.value =
-                        "";
-
-                }
-
-
-                if (levelFilter) {
-
-                    levelFilter.value =
-                        "";
-
-                }
-
-
-                if (modeFilter) {
-
-                    modeFilter.value =
-                        "";
-
-                }
-
-
-                applyFilters();
-
-            }
+            resetCourseFilters
         );
 
     }
+
+}
+
+
+// =========================================
+// RESET FILTERS
+// =========================================
+
+function resetCourseFilters() {
+
+    const courseSearch =
+        document.getElementById(
+            "courseSearch"
+        );
+
+
+    const fieldFilter =
+        document.getElementById(
+            "fieldFilter"
+        );
+
+
+    const levelFilter =
+        document.getElementById(
+            "levelFilter"
+        );
+
+
+    const modeFilter =
+        document.getElementById(
+            "modeFilter"
+        );
+
+
+    if (courseSearch) {
+
+        courseSearch.value = "";
+
+    }
+
+
+    if (fieldFilter) {
+
+        fieldFilter.value = "";
+
+    }
+
+
+    if (levelFilter) {
+
+        levelFilter.value = "";
+
+    }
+
+
+    if (modeFilter) {
+
+        modeFilter.value = "";
+
+    }
+
+
+    applyFilters();
 
 }
 
@@ -446,67 +575,31 @@ function populateFieldFilter() {
 
 
     const fields =
-        [
-            ...new Set(
-
-                allCourses
-
-                    .map(
-                        course =>
-                            course.field
-                    )
-
-                    .filter(
-                        field =>
-                            field &&
-                            String(
-                                field
-                            ).trim() !== ""
-                    )
-
-                    .map(
-                        field =>
-                            String(
-                                field
-                            ).trim()
-                    )
-
-            )
-        ]
-        .sort(
-            (a, b) =>
-                a.localeCompare(b)
+        getUniqueValues(
+            allCourses,
+            "field"
         );
 
 
-    fieldFilter.innerHTML = `
+    fieldFilter.replaceChildren();
 
-        <option value="">
-            All Fields
-        </option>
 
-    `;
+    fieldFilter.appendChild(
+        createOption(
+            "",
+            "All Fields"
+        )
+    );
 
 
     fields.forEach(
         field => {
 
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-
-            option.value =
-                field;
-
-
-            option.textContent =
-                field;
-
-
             fieldFilter.appendChild(
-                option
+                createOption(
+                    field,
+                    field
+                )
             );
 
         }
@@ -551,67 +644,31 @@ function populateLevelFilter() {
 
 
     const levels =
-        [
-            ...new Set(
-
-                allCourses
-
-                    .map(
-                        course =>
-                            course.level
-                    )
-
-                    .filter(
-                        level =>
-                            level &&
-                            String(
-                                level
-                            ).trim() !== ""
-                    )
-
-                    .map(
-                        level =>
-                            String(
-                                level
-                            ).trim()
-                    )
-
-            )
-        ]
-        .sort(
-            (a, b) =>
-                a.localeCompare(b)
+        getUniqueValues(
+            allCourses,
+            "level"
         );
 
 
-    levelFilter.innerHTML = `
+    levelFilter.replaceChildren();
 
-        <option value="">
-            All Levels
-        </option>
 
-    `;
+    levelFilter.appendChild(
+        createOption(
+            "",
+            "All Levels"
+        )
+    );
 
 
     levels.forEach(
         level => {
 
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-
-            option.value =
-                level;
-
-
-            option.textContent =
-                level;
-
-
             levelFilter.appendChild(
-                option
+                createOption(
+                    level,
+                    level
+                )
             );
 
         }
@@ -656,67 +713,31 @@ function populateModeFilter() {
 
 
     const modes =
-        [
-            ...new Set(
-
-                allCourses
-
-                    .map(
-                        course =>
-                            course.mode
-                    )
-
-                    .filter(
-                        mode =>
-                            mode &&
-                            String(
-                                mode
-                            ).trim() !== ""
-                    )
-
-                    .map(
-                        mode =>
-                            String(
-                                mode
-                            ).trim()
-                    )
-
-            )
-        ]
-        .sort(
-            (a, b) =>
-                a.localeCompare(b)
+        getUniqueValues(
+            allCourses,
+            "mode"
         );
 
 
-    modeFilter.innerHTML = `
+    modeFilter.replaceChildren();
 
-        <option value="">
-            All Modes
-        </option>
 
-    `;
+    modeFilter.appendChild(
+        createOption(
+            "",
+            "All Modes"
+        )
+    );
 
 
     modes.forEach(
         mode => {
 
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-
-            option.value =
-                mode;
-
-
-            option.textContent =
-                mode;
-
-
             modeFilter.appendChild(
-                option
+                createOption(
+                    mode,
+                    mode
+                )
             );
 
         }
@@ -733,6 +754,76 @@ function populateModeFilter() {
             previousValue;
 
     }
+
+}
+
+
+// =========================================
+// GET UNIQUE FILTER VALUES
+// =========================================
+
+function getUniqueValues(
+    courses,
+    property
+) {
+
+    return [
+        ...new Set(
+
+            courses
+
+                .map(
+                    course =>
+                        String(
+                            course?.[property] ?? ""
+                        ).trim()
+                )
+
+                .filter(
+                    value =>
+                        value !== ""
+                )
+
+        )
+    ]
+    .sort(
+        (a, b) =>
+            a.localeCompare(
+                b,
+                undefined,
+                {
+                    sensitivity: "base"
+                }
+            )
+    );
+
+}
+
+
+// =========================================
+// CREATE SELECT OPTION
+// =========================================
+
+function createOption(
+    value,
+    text
+) {
+
+    const option =
+        document.createElement(
+            "option"
+        );
+
+
+    option.value =
+        value;
+
+
+    option.textContent =
+        text;
+
+
+    return option;
 
 }
 
@@ -776,21 +867,15 @@ function applyFilters() {
 
 
     const selectedField =
-        fieldFilter
-            ? fieldFilter.value
-            : "";
+        fieldFilter?.value || "";
 
 
     const selectedLevel =
-        levelFilter
-            ? levelFilter.value
-            : "";
+        levelFilter?.value || "";
 
 
     const selectedMode =
-        modeFilter
-            ? modeFilter.value
-            : "";
+        modeFilter?.value || "";
 
 
     const filteredCourses =
@@ -799,73 +884,86 @@ function applyFilters() {
 
                 const courseName =
                     String(
-                        course.course_name ||
-                        course.courseName ||
-                        ""
+                        course.course_name
                     )
                     .toLowerCase();
 
 
                 const description =
                     String(
-                        course.description ||
-                        ""
+                        course.description
                     )
                     .toLowerCase();
 
 
                 const field =
                     String(
-                        course.field ||
-                        ""
-                    );
+                        course.field
+                    )
+                    .trim();
 
 
                 const level =
                     String(
-                        course.level ||
-                        ""
-                    );
+                        course.level
+                    )
+                    .trim();
 
 
                 const mode =
                     String(
-                        course.mode ||
-                        ""
-                    );
+                        course.mode
+                    )
+                    .trim();
 
 
-                // Search matches course
-                // name or description.
+                // -----------------------------------------
+                // Search
+                // -----------------------------------------
 
                 const searchMatch =
+
                     !searchValue ||
+
                     courseName.includes(
                         searchValue
                     ) ||
+
                     description.includes(
                         searchValue
                     );
 
 
-                // Field filter
+                // -----------------------------------------
+                // Field
+                // -----------------------------------------
 
                 const fieldMatch =
+
                     !selectedField ||
+
                     field === selectedField;
 
 
-                // Level filter
+                // -----------------------------------------
+                // Level
+                // -----------------------------------------
 
                 const levelMatch =
+
                     !selectedLevel ||
+
                     level === selectedLevel;
 
 
-                // Mode filter
+                // -----------------------------------------
+                // Mode
+                // -----------------------------------------
 
                 const modeMatch =
+
                     !selectedMode ||
+
                     mode === selectedMode;
 
 
@@ -919,12 +1017,15 @@ function renderCourses(
     }
 
 
-    courseGrid.innerHTML =
-        "";
+    courseGrid.replaceChildren();
 
+
+    // -----------------------------------------
+    // No results
+    // -----------------------------------------
 
     if (
-        !courseData ||
+        !Array.isArray(courseData) ||
         courseData.length === 0
     ) {
 
@@ -959,6 +1060,10 @@ function renderCourses(
     }
 
 
+    // -----------------------------------------
+    // Course count
+    // -----------------------------------------
+
     if (courseCount) {
 
         courseCount.textContent =
@@ -972,20 +1077,29 @@ function renderCourses(
     }
 
 
+    // -----------------------------------------
+    // Render cards
+    // -----------------------------------------
+
+    const fragment =
+        document.createDocumentFragment();
+
+
     courseData.forEach(
         course => {
 
-            const card =
+            fragment.appendChild(
                 createCourseCard(
                     course
-                );
-
-
-            courseGrid.appendChild(
-                card
+                )
             );
 
         }
+    );
+
+
+    courseGrid.appendChild(
+        fragment
     );
 
 }
@@ -1009,14 +1123,16 @@ function createCourseCard(
         "course-card";
 
 
+    // -----------------------------------------
+    // Exact database fields from server.js
+    // -----------------------------------------
+
     const courseId =
-        course.id ||
-        "";
+        course.id ?? "";
 
 
     const courseName =
         course.course_name ||
-        course.courseName ||
         "Untitled Course";
 
 
@@ -1032,7 +1148,6 @@ function createCourseCard(
 
     const institution =
         course.institution ||
-        course.provider ||
         "Institution not specified";
 
 
@@ -1052,10 +1167,9 @@ function createCourseCard(
 
 
     const courseUrl =
-        course.course_url ||
-        course.courseUrl ||
-        course.url ||
-        "";
+        normalizeCourseUrl(
+            course.course_url
+        );
 
 
     card.dataset.courseId =
@@ -1065,64 +1179,155 @@ function createCourseCard(
 
 
     // -----------------------------------------
-    // Course link
+    // Course button
     // -----------------------------------------
 
-    let buttonHTML =
-        "";
+    if (courseUrl) {
+
+        const link =
+            document.createElement(
+                "a"
+            );
 
 
-    if (
-        courseUrl &&
-        courseUrl !== "#"
-    ) {
+        link.className =
+            "view-course-btn";
 
-        buttonHTML = `
 
-            <a
-                class="view-course-btn"
-                href="${escapeHTML(courseUrl)}"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                View Course
-            </a>
+        link.href =
+            courseUrl;
 
-        `;
+
+        link.target =
+            "_blank";
+
+
+        link.rel =
+            "noopener noreferrer";
+
+
+        link.textContent =
+            "View Course";
+
+
+        card.appendChild(
+            createCourseContent(
+                course,
+                courseId,
+                courseName,
+                field,
+                description,
+                institution,
+                level,
+                mode,
+                duration
+            )
+        );
+
+
+        card
+            .querySelector(
+                ".course-body"
+            )
+            .appendChild(
+                link
+            );
 
     } else {
 
-        buttonHTML = `
+        card.appendChild(
+            createCourseContent(
+                course,
+                courseId,
+                courseName,
+                field,
+                description,
+                institution,
+                level,
+                mode,
+                duration
+            )
+        );
 
-            <button
-                type="button"
-                class="view-course-btn"
-                disabled
-                style="opacity:0.6; cursor:not-allowed;"
-            >
-                Course Link Unavailable
-            </button>
 
-        `;
+        const button =
+            document.createElement(
+                "button"
+            );
+
+
+        button.type =
+            "button";
+
+
+        button.className =
+            "view-course-btn";
+
+
+        button.disabled =
+            true;
+
+
+        button.textContent =
+            "Course Link Unavailable";
+
+
+        button.style.opacity =
+            "0.6";
+
+
+        button.style.cursor =
+            "not-allowed";
+
+
+        card
+            .querySelector(
+                ".course-body"
+            )
+            .appendChild(
+                button
+            );
 
     }
 
 
-    card.innerHTML = `
+    return card;
+
+}
+
+
+// =========================================
+// CREATE COURSE CONTENT
+// =========================================
+
+function createCourseContent(
+    course,
+    courseId,
+    courseName,
+    field,
+    description,
+    institution,
+    level,
+    mode,
+    duration
+) {
+
+    const wrapper =
+        document.createElement(
+            "div"
+        );
+
+
+    wrapper.innerHTML = `
 
         <div class="course-top">
 
             <span class="course-field">
-
                 ${escapeHTML(field)}
-
             </span>
 
-
             <h3>
-
                 ${escapeHTML(courseName)}
-
             </h3>
 
         </div>
@@ -1131,16 +1336,12 @@ function createCourseCard(
         <div class="course-body">
 
             <p class="course-description">
-
                 ${escapeHTML(description)}
-
             </p>
 
 
             <div class="institution">
-
                 ${escapeHTML(institution)}
-
             </div>
 
 
@@ -1203,15 +1404,76 @@ function createCourseCard(
 
             </div>
 
-
-            ${buttonHTML}
-
         </div>
 
     `;
 
 
-    return card;
+    return wrapper.firstElementChild;
+
+}
+
+
+// =========================================
+// NORMALIZE COURSE URL
+// =========================================
+
+function normalizeCourseUrl(
+    value
+) {
+
+    const rawUrl =
+        String(
+            value ?? ""
+        ).trim();
+
+
+    if (
+        !rawUrl ||
+        rawUrl === "#"
+    ) {
+
+        return "";
+
+    }
+
+
+    try {
+
+        const url =
+            new URL(
+                rawUrl,
+                window.location.href
+            );
+
+
+        // -----------------------------------------
+        // Allow normal web links only
+        // -----------------------------------------
+
+        if (
+            url.protocol !== "http:" &&
+            url.protocol !== "https:"
+        ) {
+
+            return "";
+
+        }
+
+
+        return url.href;
+
+    } catch (error) {
+
+        console.warn(
+            "Invalid course URL:",
+            rawUrl
+        );
+
+
+        return "";
+
+    }
 
 }
 
@@ -1231,7 +1493,9 @@ function escapeHTML(
 
 
     div.textContent =
-        value ?? "";
+        String(
+            value ?? ""
+        );
 
 
     return div.innerHTML;
@@ -1246,6 +1510,10 @@ function escapeHTML(
 window.loadCourses =
     loadCourses;
 
+
 window.applyCourseFilters =
     applyFilters;
 
+
+window.resetCourseFilters =
+    resetCourseFilters;

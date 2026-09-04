@@ -1,25 +1,27 @@
-
 "use strict";
 
 document.addEventListener("DOMContentLoaded", () => {
 
+    console.log("=========================================");
     console.log("CO.js loaded successfully");
+    console.log("=========================================");
+
 
     // =========================================
-    // API
+    // API CONFIGURATION
     // =========================================
 
     const API_BASE_URL =
-    "https://campus2career-0pi8.onrender.com";
+        "https://campus2career-0pi8.onrender.com";
 
-const API_URL =
-    `${API_BASE_URL}/api/companies`;
+    const API_URL =
+        `${API_BASE_URL}/api/companies`;
 
-const USER_PROFILE_API_URL =
-    `${API_BASE_URL}/api/user-profile`;
+    const USER_PROFILE_API_URL =
+        `${API_BASE_URL}/api/user-profile`;
 
-const APPLICATION_API_URL =
-    `${API_BASE_URL}/api/applications`;
+    const APPLICATION_API_URL =
+        `${API_BASE_URL}/api/applications`;
 
 
     // =========================================
@@ -27,37 +29,59 @@ const APPLICATION_API_URL =
     // =========================================
 
     const companyContainer =
-        document.getElementById("companyContainer");
+        document.getElementById(
+            "companyContainer"
+        );
 
     const companyName =
-        document.getElementById("companyName");
+        document.getElementById(
+            "companyName"
+        );
 
     const companyIndustry =
-        document.getElementById("companyIndustry");
+        document.getElementById(
+            "companyIndustry"
+        );
 
     const companyAbout =
-        document.getElementById("companyAbout");
+        document.getElementById(
+            "companyAbout"
+        );
 
     const industry =
-        document.getElementById("industry");
+        document.getElementById(
+            "industry"
+        );
 
     const location =
-        document.getElementById("location");
+        document.getElementById(
+            "location"
+        );
 
     const companyLogo =
-        document.getElementById("companyLogo");
+        document.getElementById(
+            "companyLogo"
+        );
 
     const websiteLink =
-        document.getElementById("websiteLink");
+        document.getElementById(
+            "websiteLink"
+        );
 
     const searchCompany =
-        document.getElementById("searchCompany");
+        document.getElementById(
+            "searchCompany"
+        );
 
     const followBtn =
-        document.getElementById("followBtn");
+        document.getElementById(
+            "followBtn"
+        );
 
     const applyBtn =
-        document.getElementById("applyBtn");
+        document.getElementById(
+            "applyBtn"
+        );
 
     const applicationMessage =
         document.getElementById(
@@ -66,7 +90,7 @@ const APPLICATION_API_URL =
 
 
     // =========================================
-    // COMPANY DATA
+    // DATA STATE
     // =========================================
 
     let companies = [];
@@ -80,20 +104,35 @@ const APPLICATION_API_URL =
 
     function getAuthToken() {
 
-        return localStorage.getItem(
-            "authToken"
-        );
+        return (
+            localStorage.getItem(
+                "authToken"
+            ) || ""
+        ).trim();
 
     }
 
 
     function getLoggedInUserId() {
 
+        const storedUserId =
+            localStorage.getItem(
+                "userId"
+            );
+
+        if (
+            !storedUserId ||
+            String(storedUserId).trim() === ""
+        ) {
+
+            return null;
+
+        }
+
+
         const userId =
             Number(
-                localStorage.getItem(
-                    "userId"
-                )
+                storedUserId
             );
 
 
@@ -113,6 +152,31 @@ const APPLICATION_API_URL =
 
 
     // =========================================
+    // CLEAR LOGIN DATA
+    // =========================================
+
+    function clearLoginData() {
+
+        localStorage.removeItem(
+            "authToken"
+        );
+
+        localStorage.removeItem(
+            "userId"
+        );
+
+        localStorage.removeItem(
+            "username"
+        );
+
+        localStorage.removeItem(
+            "loginEmail"
+        );
+
+    }
+
+
+    // =========================================
     // GET COMPANY INITIAL
     // =========================================
 
@@ -122,10 +186,13 @@ const APPLICATION_API_URL =
 
         const name =
             company?.company_name ||
+            company?.name ||
             "C";
 
 
-        return name
+        return String(
+            name
+        )
             .charAt(0)
             .toUpperCase();
 
@@ -194,7 +261,7 @@ const APPLICATION_API_URL =
 
         fallback.setAttribute(
             "aria-label",
-            `${company?.company_name || "Company"} logo`
+            `${company?.company_name || company?.name || "Company"} logo`
         );
 
 
@@ -204,7 +271,7 @@ const APPLICATION_API_URL =
 
 
     // =========================================
-    // GET LOGO URL FROM DATABASE
+    // GET LOGO URL
     // =========================================
 
     function getLogo(
@@ -229,6 +296,103 @@ const APPLICATION_API_URL =
 
 
     // =========================================
+    // GET API ERROR MESSAGE
+    // =========================================
+
+    function getErrorMessage(
+        data,
+        fallback
+    ) {
+
+        if (
+            data &&
+            typeof data === "object"
+        ) {
+
+            return (
+                data.error ||
+                data.message ||
+                data.detail ||
+                fallback
+            );
+
+        }
+
+
+        if (
+            typeof data === "string" &&
+            data.trim() !== ""
+        ) {
+
+            return data.trim();
+
+        }
+
+
+        return fallback;
+
+    }
+
+
+    // =========================================
+    // READ RESPONSE SAFELY
+    // =========================================
+
+    async function readResponseData(
+        response
+    ) {
+
+        const contentType =
+            response.headers.get(
+                "content-type"
+            ) || "";
+
+
+        if (
+            contentType
+                .toLowerCase()
+                .includes(
+                    "application/json"
+                )
+        ) {
+
+            try {
+
+                return await response.json();
+
+            } catch (error) {
+
+                console.error(
+                    "Failed to parse JSON response:",
+                    error
+                );
+
+                return {};
+
+            }
+
+        }
+
+
+        try {
+
+            return await response.text();
+
+        } catch (error) {
+
+            console.error(
+                "Failed to read response text:",
+                error
+            );
+
+            return "";
+
+        }
+
+    }
+
+
+    // =========================================
     // APPLICATION MESSAGE
     // =========================================
 
@@ -239,7 +403,13 @@ const APPLICATION_API_URL =
 
         if (!applicationMessage) {
 
-            alert(message);
+            if (message) {
+
+                console.log(
+                    message
+                );
+
+            }
 
             return;
 
@@ -247,11 +417,13 @@ const APPLICATION_API_URL =
 
 
         applicationMessage.textContent =
-            message;
+            message || "";
 
 
         applicationMessage.style.display =
-            "block";
+            message
+                ? "block"
+                : "none";
 
 
         applicationMessage.style.marginTop =
@@ -268,6 +440,10 @@ const APPLICATION_API_URL =
 
         applicationMessage.style.fontSize =
             "14px";
+
+
+        applicationMessage.style.lineHeight =
+            "1.5";
 
 
         if (success) {
@@ -300,68 +476,92 @@ const APPLICATION_API_URL =
     // =========================================
     // GET SELECTED JOB ID
     // =========================================
+
     /*
-     * The company page can receive a job ID in
-     * one of three ways:
+     * The company/job page can receive the job ID
+     * through:
      *
      * 1. window.selectedJobId
      * 2. localStorage.selectedJobId
      * 3. URL ?jobId=123
+     *
+     * The backend requires a valid job ID for
+     * POST /api/applications.
      */
 
     function getSelectedJobId() {
 
         // --------------------------------------
-        // Option 1:
-        // window.selectedJobId
+        // 1. window.selectedJobId
         // --------------------------------------
 
-        const windowJobId =
-            Number(
-                window.selectedJobId
-            );
+        const windowValue =
+            window.selectedJobId;
 
 
         if (
-            Number.isInteger(
-                windowJobId
-            ) &&
-            windowJobId > 0
+            windowValue !== undefined &&
+            windowValue !== null &&
+            String(windowValue).trim() !== ""
         ) {
 
-            return windowJobId;
+            const windowJobId =
+                Number(
+                    windowValue
+                );
+
+
+            if (
+                Number.isInteger(
+                    windowJobId
+                ) &&
+                windowJobId > 0
+            ) {
+
+                return windowJobId;
+
+            }
 
         }
 
 
         // --------------------------------------
-        // Option 2:
-        // localStorage
+        // 2. localStorage
         // --------------------------------------
 
-        const storedJobId =
-            Number(
-                localStorage.getItem(
-                    "selectedJobId"
-                )
+        const storedValue =
+            localStorage.getItem(
+                "selectedJobId"
             );
 
 
         if (
-            Number.isInteger(
-                storedJobId
-            ) &&
-            storedJobId > 0
+            storedValue &&
+            storedValue.trim() !== ""
         ) {
 
-            return storedJobId;
+            const storedJobId =
+                Number(
+                    storedValue
+                );
+
+
+            if (
+                Number.isInteger(
+                    storedJobId
+                ) &&
+                storedJobId > 0
+            ) {
+
+                return storedJobId;
+
+            }
 
         }
 
 
         // --------------------------------------
-        // Option 3:
-        // URL parameter
+        // 3. URL parameter
         // --------------------------------------
 
         const params =
@@ -370,27 +570,59 @@ const APPLICATION_API_URL =
             );
 
 
-        const urlJobId =
-            Number(
-                params.get(
-                    "jobId"
-                )
+        const urlValue =
+            params.get(
+                "jobId"
             );
 
 
         if (
-            Number.isInteger(
-                urlJobId
-            ) &&
-            urlJobId > 0
+            urlValue &&
+            urlValue.trim() !== ""
         ) {
 
-            return urlJobId;
+            const urlJobId =
+                Number(
+                    urlValue
+                );
+
+
+            if (
+                Number.isInteger(
+                    urlJobId
+                ) &&
+                urlJobId > 0
+            ) {
+
+                return urlJobId;
+
+            }
 
         }
 
 
         return null;
+
+    }
+
+
+    // =========================================
+    // VERIFY CURRENT LOGIN
+    // =========================================
+
+    function isUserLoggedIn() {
+
+        const token =
+            getAuthToken();
+
+        const userId =
+            getLoggedInUserId();
+
+
+        return Boolean(
+            token &&
+            userId
+        );
 
     }
 
@@ -431,29 +663,67 @@ const APPLICATION_API_URL =
         }
 
 
+        console.log(
+            "Fetching candidate profile for user:",
+            userId
+        );
+
+
+        console.log(
+            "Profile API:",
+            `${USER_PROFILE_API_URL}/${userId}`
+        );
+
+
         // --------------------------------------
-        // Request candidate profile
+        // Request profile
         // --------------------------------------
 
-        const response =
-            await fetch(
-                `${USER_PROFILE_API_URL}/${userId}`,
-                {
-                    method: "GET",
+        let response;
 
-                    headers: {
-                        "Authorization":
-                            `Bearer ${token}`,
+        try {
 
-                        "Content-Type":
-                            "application/json"
+            response =
+                await fetch(
+                    `${USER_PROFILE_API_URL}/${userId}`,
+                    {
+                        method: "GET",
+
+                        headers: {
+                            "Authorization":
+                                `Bearer ${token}`,
+
+                            "Accept":
+                                "application/json"
+                        },
+
+                        cache:
+                            "no-store"
                     }
-                }
+                );
+
+        } catch (networkError) {
+
+            console.error(
+                "PROFILE NETWORK ERROR:",
+                networkError
             );
 
+            throw new Error(
+                "Unable to connect to the backend while loading your profile."
+            );
+
+        }
+
+
+        console.log(
+            "Profile HTTP status:",
+            response.status
+        );
+
 
         // --------------------------------------
-        // Session expired
+        // Unauthorized
         // --------------------------------------
 
         if (
@@ -461,21 +731,7 @@ const APPLICATION_API_URL =
             response.status === 403
         ) {
 
-            localStorage.removeItem(
-                "authToken"
-            );
-
-            localStorage.removeItem(
-                "userId"
-            );
-
-            localStorage.removeItem(
-                "username"
-            );
-
-            localStorage.removeItem(
-                "loginEmail"
-            );
+            clearLoginData();
 
 
             throw new Error(
@@ -485,61 +741,53 @@ const APPLICATION_API_URL =
         }
 
 
-        const contentType =
-            response.headers.get(
-                "content-type"
-            ) || "";
+        // --------------------------------------
+        // Read data
+        // --------------------------------------
+
+        const data =
+            await readResponseData(
+                response
+            );
 
 
-        let data;
+        console.log(
+            "Profile API response:",
+            data
+        );
 
 
-        if (
-            contentType.includes(
-                "application/json"
-            )
-        ) {
-
-            data =
-                await response.json();
-
-        } else {
-
-            data =
-                await response.text();
-
-        }
-
+        // --------------------------------------
+        // API error
+        // --------------------------------------
 
         if (!response.ok) {
 
             throw new Error(
-
-                typeof data ===
-                    "object"
-
-                    ? (
-                        data.message ||
-                        data.error ||
-                        "Unable to load your profile."
-                    )
-
-                    : (
-                        data ||
-                        "Unable to load your profile."
-                    )
-
+                getErrorMessage(
+                    data,
+                    "Unable to load your profile."
+                )
             );
 
         }
 
 
+        // --------------------------------------
+        // Support different response formats
+        // --------------------------------------
+
         const profile =
-            data?.profile ||
+            data?.profile ??
+            data?.userProfile ??
+            data?.user ??
             data;
 
 
-        if (!profile) {
+        if (
+            !profile ||
+            typeof profile !== "object"
+        ) {
 
             throw new Error(
                 "Candidate profile was not found."
@@ -560,7 +808,7 @@ const APPLICATION_API_URL =
     async function applyToCompany() {
 
         // --------------------------------------
-        // Check selected company
+        // Check company
         // --------------------------------------
 
         if (!selectedCompany) {
@@ -576,7 +824,39 @@ const APPLICATION_API_URL =
 
 
         // --------------------------------------
-        // Check login token
+        // Check company ID
+        // --------------------------------------
+
+        const companyId =
+            Number(
+                selectedCompany.id ??
+                selectedCompany.company_id
+            );
+
+
+        if (
+            !Number.isInteger(companyId) ||
+            companyId <= 0
+        ) {
+
+            console.error(
+                "Invalid company object:",
+                selectedCompany
+            );
+
+
+            showApplicationMessage(
+                "This company does not have a valid ID.",
+                false
+            );
+
+            return;
+
+        }
+
+
+        // --------------------------------------
+        // Check login
         // --------------------------------------
 
         const token =
@@ -591,8 +871,77 @@ const APPLICATION_API_URL =
             );
 
 
-            window.location.href =
-                "login.html";
+            setTimeout(
+                () => {
+
+                    window.location.href =
+                        "login.html";
+
+                },
+                500
+            );
+
+
+            return;
+
+        }
+
+
+        // --------------------------------------
+        // Check user ID
+        // --------------------------------------
+
+        const userId =
+            getLoggedInUserId();
+
+
+        if (!userId) {
+
+            clearLoginData();
+
+
+            showApplicationMessage(
+                "Your login information is incomplete. Please login again.",
+                false
+            );
+
+
+            setTimeout(
+                () => {
+
+                    window.location.href =
+                        "login.html";
+
+                },
+                500
+            );
+
+
+            return;
+
+        }
+
+
+        // --------------------------------------
+        // IMPORTANT:
+        // Backend REQUIRES a valid job ID
+        // --------------------------------------
+
+        const jobId =
+            getSelectedJobId();
+
+
+        if (!jobId) {
+
+            showApplicationMessage(
+                "Please open a specific job before applying. A job ID is required.",
+                false
+            );
+
+
+            console.warn(
+                "Application blocked because no valid jobId was found."
+            );
 
 
             return;
@@ -626,7 +975,7 @@ const APPLICATION_API_URL =
         try {
 
             // =====================================
-            // GET CANDIDATE PROFILE
+            // GET CURRENT USER PROFILE
             // =====================================
 
             const profile =
@@ -634,264 +983,289 @@ const APPLICATION_API_URL =
 
 
             console.log(
-                "Candidate profile:",
+                "Candidate profile received:",
                 profile
             );
 
 
             // =====================================
-            // GET JOB ID
+            // BUILD APPLICATION DATA
             // =====================================
 
-            const jobId =
-                getSelectedJobId();
+            const profileData = {
+
+                user_id:
+                    profile.user_id ??
+                    profile.userId ??
+                    profile.id ??
+                    userId,
+
+
+                name:
+                    profile.name ??
+                    profile.full_name ??
+                    profile.username ??
+                    "",
+
+
+                headline:
+                    profile.headline ??
+                    "",
+
+
+                tagline:
+                    profile.tagline ??
+                    "",
+
+
+                location:
+                    profile.location ??
+                    "",
+
+
+                connections:
+                    profile.connections ??
+                    0,
+
+
+                followers:
+                    profile.followers ??
+                    0,
+
+
+                about:
+                    profile.about ??
+                    "",
+
+
+                email:
+                    profile.email ??
+                    localStorage.getItem(
+                        "loginEmail"
+                    ) ??
+                    "",
+
+
+                phone:
+                    profile.phone ??
+                    "",
+
+
+                github:
+                    profile.github ??
+                    "",
+
+
+                linkedin:
+                    profile.linkedin ??
+                    "",
+
+
+                education:
+                    profile.education ??
+                    "",
+
+
+                experience:
+                    profile.experience ??
+                    "",
+
+
+                projects:
+                    profile.projects ??
+                    "",
+
+
+                skills:
+                    profile.skills ??
+                    "",
+
+
+                certifications:
+                    profile.certifications ??
+                    "",
+
+
+                achievements:
+                    profile.achievements ??
+                    "",
+
+
+                achievement_1:
+                    profile.achievement_1 ??
+                    "",
+
+
+                achievement_2:
+                    profile.achievement_2 ??
+                    "",
+
+
+                achievement_3:
+                    profile.achievement_3 ??
+                    "",
+
+
+                achievement_4:
+                    profile.achievement_4 ??
+                    "",
+
+
+                achievement_5:
+                    profile.achievement_5 ??
+                    "",
+
+
+                achievement_6:
+                    profile.achievement_6 ??
+                    "",
+
+
+                profile_pic:
+                    profile.profile_pic ??
+                    profile.profilePic ??
+                    "",
+
+
+                banner_image:
+                    profile.banner_image ??
+                    profile.bannerImage ??
+                    "",
+
+
+                resume_url:
+                    profile.resume_url ??
+                    profile.resumeUrl ??
+                    "",
+
+
+                cover_letter:
+                    profile.cover_letter ??
+                    profile.coverLetter ??
+                    ""
+
+            };
 
 
             // =====================================
-            // CANDIDATE USER ID
-            // =====================================
-
-            const userId =
-                getLoggedInUserId();
-
-
-            // =====================================
-            // CREATE APPLICATION DATA
+            // APPLICATION PAYLOAD
             // =====================================
 
             const applicationData = {
 
-                /*
-                 * Company receiving the application
-                 */
                 company_id:
-                    Number(
-                        selectedCompany.id
-                    ),
+                    companyId,
 
 
-                /*
-                 * Specific job.
-                 *
-                 * Can be null when the company
-                 * page is not connected to a job.
-                 */
                 job_id:
                     jobId,
 
 
-                /*
-                 * Candidate profile.
-                 *
-                 * The backend should still use
-                 * req.user.id from the JWT as the
-                 * authoritative user ID.
-                 */
-                profile: {
-
-                    user_id:
-                        profile.user_id ??
-                        profile.userId ??
-                        profile.id ??
-                        userId,
-
-
-                    name:
-                        profile.name ??
-                        profile.full_name ??
-                        profile.username ??
-                        "",
-
-
-                    headline:
-                        profile.headline ??
-                        "",
-
-
-                    tagline:
-                        profile.tagline ??
-                        "",
-
-
-                    location:
-                        profile.location ??
-                        "",
-
-
-                    connections:
-                        profile.connections ??
-                        0,
-
-
-                    followers:
-                        profile.followers ??
-                        0,
-
-
-                    about:
-                        profile.about ??
-                        "",
-
-
-                    email:
-                        profile.email ??
-                        "",
-
-
-                    phone:
-                        profile.phone ??
-                        "",
-
-
-                    github:
-                        profile.github ??
-                        "",
-
-
-                    linkedin:
-                        profile.linkedin ??
-                        "",
-
-
-                    education:
-                        profile.education ??
-                        "",
-
-
-                    experience:
-                        profile.experience ??
-                        "",
-
-
-                    projects:
-                        profile.projects ??
-                        "",
-
-
-                    skills:
-                        profile.skills ??
-                        "",
-
-
-                    certifications:
-                        profile.certifications ??
-                        "",
-
-
-                    achievements:
-                        profile.achievements ??
-                        "",
-
-
-                    achievement_1:
-                        profile.achievement_1 ??
-                        "",
-
-
-                    achievement_2:
-                        profile.achievement_2 ??
-                        "",
-
-
-                    achievement_3:
-                        profile.achievement_3 ??
-                        "",
-
-
-                    achievement_4:
-                        profile.achievement_4 ??
-                        "",
-
-
-                    achievement_5:
-                        profile.achievement_5 ??
-                        "",
-
-
-                    achievement_6:
-                        profile.achievement_6 ??
-                        "",
-
-
-                    profile_pic:
-                        profile.profile_pic ??
-                        profile.profilePic ??
-                        "",
-
-
-                    banner_image:
-                        profile.banner_image ??
-                        profile.bannerImage ??
-                        ""
-
-                }
+                profile:
+                    profileData
 
             };
 
 
             console.log(
-                "Application being sent:",
+                "========================================="
+            );
+
+            console.log(
+                "Sending application..."
+            );
+
+            console.log(
+                "Company ID:",
+                companyId
+            );
+
+            console.log(
+                "Job ID:",
+                jobId
+            );
+
+            console.log(
+                "User ID:",
+                userId
+            );
+
+            console.log(
+                "Application payload:",
                 applicationData
+            );
+
+            console.log(
+                "========================================="
             );
 
 
             // =====================================
-            // SEND APPLICATION TO NODE.JS
+            // SEND APPLICATION
             // =====================================
 
-            const response =
-                await fetch(
-                    APPLICATION_API_URL,
-                    {
-                        method: "POST",
+            let response;
 
-                        headers: {
+            try {
 
-                            "Content-Type":
-                                "application/json",
+                response =
+                    await fetch(
+                        APPLICATION_API_URL,
+                        {
+                            method: "POST",
 
-                            "Authorization":
-                                `Bearer ${token}`
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
 
-                        },
+                                "Accept":
+                                    "application/json",
 
-                        body:
-                            JSON.stringify(
-                                applicationData
-                            )
+                                "Authorization":
+                                    `Bearer ${token}`
+                            },
 
-                    }
+                            body:
+                                JSON.stringify(
+                                    applicationData
+                                )
+                        }
+                    );
+
+            } catch (networkError) {
+
+                console.error(
+                    "APPLICATION NETWORK ERROR:",
+                    networkError
                 );
+
+                throw new Error(
+                    "Unable to connect to the backend while submitting your application."
+                );
+
+            }
+
+
+            console.log(
+                "Application HTTP status:",
+                response.status
+            );
 
 
             // =====================================
             // READ RESPONSE
             // =====================================
 
-            const contentType =
-                response.headers.get(
-                    "content-type"
-                ) || "";
+            const data =
+                await readResponseData(
+                    response
+                );
 
 
-            let data;
-
-
-            if (
-                contentType.includes(
-                    "application/json"
-                )
-            ) {
-
-                data =
-                    await response.json();
-
-            } else {
-
-                data =
-                    await response.text();
-
-            }
+            console.log(
+                "Application API response:",
+                data
+            );
 
 
             // =====================================
@@ -903,21 +1277,7 @@ const APPLICATION_API_URL =
                 response.status === 403
             ) {
 
-                localStorage.removeItem(
-                    "authToken"
-                );
-
-                localStorage.removeItem(
-                    "userId"
-                );
-
-                localStorage.removeItem(
-                    "username"
-                );
-
-                localStorage.removeItem(
-                    "loginEmail"
-                );
+                clearLoginData();
 
 
                 throw new Error(
@@ -934,21 +1294,10 @@ const APPLICATION_API_URL =
             if (!response.ok) {
 
                 throw new Error(
-
-                    typeof data ===
-                        "object"
-
-                        ? (
-                            data.message ||
-                            data.error ||
-                            "Application submission failed."
-                        )
-
-                        : (
-                            data ||
-                            "Application submission failed."
-                        )
-
+                    getErrorMessage(
+                        data,
+                        "Application submission failed."
+                    )
                 );
 
             }
@@ -959,21 +1308,25 @@ const APPLICATION_API_URL =
             // =====================================
 
             console.log(
-                "Application submitted:",
-                data
+                "Application submitted successfully."
             );
 
 
-            showApplicationMessage(
+            const successMessage =
                 data?.message ||
-                `Your profile has been sent to ${selectedCompany.company_name}.`,
+                data?.successMessage ||
+                `Your profile has been sent to ${selectedCompany.company_name || "the company"}.`;
+
+
+            showApplicationMessage(
+                successMessage,
                 true
             );
 
 
-            // --------------------------------------
-            // Change button
-            // --------------------------------------
+            // =====================================
+            // UPDATE APPLY BUTTON
+            // =====================================
 
             if (applyBtn) {
 
@@ -1004,10 +1357,11 @@ const APPLICATION_API_URL =
                 JSON.stringify({
 
                     companyId:
-                        selectedCompany.id,
+                        companyId,
 
                     companyName:
-                        selectedCompany.company_name,
+                        selectedCompany.company_name ||
+                        "",
 
                     jobId:
                         jobId,
@@ -1025,8 +1379,16 @@ const APPLICATION_API_URL =
         } catch (error) {
 
             console.error(
-                "Application error:",
+                "========================================="
+            );
+
+            console.error(
+                "APPLICATION ERROR:",
                 error
+            );
+
+            console.error(
+                "========================================="
             );
 
 
@@ -1045,6 +1407,11 @@ const APPLICATION_API_URL =
 
                 applyBtn.disabled =
                     false;
+
+
+                applyBtn.classList.remove(
+                    "applied"
+                );
 
 
                 applyBtn.innerHTML =
@@ -1084,19 +1451,21 @@ const APPLICATION_API_URL =
             company;
 
 
-        /*
-         * Make the selected company available
-         * to other JavaScript code as well.
-         */
-
         window.selectedCompany =
             company;
 
 
         window.selectedCompanyId =
             Number(
-                company.id
+                company.id ??
+                company.company_id
             );
+
+
+        console.log(
+            "Selected company:",
+            company
+        );
 
 
         // =====================================
@@ -1107,13 +1476,14 @@ const APPLICATION_API_URL =
 
             companyName.textContent =
                 company.company_name ||
+                company.name ||
                 "Company";
 
         }
 
 
         // =====================================
-        // INDUSTRY
+        // COMPANY INDUSTRY
         // =====================================
 
         if (companyIndustry) {
@@ -1126,13 +1496,14 @@ const APPLICATION_API_URL =
 
 
         // =====================================
-        // ABOUT
+        // COMPANY ABOUT
         // =====================================
 
         if (companyAbout) {
 
             companyAbout.textContent =
                 company.about ||
+                company.description ||
                 "No company information available.";
 
         }
@@ -1165,11 +1536,13 @@ const APPLICATION_API_URL =
 
 
         // =====================================
-        // MAIN COMPANY LOGO
+        // COMPANY LOGO
         // =====================================
 
         const logoUrl =
-            getLogo(company);
+            getLogo(
+                company
+            );
 
 
         const oldFallback =
@@ -1185,76 +1558,85 @@ const APPLICATION_API_URL =
         }
 
 
-        if (logoUrl) {
+        if (
+            logoUrl &&
+            companyLogo
+        ) {
 
-            if (companyLogo) {
-
-                companyLogo.src =
-                    logoUrl;
-
-
-                companyLogo.alt =
-                    `${company.company_name || "Company"} Logo`;
+            companyLogo.src =
+                logoUrl;
 
 
-                companyLogo.style.display =
-                    "block";
+            companyLogo.alt =
+                `${company.company_name || "Company"} Logo`;
 
 
-                companyLogo.onload =
-                    () => {
-
-                        companyLogo.style.display =
-                            "block";
-
-                    };
+            companyLogo.style.display =
+                "block";
 
 
-                companyLogo.onerror =
-                    () => {
+            companyLogo.onload =
+                () => {
 
-                        companyLogo.style.display =
-                            "none";
+                    companyLogo.style.display =
+                        "block";
 
-
-                        const fallback =
-                            createLogoFallback(
-                                company,
-                                "company-text-logo main-logo-fallback"
-                            );
+                };
 
 
-                        fallback.id =
-                            "mainLogoFallback";
+            companyLogo.onerror =
+                () => {
 
+                    companyLogo.style.display =
+                        "none";
+
+
+                    const fallback =
+                        createLogoFallback(
+                            company,
+                            "company-text-logo main-logo-fallback"
+                        );
+
+
+                    fallback.id =
+                        "mainLogoFallback";
+
+
+                    if (
+                        companyLogo.parentNode
+                    ) {
 
                         companyLogo.parentNode.insertBefore(
                             fallback,
                             companyLogo
                         );
 
-                    };
+                    }
 
-            }
+                };
 
-        } else {
+        }
 
-            if (companyLogo) {
+        else if (companyLogo) {
 
-                companyLogo.style.display =
-                    "none";
-
-
-                const fallback =
-                    createLogoFallback(
-                        company,
-                        "company-text-logo main-logo-fallback"
-                    );
+            companyLogo.style.display =
+                "none";
 
 
-                fallback.id =
-                    "mainLogoFallback";
+            const fallback =
+                createLogoFallback(
+                    company,
+                    "company-text-logo main-logo-fallback"
+                );
 
+
+            fallback.id =
+                "mainLogoFallback";
+
+
+            if (
+                companyLogo.parentNode
+            ) {
 
                 companyLogo.parentNode.insertBefore(
                     fallback,
@@ -1277,10 +1659,26 @@ const APPLICATION_API_URL =
             ).trim() !== ""
         ) {
 
-            const companyWebsite =
+            let companyWebsite =
                 String(
                     company.website
                 ).trim();
+
+
+            // ---------------------------------
+            // Add protocol if missing
+            // ---------------------------------
+
+            if (
+                !/^https?:\/\//i.test(
+                    companyWebsite
+                )
+            ) {
+
+                companyWebsite =
+                    `https://${companyWebsite}`;
+
+            }
 
 
             if (websiteLink) {
@@ -1310,7 +1708,9 @@ const APPLICATION_API_URL =
 
             }
 
-        } else {
+        }
+
+        else {
 
             if (websiteLink) {
 
@@ -1339,100 +1739,146 @@ const APPLICATION_API_URL =
         // APPLY BUTTON STATE
         // =====================================
 
-        if (applyBtn) {
+        updateApplyButtonState();
+
+    }
+
+
+    // =========================================
+    // UPDATE APPLY BUTTON
+    // =========================================
+
+    function updateApplyButtonState() {
+
+        if (!applyBtn) {
+
+            return;
+
+        }
+
+
+        // --------------------------------------
+        // Default state
+        // --------------------------------------
+
+        applyBtn.disabled =
+            false;
+
+
+        applyBtn.classList.remove(
+            "applied"
+        );
+
+
+        applyBtn.innerHTML =
+            `
+            <i class="fas fa-paper-plane"></i>
+            Apply Now
+            `;
+
+
+        // --------------------------------------
+        // No company
+        // --------------------------------------
+
+        if (!selectedCompany) {
 
             applyBtn.disabled =
-                false;
+                true;
+
+            return;
+
+        }
 
 
-            applyBtn.classList.remove(
-                "applied"
+        // --------------------------------------
+        // Check previous application
+        // --------------------------------------
+
+        const lastApplication =
+            sessionStorage.getItem(
+                "lastApplication"
             );
 
 
-            applyBtn.innerHTML =
-                `
-                <i class="fas fa-paper-plane"></i>
-                Apply Now
-                `;
+        if (!lastApplication) {
+
+            return;
+
+        }
 
 
-            // ----------------------------------
-            // Check session state
-            // ----------------------------------
+        try {
 
-            const lastApplication =
-                sessionStorage.getItem(
-                    "lastApplication"
+            const saved =
+                JSON.parse(
+                    lastApplication
                 );
 
 
-            if (lastApplication) {
-
-                try {
-
-                    const saved =
-                        JSON.parse(
-                            lastApplication
-                        );
+            const selectedCompanyId =
+                Number(
+                    selectedCompany.id ??
+                    selectedCompany.company_id
+                );
 
 
-                    const sameCompany =
-                        String(
-                            saved.companyId
-                        ) ===
-                        String(
-                            company.id
-                        );
+            const savedCompanyId =
+                Number(
+                    saved.companyId
+                );
 
 
-                    const currentJobId =
-                        getSelectedJobId();
+            const currentJobId =
+                getSelectedJobId();
 
 
-                    const sameJob =
-                        !currentJobId ||
-                        !saved.jobId ||
-                        String(
-                            saved.jobId
-                        ) ===
-                        String(
-                            currentJobId
-                        );
+            const savedJobId =
+                saved.jobId
+                    ? Number(saved.jobId)
+                    : null;
 
 
-                    if (
-                        sameCompany &&
-                        sameJob
-                    ) {
-
-                        applyBtn.disabled =
-                            true;
+            const sameCompany =
+                selectedCompanyId ===
+                savedCompanyId;
 
 
-                        applyBtn.classList.add(
-                            "applied"
-                        );
+            const sameJob =
+                currentJobId &&
+                savedJobId &&
+                currentJobId ===
+                savedJobId;
 
 
-                        applyBtn.innerHTML =
-                            `
-                            <i class="fas fa-check"></i>
-                            Applied
-                            `;
+            if (
+                sameCompany &&
+                sameJob
+            ) {
 
-                    }
+                applyBtn.disabled =
+                    true;
 
-                } catch (error) {
 
-                    console.warn(
-                        "Could not read application state:",
-                        error
-                    );
+                applyBtn.classList.add(
+                    "applied"
+                );
 
-                }
+
+                applyBtn.innerHTML =
+                    `
+                    <i class="fas fa-check"></i>
+                    Applied
+                    `;
 
             }
+
+        } catch (error) {
+
+            console.warn(
+                "Could not read application state:",
+                error
+            );
 
         }
 
@@ -1449,6 +1895,10 @@ const APPLICATION_API_URL =
 
         if (!companyContainer) {
 
+            console.warn(
+                "companyContainer not found."
+            );
+
             return;
 
         }
@@ -1463,7 +1913,7 @@ const APPLICATION_API_URL =
         // =====================================
 
         if (
-            !companyData ||
+            !Array.isArray(companyData) ||
             companyData.length === 0
         ) {
 
@@ -1486,6 +1936,13 @@ const APPLICATION_API_URL =
         companyData.forEach(
             company => {
 
+                if (!company) {
+
+                    return;
+
+                }
+
+
                 const card =
                     document.createElement(
                         "div"
@@ -1498,11 +1955,12 @@ const APPLICATION_API_URL =
 
                 card.dataset.companyId =
                     company.id ??
+                    company.company_id ??
                     "";
 
 
                 // =================================
-                // LOGO URL
+                // LOGO
                 // =================================
 
                 const logoUrl =
@@ -1522,32 +1980,30 @@ const APPLICATION_API_URL =
                         ${
                             logoUrl
                                 ? `
-                                    <img
-                                        src="${escapeHTML(
-                                            logoUrl
-                                        )}"
-                                        alt="${escapeHTML(
-                                            company.company_name ||
-                                            "Company"
-                                        )} Logo"
-                                        class="company-list-logo"
-                                    >
-                                  `
+                                <img
+                                    src="${escapeHTML(logoUrl)}"
+                                    alt="${escapeHTML(
+                                        company.company_name ||
+                                        company.name ||
+                                        "Company"
+                                    )} Logo"
+                                    class="company-list-logo"
+                                >
+                                `
                                 : ""
                         }
 
                     </div>
-
 
                     <div class="company-info">
 
                         <h3>
                             ${escapeHTML(
                                 company.company_name ||
+                                company.name ||
                                 "Company"
                             )}
                         </h3>
-
 
                         <p>
                             ${escapeHTML(
@@ -1561,7 +2017,7 @@ const APPLICATION_API_URL =
 
 
                 // =================================
-                // CARD LOGO
+                // LOGO HANDLING
                 // =================================
 
                 const logoContainer =
@@ -1600,13 +2056,19 @@ const APPLICATION_API_URL =
                                 );
 
 
-                            logoContainer.appendChild(
-                                fallback
-                            );
+                            if (logoContainer) {
+
+                                logoContainer.appendChild(
+                                    fallback
+                                );
+
+                            }
 
                         };
 
-                } else {
+                }
+
+                else {
 
                     const fallback =
                         createLogoFallback(
@@ -1615,9 +2077,13 @@ const APPLICATION_API_URL =
                         );
 
 
-                    logoContainer.appendChild(
-                        fallback
-                    );
+                    if (logoContainer) {
+
+                        logoContainer.appendChild(
+                            fallback
+                        );
+
+                    }
 
                 }
 
@@ -1673,14 +2139,25 @@ const APPLICATION_API_URL =
 
 
     // =========================================
-    // LOAD COMPANIES FROM NODE.JS API
+    // LOAD COMPANIES FROM BACKEND
     // =========================================
 
     async function loadCompanies() {
 
         console.log(
-            "Calling API:",
+            "========================================="
+        );
+
+        console.log(
+            "Loading companies from:"
+        );
+
+        console.log(
             API_URL
+        );
+
+        console.log(
+            "========================================="
         );
 
 
@@ -1698,41 +2175,120 @@ const APPLICATION_API_URL =
 
         try {
 
-            const response =
-                await fetch(
-                    API_URL
+            let response;
+
+            try {
+
+                response =
+                    await fetch(
+                        API_URL,
+                        {
+                            method: "GET",
+
+                            headers: {
+                                "Accept":
+                                    "application/json"
+                            },
+
+                            cache:
+                                "no-store"
+                        }
+                    );
+
+            } catch (networkError) {
+
+                console.error(
+                    "COMPANY API NETWORK ERROR:",
+                    networkError
                 );
 
-
-            console.log(
-                "API response status:",
-                response.status
-            );
-
-
-            if (!response.ok) {
-
                 throw new Error(
-                    `API returned status ${response.status}`
+                    "Unable to connect to the Campus2Career backend."
                 );
 
             }
 
 
+            console.log(
+                "Companies HTTP status:",
+                response.status
+            );
+
+
+            // =====================================
+            // READ API RESPONSE
+            // =====================================
+
             const data =
-                await response.json();
+                await readResponseData(
+                    response
+                );
 
 
             console.log(
-                "Data received from API:",
+                "Companies API response:",
                 data
             );
 
 
-            if (!Array.isArray(data)) {
+            // =====================================
+            // HANDLE SERVER ERROR
+            // =====================================
+
+            if (!response.ok) {
 
                 throw new Error(
-                    "API did not return an array of companies."
+                    getErrorMessage(
+                        data,
+                        `Company API returned status ${response.status}.`
+                    )
+                );
+
+            }
+
+
+            // =====================================
+            // SUPPORT POSSIBLE API RESPONSE SHAPES
+            // =====================================
+
+            let companyData;
+
+
+            if (Array.isArray(data)) {
+
+                companyData =
+                    data;
+
+            }
+
+            else if (
+                data &&
+                Array.isArray(
+                    data.companies
+                )
+            ) {
+
+                companyData =
+                    data.companies;
+
+            }
+
+            else if (
+                data &&
+                Array.isArray(
+                    data.data
+                )
+            ) {
+
+                companyData =
+                    data.data;
+
+            }
+
+            else {
+
+                throw new Error(
+                    "The companies API did not return a valid company list."
                 );
 
             }
@@ -1743,7 +2299,12 @@ const APPLICATION_API_URL =
             // =====================================
 
             companies =
-                data;
+                companyData;
+
+
+            console.log(
+                `Loaded ${companies.length} companies.`
+            );
 
 
             // =====================================
@@ -1769,7 +2330,7 @@ const APPLICATION_API_URL =
 
 
                 const firstCard =
-                    document.querySelector(
+                    companyContainer?.querySelector(
                         ".company-item"
                     );
 
@@ -1784,11 +2345,75 @@ const APPLICATION_API_URL =
 
             }
 
+
+            else {
+
+                selectedCompany =
+                    null;
+
+
+                if (companyName) {
+
+                    companyName.textContent =
+                        "No company available";
+
+                }
+
+
+                if (companyIndustry) {
+
+                    companyIndustry.textContent =
+                        "";
+
+                }
+
+
+                if (companyAbout) {
+
+                    companyAbout.textContent =
+                        "";
+
+                }
+
+
+                if (industry) {
+
+                    industry.textContent =
+                        "";
+
+                }
+
+
+                if (location) {
+
+                    location.textContent =
+                        "";
+
+                }
+
+
+                if (applyBtn) {
+
+                    applyBtn.disabled =
+                        true;
+
+                }
+
+            }
+
         } catch (error) {
 
             console.error(
-                "API FETCH ERROR:",
+                "========================================="
+            );
+
+            console.error(
+                "COMPANY FETCH ERROR:",
                 error
+            );
+
+            console.error(
+                "========================================="
             );
 
 
@@ -1803,8 +2428,10 @@ const APPLICATION_API_URL =
                         <br>
                         <br>
 
-                        Please make sure the Node.js server
-                        is running on port 5000.
+                        ${escapeHTML(
+                            error.message ||
+                            "Unable to load companies."
+                        )}
 
                     </div>
                     `;
@@ -1841,27 +2468,37 @@ const APPLICATION_API_URL =
                         company => {
 
                             const name =
-                                (
+                                String(
                                     company.company_name ||
+                                    company.name ||
                                     ""
                                 )
-                                .toLowerCase();
+                                    .toLowerCase();
 
 
                             const companyIndustry =
-                                (
+                                String(
                                     company.industry ||
                                     ""
                                 )
-                                .toLowerCase();
+                                    .toLowerCase();
 
 
                             const companyLocation =
-                                (
+                                String(
                                     company.location ||
                                     ""
                                 )
-                                .toLowerCase();
+                                    .toLowerCase();
+
+
+                            const companyAboutText =
+                                String(
+                                    company.about ||
+                                    company.description ||
+                                    ""
+                                )
+                                    .toLowerCase();
 
 
                             return (
@@ -1882,6 +2519,12 @@ const APPLICATION_API_URL =
                                     searchText
                                 )
 
+                                ||
+
+                                companyAboutText.includes(
+                                    searchText
+                                )
+
                             );
 
                         }
@@ -1898,7 +2541,7 @@ const APPLICATION_API_URL =
 
 
                 // =================================
-                // SHOW FIRST SEARCH RESULT
+                // SHOW FIRST RESULT
                 // =================================
 
                 if (
@@ -1911,7 +2554,7 @@ const APPLICATION_API_URL =
 
 
                     const firstCard =
-                        document.querySelector(
+                        companyContainer?.querySelector(
                             ".company-item"
                         );
 
@@ -1924,10 +2567,36 @@ const APPLICATION_API_URL =
 
                     }
 
-                } else {
+                }
+
+                else {
 
                     selectedCompany =
                         null;
+
+
+                    if (companyName) {
+
+                        companyName.textContent =
+                            "No company found";
+
+                    }
+
+
+                    if (companyIndustry) {
+
+                        companyIndustry.textContent =
+                            "";
+
+                    }
+
+
+                    if (companyAbout) {
+
+                        companyAbout.textContent =
+                            "";
+
+                    }
 
 
                     if (applyBtn) {
@@ -1979,6 +2648,13 @@ const APPLICATION_API_URL =
     // FOLLOW BUTTON
     // =========================================
 
+    /*
+     * No follow API endpoint was present in the
+     * supplied CO.js flow, so this remains a local
+     * UI state only. It does NOT pretend that the
+     * database has been updated.
+     */
+
     if (followBtn) {
 
         followBtn.addEventListener(
@@ -2021,7 +2697,9 @@ const APPLICATION_API_URL =
                         "following"
                     );
 
-                } else {
+                }
+
+                else {
 
                     followBtn.dataset.following =
                         "false";
@@ -2044,10 +2722,21 @@ const APPLICATION_API_URL =
 
 
     // =========================================
+    // CHECK PAGE AUTH STATE
+    // =========================================
+
+    console.log(
+        "Authentication state:",
+        isUserLoggedIn()
+            ? "Logged in"
+            : "Not logged in"
+    );
+
+
+    // =========================================
     // START
     // =========================================
 
     loadCompanies();
 
 });
-

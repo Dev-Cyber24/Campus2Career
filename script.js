@@ -3,6 +3,7 @@
 // =========================================================
 // DATABASE + JWT + PROFILE + PEOPLE + COMPANIES + COURSES
 // + POSTS + LIKES + SHARES + COMMENTS + SEARCH
+// + AI CHATBOT + INDUSTRY READINESS TEST
 // =========================================================
 
 
@@ -13,11 +14,27 @@
 const API_BASE =
     "https://campus2career-0pi8.onrender.com/api";
 
+
+// =========================================================
+// PROFILE APIs
+// =========================================================
+
+// Logged-in user's own profile.
+const MY_PROFILE_API =
+    `${API_BASE}/my-profile`;
+
+// Public profile of another user.
 const PUBLIC_PROFILE_API =
     `${API_BASE}/user-profile`;
 
+// People list.
 const PEOPLE_API =
     `${API_BASE}/user-profiles`;
+
+
+// =========================================================
+// COMPANY / COURSE / POST APIs
+// =========================================================
 
 const COMPANIES_API =
     `${API_BASE}/companies`;
@@ -29,8 +46,30 @@ const POSTS_API =
     `${API_BASE}/posts`;
 
 
+// =========================================================
+// OPTIONAL CONNECTION API
+// =========================================================
+//
+// The current backend evidence does not establish this route.
+// The frontend will NOT fake a successful connection if this
+// endpoint is unavailable.
+// =========================================================
+
+const CONNECTIONS_API =
+    `${API_BASE}/connections`;
+
+
+// =========================================================
+// AI
+// =========================================================
+
 const AI_CHATBOT_URL =
-    "https://campus2career-0pi8.onrender.com/api/ai-chat";
+    `${API_BASE}/ai-chat`;
+
+
+// =========================================================
+// INDUSTRY READINESS
+// =========================================================
 
 const INDUSTRY_TEST_START_URL =
     `${API_BASE}/industry-readiness/start`;
@@ -38,23 +77,51 @@ const INDUSTRY_TEST_START_URL =
 const INDUSTRY_TEST_SUBMIT_URL =
     `${API_BASE}/industry-readiness/submit`;
 
-// In script.js - update line 8 and navigation
-// =========================================================
-// PAGE FILES
-// =========================================================
-
-
- const COMPANY_PAGE = "Companyprofile.html";
-const PROFILE_PAGE = "Profile.html";
-const COURSES_PAGE = "Courses.html";
-
-let industryTest = null;
-let industryTestAnswers = [];
-let industryCurrentQuestion = 0;
+const INDUSTRY_TEST_LATEST_URL =
+    `${API_BASE}/industry-readiness/latest`;
 
 
 // =========================================================
-// STORAGE
+// PAGE FILE NAMES
+// =========================================================
+//
+// IMPORTANT:
+// GitHub Pages is case-sensitive.
+// Keep these names EXACTLY the same as the files in GitHub.
+// =========================================================
+
+const PROFILE_PAGE =
+    "Profile.html";
+
+const COMPANY_PAGE =
+    "Companyprofile.html";
+
+const COURSES_PAGE =
+    "Courses.html";
+
+const COURSE_PROFILE_PAGE =
+    "courseprofile.html";
+
+const LOGIN_PAGE =
+    "login.html";
+
+
+// =========================================================
+// INDUSTRY TEST STATE
+// =========================================================
+
+let industryTest =
+    null;
+
+let industryTestAnswers =
+    [];
+
+let industryCurrentQuestion =
+    0;
+
+
+// =========================================================
+// STORAGE KEYS
 // =========================================================
 
 const TOKEN_KEY =
@@ -74,35 +141,66 @@ const EMAIL_KEY =
 // GLOBAL DATA
 // =========================================================
 
-let currentUserProfile = null;
-let people = [];
-let companies = [];
-let courses = [];
-let posts = [];
+let currentUserProfile =
+    null;
+
+let people =
+    [];
+
+let companies =
+    [];
+
+let courses =
+    [];
+
+let posts =
+    [];
 
 
 // =========================================================
-// PROFILE COMPLETION
+// PROFILE COMPLETION FIELDS
+// =========================================================
+//
+// Connections and followers are statistics and are therefore
+// not counted as profile-completion fields.
 // =========================================================
 
 const profileCompletionFields = [
+
     "name",
+
     "headline",
+
     "tagline",
+
     "location",
+
     "about",
+
     "email",
+
     "phone",
+
     "github",
+
     "linkedin",
+
     "education",
+
     "experience",
+
     "projects",
+
     "skills",
+
     "certifications",
+
     "achievements",
+
     "profilePic",
+
     "bannerImage"
+
 ];
 
 
@@ -116,17 +214,27 @@ document.addEventListener(
 );
 
 
+// =========================================================
+// INITIALIZE PORTAL
+// =========================================================
+
 async function initializePortal() {
 
     console.log(
-        "Campus2Career portal initialized."
+        "Campus2Career main portal initialized."
     );
+
 
     const token =
         getAuthToken();
 
     const currentUserId =
         getCurrentUserId();
+
+
+    // -----------------------------------------------------
+    // AUTHENTICATION CHECK
+    // -----------------------------------------------------
 
     if (
         !token ||
@@ -137,31 +245,61 @@ async function initializePortal() {
             "No valid authentication session."
         );
 
-       window.location.href = "login.html";
+
+        window.location.href =
+            LOGIN_PAGE;
+
 
         return;
     }
 
+
+    // -----------------------------------------------------
+    // UI INITIALIZATION
+    // -----------------------------------------------------
+
     setupPostFeatures();
+
     setupSearch();
+
     setupDarkMode();
+
     setupMobileMenu();
+
     setupEditProfile();
-    setupAIChatbot();
 
     initializeExistingPosts();
 
     updatePostCount();
 
+
+    // -----------------------------------------------------
+    // LOAD DATABASE DATA
+    // -----------------------------------------------------
+
     await Promise.allSettled([
+
         loadMyProfile(),
+
+        loadLatestIndustryReadiness(),
+
         loadPeopleYouMayKnow(),
+
         loadCompanies(),
+
         loadCourses(),
+
         loadPosts()
+
     ]);
 
+
+    // -----------------------------------------------------
+    // POST AUTHOR LINKS
+    // -----------------------------------------------------
+
     setupPostAuthorClicks();
+
 
     console.log(
         "Campus2Career portal loading completed."
@@ -170,7 +308,7 @@ async function initializePortal() {
 
 
 // =========================================================
-// AUTH TOKEN
+// GET AUTH TOKEN
 // =========================================================
 
 function getAuthToken() {
@@ -180,6 +318,7 @@ function getAuthToken() {
             TOKEN_KEY
         );
 
+
     if (
         !token ||
         token.trim() === ""
@@ -188,12 +327,13 @@ function getAuthToken() {
         return null;
     }
 
+
     return token.trim();
 }
 
 
 // =========================================================
-// USER ID
+// GET CURRENT USER ID
 // =========================================================
 
 function getCurrentUserId() {
@@ -203,15 +343,18 @@ function getCurrentUserId() {
             USER_ID_KEY
         );
 
+
     if (!storedId) {
 
         return null;
     }
 
+
     const id =
         Number(
             storedId
         );
+
 
     if (
         !Number.isInteger(id) ||
@@ -220,6 +363,7 @@ function getCurrentUserId() {
 
         return null;
     }
+
 
     return id;
 }
@@ -237,6 +381,7 @@ async function authenticatedFetch(
     const token =
         getAuthToken();
 
+
     if (!token) {
 
         throw new Error(
@@ -244,13 +389,19 @@ async function authenticatedFetch(
         );
     }
 
+
     const headers = {
-        "Accept":
+
+        Accept:
             "application/json",
+
         ...(options.headers || {}),
-        "Authorization":
+
+        Authorization:
             `Bearer ${token}`
+
     };
+
 
     return fetch(
         url,
@@ -273,15 +424,12 @@ async function readJsonResponse(
     const text =
         await response.text();
 
+
     console.log(
         "HTTP:",
         response.status
     );
 
-    console.log(
-        "Response:",
-        text
-    );
 
     if (
         !text ||
@@ -291,23 +439,23 @@ async function readJsonResponse(
         return {};
     }
 
+
     try {
 
         return JSON.parse(
             text
         );
 
-    } catch (
-        error
-    ) {
+    } catch (error) {
 
         console.error(
             "Invalid JSON response:",
             text
         );
 
+
         throw new Error(
-            "Server returned HTML/text instead of JSON."
+            "Server returned an invalid JSON response."
         );
     }
 }
@@ -342,15 +490,19 @@ function handleAuthError(
             EMAIL_KEY
         );
 
+
         alert(
             "Your login session has expired. Please sign in again."
         );
 
+
         window.location.href =
-            "login.html";
+            LOGIN_PAGE;
+
 
         return true;
     }
+
 
     return false;
 }
@@ -359,35 +511,32 @@ function handleAuthError(
 // =========================================================
 // LOAD MY PROFILE
 // =========================================================
+//
+// Uses:
+//
+// GET /api/my-profile
+//
+// The server obtains the authenticated user ID from JWT.
+// =========================================================
 
 async function loadMyProfile() {
 
-    const userId =
-        getCurrentUserId();
-
-    if (!userId) {
-
-        return;
-    }
-
-    const url =
-        `${PUBLIC_PROFILE_API}/${userId}`;
-
     console.log(
-        "Loading current profile:",
-        url
+        "Loading current user's profile..."
     );
+
 
     try {
 
         const response =
             await authenticatedFetch(
-                url,
+                MY_PROFILE_API,
                 {
                     method:
                         "GET"
                 }
             );
+
 
         if (
             handleAuthError(
@@ -398,6 +547,9 @@ async function loadMyProfile() {
             return;
         }
 
+
+        // No profile created yet.
+
         if (
             response.status === 404
         ) {
@@ -405,40 +557,68 @@ async function loadMyProfile() {
             currentUserProfile =
                 null;
 
+
             updateProfileCompletion(
                 null
             );
 
-            setTextForIds(
-                ["profileName"],
-                "Complete your profile"
+
+            displayMyProfile(
+                null
             );
+
 
             return;
         }
+
 
         const data =
             await readJsonResponse(
                 response
             );
 
+
         if (!response.ok) {
 
             throw new Error(
                 data.error ||
+                data.message ||
                 `Profile request failed (${response.status}).`
             );
         }
 
+
         if (
+            !data ||
             !data.profile
         ) {
+
+            currentUserProfile =
+                null;
+
+
+            updateProfileCompletion(
+                null
+            );
+
 
             return;
         }
 
+
         currentUserProfile =
             data.profile;
+
+
+        displayMyProfile(
+            currentUserProfile
+        );
+
+
+        updateProfileCompletion(
+            currentUserProfile
+        );
+
 
         localStorage.setItem(
             "userProfile",
@@ -447,22 +627,14 @@ async function loadMyProfile() {
             )
         );
 
-        displayMyProfile(
-            currentUserProfile
-        );
 
-        updateProfileCompletion(
-            currentUserProfile
-        );
-
-    } catch (
-        error
-    ) {
+    } catch (error) {
 
         console.error(
             "MY PROFILE LOAD ERROR:",
             error
         );
+
 
         loadLocalProfileBackup();
     }
@@ -478,12 +650,22 @@ function displayMyProfile(
 ) {
 
     if (!profile) {
+
+        setTextForIds(
+            [
+                "profileName"
+            ],
+            "Complete your profile"
+        );
+
+
         return;
     }
 
-    // =====================================================
-    // PROFILE TEXT DATA
-    // =====================================================
+
+    // -----------------------------------------------------
+    // NAME
+    // -----------------------------------------------------
 
     setTextForIds(
         [
@@ -494,6 +676,11 @@ function displayMyProfile(
         ],
         profile.name
     );
+
+
+    // -----------------------------------------------------
+    // HEADLINE
+    // -----------------------------------------------------
 
     setTextForIds(
         [
@@ -506,6 +693,11 @@ function displayMyProfile(
         profile.headline
     );
 
+
+    // -----------------------------------------------------
+    // TAGLINE
+    // -----------------------------------------------------
+
     setTextForIds(
         [
             "tagline",
@@ -515,6 +707,11 @@ function displayMyProfile(
         ],
         profile.tagline
     );
+
+
+    // -----------------------------------------------------
+    // LOCATION
+    // -----------------------------------------------------
 
     setTextForIds(
         [
@@ -526,6 +723,11 @@ function displayMyProfile(
         profile.location
     );
 
+
+    // -----------------------------------------------------
+    // ABOUT
+    // -----------------------------------------------------
+
     setTextForIds(
         [
             "profileAbout",
@@ -535,6 +737,11 @@ function displayMyProfile(
         ],
         profile.about
     );
+
+
+    // -----------------------------------------------------
+    // EMAIL
+    // -----------------------------------------------------
 
     setTextForIds(
         [
@@ -546,6 +753,11 @@ function displayMyProfile(
         profile.email
     );
 
+
+    // -----------------------------------------------------
+    // PHONE
+    // -----------------------------------------------------
+
     setTextForIds(
         [
             "profilePhone",
@@ -555,6 +767,11 @@ function displayMyProfile(
         ],
         profile.phone
     );
+
+
+    // -----------------------------------------------------
+    // GITHUB
+    // -----------------------------------------------------
 
     setTextForIds(
         [
@@ -566,6 +783,11 @@ function displayMyProfile(
         profile.github
     );
 
+
+    // -----------------------------------------------------
+    // LINKEDIN
+    // -----------------------------------------------------
+
     setTextForIds(
         [
             "linkedin",
@@ -576,6 +798,11 @@ function displayMyProfile(
         profile.linkedin
     );
 
+
+    // -----------------------------------------------------
+    // CONNECTIONS
+    // -----------------------------------------------------
+
     setTextForIds(
         [
             "connectionsCount",
@@ -585,60 +812,80 @@ function displayMyProfile(
         profile.connections
     );
 
-   // =====================================================
-// BACKEND CONTROLLED TEST RATING
-// =====================================================
 
-const testRating =
-    profile.test_rating ??
-    profile.testRating ??
-    profile.rating ??
-    profile.overall_rating ??
-    profile.overallRating ??
-    "";
+    // -----------------------------------------------------
+    // FOLLOWERS
+    // -----------------------------------------------------
 
-setTextForIds(
-    [
-        "profileTestRating",
-        "view-rating",
-        "viewRating"
-    ],
-    testRating
-);
+    setTextForIds(
+        [
+            "followersCount",
+            "view-followers",
+            "viewFollowers"
+        ],
+        profile.followers
+    );
 
 
-// =====================================================
-// BACKEND CONTROLLED GRADE
-// =====================================================
+    // -----------------------------------------------------
+    // TEST RATING
+    // -----------------------------------------------------
 
-const grade =
-    profile.grade ??
-    profile.test_grade ??
-    profile.testGrade ??
-    profile.overall_grade ??
-    profile.overallGrade ??
-    "";
-
-setTextForIds(
-    [
-        "profileGrade",
-        "view-grade",
-        "viewGrade"
-    ],
-    grade
-);
+    const testRating =
+        profile.test_rating ??
+        profile.testRating ??
+        profile.rating ??
+        profile.overall_rating ??
+        profile.overallRating ??
+        "";
 
 
-    // =====================================================
-    // PROFILE IMAGE / LOGO
-    // =====================================================
-    // Supports the possible field names returned by backend.
-    // The same image is used in:
-    // 1. Top bar
-    // 2. Left profile card
-    // 3. Create-post section
-    // 4. Any #profilePic element
-    // =====================================================
+    if (
+        testRating !== ""
+    ) {
+
+        setTextForIds(
+            [
+                "profileTestRating",
+                "view-rating",
+                "viewRating"
+            ],
+            testRating
+        );
+    }
+
+
+    // -----------------------------------------------------
+    // GRADE
+    // -----------------------------------------------------
+
+    const grade =
+        profile.grade ??
+        profile.test_grade ??
+        profile.testGrade ??
+        profile.overall_grade ??
+        profile.overallGrade ??
+        "";
+
+
+    if (
+        grade !== ""
+    ) {
+
+        setTextForIds(
+            [
+                "profileGrade",
+                "view-grade",
+                "viewGrade"
+            ],
+            grade
+        );
+    }
+
+
+    // -----------------------------------------------------
+    // PROFILE IMAGE
+    // -----------------------------------------------------
 
     const profileImage =
         profile.profilePic ||
@@ -649,7 +896,9 @@ setTextForIds(
         "";
 
 
-    if (profileImage) {
+    if (
+        profileImage
+    ) {
 
         document
             .querySelectorAll(
@@ -661,17 +910,18 @@ setTextForIds(
                     image.src =
                         profileImage;
 
-                    // Use profile name as alt text
+
                     image.alt =
                         profile.name ||
                         "Profile";
 
-                    // Prevent broken image icon
+
                     image.onerror =
                         () => {
 
                             image.onerror =
                                 null;
+
 
                             image.src =
                                 "https://via.placeholder.com/100";
@@ -680,13 +930,12 @@ setTextForIds(
 
                 }
             );
-
     }
 
 
-    // =====================================================
+    // -----------------------------------------------------
     // BANNER IMAGE
-    // =====================================================
+    // -----------------------------------------------------
 
     const banner =
         document.getElementById(
@@ -709,8 +958,10 @@ setTextForIds(
         banner.src =
             bannerImage;
 
+
         banner.style.display =
             "block";
+
 
         banner.onerror =
             () => {
@@ -719,12 +970,12 @@ setTextForIds(
                     "none";
 
             };
-
     }
-
 }
+
+
 // =========================================================
-// SET TEXT
+// SET TEXT FOR IDS
 // =========================================================
 
 function setTextForIds(
@@ -740,10 +991,12 @@ function setTextForIds(
         return;
     }
 
+
     const text =
         String(
             value
         ).trim();
+
 
     if (
         text === ""
@@ -751,6 +1004,7 @@ function setTextForIds(
 
         return;
     }
+
 
     ids.forEach(
         id => {
@@ -760,11 +1014,13 @@ function setTextForIds(
                     id
                 );
 
+
             if (element) {
 
                 element.textContent =
                     text;
             }
+
         }
     );
 }
@@ -784,11 +1040,14 @@ function updateProfileCompletion(
             0
         );
 
+
         return;
     }
 
+
     let completed =
         0;
+
 
     profileCompletionFields.forEach(
         field => {
@@ -796,16 +1055,21 @@ function updateProfileCompletion(
             const value =
                 profile[field];
 
+
             if (
                 value !== undefined &&
                 value !== null &&
-                String(value).trim() !== ""
+                String(
+                    value
+                ).trim() !== ""
             ) {
 
                 completed++;
             }
+
         }
     );
+
 
     const percentage =
         Math.round(
@@ -815,9 +1079,11 @@ function updateProfileCompletion(
             ) * 100
         );
 
+
     console.log(
         `Profile Completion: ${percentage}%`
     );
+
 
     setCompletionDisplay(
         percentage
@@ -833,12 +1099,30 @@ function setCompletionDisplay(
     percentage
 ) {
 
+    const safePercentage =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                Number(
+                    percentage
+                ) || 0
+            )
+        );
+
+
     const textIds = [
+
         "profileCompletion",
+
         "profileCompletionPercent",
+
         "completionPercentage",
+
         "profileProgressText"
+
     ];
+
 
     textIds.forEach(
         id => {
@@ -848,19 +1132,28 @@ function setCompletionDisplay(
                     id
                 );
 
+
             if (element) {
 
                 element.textContent =
-                    `${percentage}% Completed`;
+                    `${safePercentage}% Completed`;
+
             }
+
         }
     );
 
+
     const progressIds = [
+
         "profileProgress",
+
         "profileCompletionBar",
+
         "completionProgress"
+
     ];
+
 
     progressIds.forEach(
         id => {
@@ -870,20 +1163,24 @@ function setCompletionDisplay(
                     id
                 );
 
+
             if (element) {
 
                 element.style.width =
-                    `${percentage}%`;
+                    `${safePercentage}%`;
+
 
                 element.setAttribute(
                     "aria-valuenow",
                     String(
-                        percentage
+                        safePercentage
                     )
                 );
             }
+
         }
     );
+
 
     document
         .querySelectorAll(
@@ -893,9 +1190,11 @@ function setCompletionDisplay(
             element => {
 
                 element.textContent =
-                    `${percentage}%`;
+                    `${safePercentage}%`;
+
             }
         );
+
 
     document
         .querySelectorAll(
@@ -905,7 +1204,8 @@ function setCompletionDisplay(
             element => {
 
                 element.style.width =
-                    `${percentage}%`;
+                    `${safePercentage}%`;
+
             }
         );
 }
@@ -922,14 +1222,17 @@ function loadLocalProfileBackup() {
             "userProfile"
         );
 
+
     if (!saved) {
 
         setCompletionDisplay(
             0
         );
 
+
         return;
     }
+
 
     try {
 
@@ -938,8 +1241,10 @@ function loadLocalProfileBackup() {
                 saved
             );
 
+
         const currentId =
             getCurrentUserId();
+
 
         if (
             profile.userId &&
@@ -952,25 +1257,174 @@ function loadLocalProfileBackup() {
             return;
         }
 
+
         currentUserProfile =
             profile;
+
 
         displayMyProfile(
             profile
         );
 
+
         updateProfileCompletion(
             profile
         );
 
-    } catch (
-        error
-    ) {
+
+    } catch (error) {
 
         console.error(
             "LOCAL PROFILE ERROR:",
             error
         );
+    }
+}
+
+
+// =========================================================
+// LOAD LATEST INDUSTRY READINESS
+// =========================================================
+//
+// GET /api/industry-readiness/latest
+//
+// The backend returns:
+//
+// score
+// totalQuestions
+// percentage
+// grade
+// testRating
+// =========================================================
+
+async function loadLatestIndustryReadiness(
+    silent = true
+) {
+
+    try {
+
+        const response =
+            await authenticatedFetch(
+                INDUSTRY_TEST_LATEST_URL,
+                {
+                    method:
+                        "GET"
+                }
+            );
+
+
+        if (
+            handleAuthError(
+                response
+            )
+        ) {
+
+            return;
+        }
+
+
+        const data =
+            await readJsonResponse(
+                response
+            );
+
+
+        if (!response.ok) {
+
+            if (!silent) {
+
+                throw new Error(
+                    data.message ||
+                    data.error ||
+                    "Unable to load readiness score."
+                );
+            }
+
+
+            return;
+        }
+
+
+        if (
+            !data.hasScore
+        ) {
+
+            return;
+        }
+
+
+        if (
+            currentUserProfile
+        ) {
+
+            currentUserProfile.test_rating =
+                data.testRating;
+
+
+            currentUserProfile.grade =
+                data.grade;
+        }
+
+
+        setTextForIds(
+            [
+                "profileTestRating",
+                "view-rating",
+                "viewRating"
+            ],
+            data.testRating
+        );
+
+
+        setTextForIds(
+            [
+                "profileGrade",
+                "view-grade",
+                "viewGrade"
+            ],
+            data.grade
+        );
+
+
+        // Also support optional readiness elements.
+
+        setTextForIds(
+            [
+                "readinessScore",
+                "profileReadinessScore"
+            ],
+            data.percentage
+        );
+
+
+        if (
+            currentUserProfile
+        ) {
+
+            localStorage.setItem(
+                "userProfile",
+                JSON.stringify(
+                    currentUserProfile
+                )
+            );
+        }
+
+
+        console.log(
+            "Latest Industry Readiness loaded:",
+            data
+        );
+
+
+    } catch (error) {
+
+        if (!silent) {
+
+            console.error(
+                "READINESS SCORE LOAD ERROR:",
+                error
+            );
+        }
     }
 }
 
@@ -985,8 +1439,6 @@ async function loadPeopleYouMayKnow() {
         "Loading People You May Know..."
     );
 
-    const currentUserId =
-        getCurrentUserId();
 
     try {
 
@@ -999,6 +1451,7 @@ async function loadPeopleYouMayKnow() {
                 }
             );
 
+
         if (
             handleAuthError(
                 response
@@ -1008,18 +1461,22 @@ async function loadPeopleYouMayKnow() {
             return;
         }
 
+
         const data =
             await readJsonResponse(
                 response
             );
 
+
         if (!response.ok) {
 
             throw new Error(
                 data.error ||
+                data.message ||
                 `People request failed (${response.status}).`
             );
         }
+
 
         if (
             Array.isArray(
@@ -1031,7 +1488,6 @@ async function loadPeopleYouMayKnow() {
                 data;
 
         } else if (
-            data &&
             Array.isArray(
                 data.users
             )
@@ -1041,7 +1497,6 @@ async function loadPeopleYouMayKnow() {
                 data.users;
 
         } else if (
-            data &&
             Array.isArray(
                 data.profiles
             )
@@ -1056,7 +1511,10 @@ async function loadPeopleYouMayKnow() {
                 [];
         }
 
-        // Do not show yourself.
+
+        const currentUserId =
+            getCurrentUserId();
+
 
         people =
             people.filter(
@@ -1069,17 +1527,15 @@ async function loadPeopleYouMayKnow() {
                             person.id
                         );
 
+
                     return (
                         !currentUserId ||
                         id !== currentUserId
                     );
+
                 }
             );
 
-        console.log(
-            "People loaded:",
-            people.length
-        );
 
         localStorage.setItem(
             "peopleYouMayKnow",
@@ -1088,18 +1544,25 @@ async function loadPeopleYouMayKnow() {
             )
         );
 
+
+        console.log(
+            "People loaded:",
+            people.length
+        );
+
+
         renderPeopleYouMayKnow(
             people
         );
 
-    } catch (
-        error
-    ) {
+
+    } catch (error) {
 
         console.error(
             "PEOPLE LOAD ERROR:",
             error
         );
+
 
         loadPeopleBackup();
     }
@@ -1117,14 +1580,17 @@ function loadPeopleBackup() {
             "peopleYouMayKnow"
         );
 
+
     if (!saved) {
 
         renderPeopleYouMayKnow(
             []
         );
 
+
         return;
     }
+
 
     try {
 
@@ -1132,6 +1598,7 @@ function loadPeopleBackup() {
             JSON.parse(
                 saved
             );
+
 
         if (
             !Array.isArray(
@@ -1143,8 +1610,10 @@ function loadPeopleBackup() {
                 [];
         }
 
+
         const currentUserId =
             getCurrentUserId();
+
 
         people =
             people.filter(
@@ -1157,24 +1626,31 @@ function loadPeopleBackup() {
                             person.id
                         );
 
+
                     return (
                         !currentUserId ||
                         id !== currentUserId
                     );
+
                 }
             );
+
 
         renderPeopleYouMayKnow(
             people
         );
 
-    } catch (
-        error
-    ) {
+
+    } catch (error) {
 
         console.error(
             "PEOPLE BACKUP ERROR:",
             error
+        );
+
+
+        renderPeopleYouMayKnow(
+            []
         );
     }
 }
@@ -1193,17 +1669,21 @@ function renderPeopleYouMayKnow(
             "peopleContainer"
         );
 
+
     if (!container) {
 
-        console.error(
-            "#peopleContainer was not found."
+        console.warn(
+            "#peopleContainer not found."
         );
+
 
         return;
     }
 
+
     container.innerHTML =
         "";
+
 
     if (
         !Array.isArray(
@@ -1213,16 +1693,21 @@ function renderPeopleYouMayKnow(
     ) {
 
         container.innerHTML = `
+
             <div class="people-loading">
                 No other profiles available.
             </div>
+
         `;
+
 
         return;
     }
 
+
     const currentUserId =
         getCurrentUserId();
+
 
     peopleData
         .slice(
@@ -1239,6 +1724,7 @@ function renderPeopleYouMayKnow(
                         person.id
                     );
 
+
                 if (
                     !Number.isInteger(
                         personId
@@ -1249,6 +1735,7 @@ function renderPeopleYouMayKnow(
                     return;
                 }
 
+
                 if (
                     currentUserId &&
                     personId === currentUserId
@@ -1257,20 +1744,24 @@ function renderPeopleYouMayKnow(
                     return;
                 }
 
+
                 const name =
                     person.name ||
                     person.username ||
                     person.fullname ||
                     "Campus2Career User";
 
+
                 const headline =
                     person.headline ||
                     person.designation ||
                     "Professional";
 
+
                 const location =
                     person.location ||
                     "";
+
 
                 const profilePic =
                     person.profilePic ||
@@ -1278,21 +1769,26 @@ function renderPeopleYouMayKnow(
                     person.avatar ||
                     "https://via.placeholder.com/50";
 
+
                 const card =
                     document.createElement(
                         "div"
                     );
 
+
                 card.className =
                     "recommend-user database-person";
+
 
                 card.dataset.userId =
                     String(
                         personId
                     );
 
+
                 card.title =
                     "View profile";
+
 
                 card.innerHTML = `
 
@@ -1300,6 +1796,7 @@ function renderPeopleYouMayKnow(
                         src="${escapeHTML(profilePic)}"
                         alt="${escapeHTML(name)}"
                         class="recommend-profile-image"
+                        loading="lazy"
                     >
 
                     <div class="recommend-profile-info">
@@ -1331,17 +1828,23 @@ function renderPeopleYouMayKnow(
                     >
                         Connect
                     </button>
+
                 `;
+
 
                 const image =
                     card.querySelector(
                         "img"
                     );
 
+
                 if (image) {
 
                     image.onerror =
                         () => {
+
+                            image.onerror =
+                                null;
 
                             image.src =
                                 "https://via.placeholder.com/50";
@@ -1349,13 +1852,17 @@ function renderPeopleYouMayKnow(
                         };
                 }
 
+
                 container.appendChild(
                     card
                 );
+
             }
         );
 
+
     setupPeopleDelegation();
+
     setupConnectionButtons();
 }
 
@@ -1371,6 +1878,7 @@ function setupPeopleDelegation() {
             "peopleContainer"
         );
 
+
     if (
         !container ||
         container.dataset.eventsAttached ===
@@ -1380,14 +1888,14 @@ function setupPeopleDelegation() {
         return;
     }
 
+
     container.dataset.eventsAttached =
         "true";
+
 
     container.addEventListener(
         "click",
         event => {
-
-            // Do not navigate when Connect is clicked.
 
             if (
                 event.target.closest(
@@ -1398,27 +1906,33 @@ function setupPeopleDelegation() {
                 return;
             }
 
+
             const card =
                 event.target.closest(
                     ".database-person"
                 );
+
 
             if (!card) {
 
                 return;
             }
 
+
             const userId =
                 card.dataset.userId;
+
 
             if (!userId) {
 
                 return;
             }
 
+
             openPublicProfile(
                 userId
             );
+
         }
     );
 }
@@ -1426,6 +1940,12 @@ function setupPeopleDelegation() {
 
 // =========================================================
 // OPEN PUBLIC PROFILE
+// =========================================================
+//
+// Other user's URL:
+//
+// Profile.html?viewUserId=123
+//
 // =========================================================
 
 function openPublicProfile(
@@ -1437,6 +1957,7 @@ function openPublicProfile(
             profileUserId
         );
 
+
     if (
         !Number.isInteger(id) ||
         id <= 0
@@ -1447,13 +1968,18 @@ function openPublicProfile(
             profileUserId
         );
 
+
         return;
     }
+
 
     const currentId =
         getCurrentUserId();
 
-    // Own profile
+
+    // -----------------------------------------------------
+    // OWN PROFILE
+    // -----------------------------------------------------
 
     if (
         currentId &&
@@ -1461,15 +1987,19 @@ function openPublicProfile(
     ) {
 
         window.location.href =
-            "profile.html";
+            PROFILE_PAGE;
+
 
         return;
     }
 
-    // Other person's profile
+
+    // -----------------------------------------------------
+    // OTHER USER
+    // -----------------------------------------------------
 
     window.location.href =
-        `profile.html?viewUserId=${encodeURIComponent(
+        `${PROFILE_PAGE}?viewUserId=${encodeURIComponent(
             id
         )}`;
 }
@@ -1485,6 +2015,7 @@ async function loadCompanies() {
         "Loading companies..."
     );
 
+
     try {
 
         const response =
@@ -1495,24 +2026,28 @@ async function loadCompanies() {
                         "GET",
 
                     headers: {
-                        "Accept":
+                        Accept:
                             "application/json"
                     }
                 }
             );
+
 
         const data =
             await readJsonResponse(
                 response
             );
 
+
         if (!response.ok) {
 
             throw new Error(
                 data.error ||
+                data.message ||
                 `Companies request failed (${response.status}).`
             );
         }
+
 
         if (
             Array.isArray(
@@ -1524,7 +2059,6 @@ async function loadCompanies() {
                 data;
 
         } else if (
-            data &&
             Array.isArray(
                 data.companies
             )
@@ -1539,6 +2073,7 @@ async function loadCompanies() {
                 [];
         }
 
+
         localStorage.setItem(
             "companies",
             JSON.stringify(
@@ -1546,18 +2081,25 @@ async function loadCompanies() {
             )
         );
 
+
+        console.log(
+            "Companies loaded:",
+            companies.length
+        );
+
+
         renderCompanies(
             companies
         );
 
-    } catch (
-        error
-    ) {
+
+    } catch (error) {
 
         console.error(
             "COMPANY LOAD ERROR:",
             error
         );
+
 
         loadCompanyBackup();
     }
@@ -1575,14 +2117,17 @@ function loadCompanyBackup() {
             "companies"
         );
 
+
     if (!saved) {
 
         renderCompanies(
             []
         );
 
+
         return;
     }
+
 
     try {
 
@@ -1590,6 +2135,7 @@ function loadCompanyBackup() {
             JSON.parse(
                 saved
             );
+
 
         if (
             !Array.isArray(
@@ -1601,17 +2147,22 @@ function loadCompanyBackup() {
                 [];
         }
 
+
         renderCompanies(
             companies
         );
 
-    } catch (
-        error
-    ) {
+
+    } catch (error) {
 
         console.error(
             "COMPANY BACKUP ERROR:",
             error
+        );
+
+
+        renderCompanies(
+            []
         );
     }
 }
@@ -1630,17 +2181,21 @@ function renderCompanies(
             "companyContainer"
         );
 
+
     if (!container) {
 
         console.warn(
             "#companyContainer not found."
         );
 
+
         return;
     }
 
+
     container.innerHTML =
         "";
+
 
     if (
         !Array.isArray(
@@ -1650,13 +2205,17 @@ function renderCompanies(
     ) {
 
         container.innerHTML = `
+
             <div class="loading-message">
                 No companies available.
             </div>
+
         `;
+
 
         return;
     }
+
 
     companyData
         .slice(
@@ -1666,33 +2225,50 @@ function renderCompanies(
         .forEach(
             company => {
 
+                const companyId =
+                    Number(
+                        company.id
+                    );
+
+
                 const companyName =
                     company.company_name ||
                     company.companyName ||
                     "Company";
 
+
                 const logo =
                     company.logo ||
                     "https://via.placeholder.com/60?text=Logo";
+
 
                 const industry =
                     company.industry ||
                     "Industry not specified";
 
+
                 const location =
                     company.location ||
                     "";
+
 
                 const card =
                     document.createElement(
                         "div"
                     );
 
+
                 card.className =
                     "company-item";
 
+
                 card.dataset.companyId =
-                    company.id || "";
+                    companyId > 0
+                        ? String(
+                            companyId
+                        )
+                        : "";
+
 
                 card.innerHTML = `
 
@@ -1700,6 +2276,7 @@ function renderCompanies(
                         src="${escapeHTML(logo)}"
                         alt="${escapeHTML(companyName)}"
                         class="company-list-logo"
+                        loading="lazy"
                     >
 
                     <div>
@@ -1726,25 +2303,51 @@ function renderCompanies(
 
                 `;
 
+
+                const image =
+                    card.querySelector(
+                        "img"
+                    );
+
+
+                if (image) {
+
+                    image.onerror =
+                        () => {
+
+                            image.onerror =
+                                null;
+
+
+                            image.src =
+                                "https://via.placeholder.com/60?text=Logo";
+
+                        };
+                }
+
+
                 card.addEventListener(
                     "click",
                     () => {
 
                         if (
-                            company.id
+                            companyId > 0
                         ) {
 
                             window.location.href =
-                                `CompanyProfile.html?id=${encodeURIComponent(
-                                    company.id
+                                `${COMPANY_PAGE}?id=${encodeURIComponent(
+                                    companyId
                                 )}`;
                         }
+
                     }
                 );
+
 
                 container.appendChild(
                     card
                 );
+
             }
         );
 }
@@ -1760,6 +2363,7 @@ async function loadCourses() {
         "Loading courses..."
     );
 
+
     try {
 
         const response =
@@ -1770,24 +2374,28 @@ async function loadCourses() {
                         "GET",
 
                     headers: {
-                        "Accept":
+                        Accept:
                             "application/json"
                     }
                 }
             );
+
 
         const data =
             await readJsonResponse(
                 response
             );
 
+
         if (!response.ok) {
 
             throw new Error(
                 data.error ||
+                data.message ||
                 `Courses request failed (${response.status}).`
             );
         }
+
 
         if (
             Array.isArray(
@@ -1799,7 +2407,6 @@ async function loadCourses() {
                 data;
 
         } else if (
-            data &&
             Array.isArray(
                 data.courses
             )
@@ -1814,6 +2421,7 @@ async function loadCourses() {
                 [];
         }
 
+
         localStorage.setItem(
             "courses",
             JSON.stringify(
@@ -1821,18 +2429,25 @@ async function loadCourses() {
             )
         );
 
+
+        console.log(
+            "Courses loaded:",
+            courses.length
+        );
+
+
         renderPortalCourses(
             courses
         );
 
-    } catch (
-        error
-    ) {
+
+    } catch (error) {
 
         console.error(
             "COURSE LOAD ERROR:",
             error
         );
+
 
         loadCourseBackup();
     }
@@ -1850,14 +2465,17 @@ function loadCourseBackup() {
             "courses"
         );
 
+
     if (!saved) {
 
         renderPortalCourses(
             []
         );
 
+
         return;
     }
+
 
     try {
 
@@ -1865,6 +2483,7 @@ function loadCourseBackup() {
             JSON.parse(
                 saved
             );
+
 
         if (
             !Array.isArray(
@@ -1876,18 +2495,19 @@ function loadCourseBackup() {
                 [];
         }
 
+
         renderPortalCourses(
             courses
         );
 
-    } catch (
-        error
-    ) {
+
+    } catch (error) {
 
         console.error(
             "COURSE BACKUP ERROR:",
             error
         );
+
 
         renderPortalCourses(
             []
@@ -1909,17 +2529,21 @@ function renderPortalCourses(
             "courseContainer"
         );
 
+
     if (!container) {
 
         console.warn(
             "#courseContainer not found."
         );
 
+
         return;
     }
 
+
     container.innerHTML =
         "";
+
 
     if (
         !Array.isArray(
@@ -1929,13 +2553,17 @@ function renderPortalCourses(
     ) {
 
         container.innerHTML = `
+
             <div class="loading-message">
                 No courses available.
             </div>
+
         `;
+
 
         return;
     }
+
 
     courseData
         .slice(
@@ -1946,7 +2574,10 @@ function renderPortalCourses(
             course => {
 
                 const id =
-                    course.id || "";
+                    Number(
+                        course.id
+                    );
+
 
                 const name =
                     course.course_name ||
@@ -1954,11 +2585,13 @@ function renderPortalCourses(
                     course.name ||
                     "Course";
 
+
                 const field =
                     course.field ||
                     course.course_field ||
                     course.category ||
                     "General";
+
 
                 const institution =
                     course.institution ||
@@ -1966,19 +2599,23 @@ function renderPortalCourses(
                     course.organization ||
                     "";
 
+
                 const level =
                     course.level ||
                     course.course_level ||
                     "";
+
 
                 const mode =
                     course.mode ||
                     course.learning_mode ||
                     "";
 
+
                 const duration =
                     course.duration ||
                     "";
+
 
                 const courseURL =
                     course.course_url ||
@@ -1986,16 +2623,24 @@ function renderPortalCourses(
                     course.url ||
                     "";
 
+
                 const item =
                     document.createElement(
                         "div"
                     );
 
+
                 item.className =
                     "course-item database-course-item";
 
+
                 item.dataset.courseId =
-                    id;
+                    id > 0
+                        ? String(
+                            id
+                        )
+                        : "";
+
 
                 item.innerHTML = `
 
@@ -2003,9 +2648,11 @@ function renderPortalCourses(
                         ${escapeHTML(name)}
                     </h3>
 
+
                     <p>
                         ${escapeHTML(field)}
                     </p>
+
 
                     ${
                         institution
@@ -2016,6 +2663,7 @@ function renderPortalCourses(
                             `
                             : ""
                     }
+
 
                     ${
                         level
@@ -2028,6 +2676,7 @@ function renderPortalCourses(
                             : ""
                     }
 
+
                     ${
                         mode
                             ? `
@@ -2038,6 +2687,7 @@ function renderPortalCourses(
                             `
                             : ""
                     }
+
 
                     ${
                         duration
@@ -2052,12 +2702,15 @@ function renderPortalCourses(
 
                 `;
 
+
                 item.addEventListener(
                     "click",
                     () => {
 
                         if (
-                            courseURL
+                            isValidHttpUrl(
+                                courseURL
+                            )
                         ) {
 
                             window.open(
@@ -2066,24 +2719,29 @@ function renderPortalCourses(
                                 "noopener,noreferrer"
                             );
 
+
                             return;
                         }
 
+
                         if (
-                            id
+                            id > 0
                         ) {
 
                             window.location.href =
-                                `courses.html?courseId=${encodeURIComponent(
+                                `${COURSES_PAGE}?courseId=${encodeURIComponent(
                                     id
                                 )}`;
                         }
+
                     }
                 );
+
 
                 container.appendChild(
                     item
                 );
+
             }
         );
 }
@@ -2099,6 +2757,7 @@ async function loadPosts() {
         "Loading posts..."
     );
 
+
     try {
 
         const response =
@@ -2110,6 +2769,7 @@ async function loadPosts() {
                 }
             );
 
+
         if (
             handleAuthError(
                 response
@@ -2119,18 +2779,22 @@ async function loadPosts() {
             return;
         }
 
+
         const data =
             await readJsonResponse(
                 response
             );
 
+
         if (!response.ok) {
 
             throw new Error(
                 data.error ||
+                data.message ||
                 `Posts request failed (${response.status}).`
             );
         }
+
 
         if (
             Array.isArray(
@@ -2142,7 +2806,6 @@ async function loadPosts() {
                 data;
 
         } else if (
-            data &&
             Array.isArray(
                 data.posts
             )
@@ -2157,25 +2820,34 @@ async function loadPosts() {
                 [];
         }
 
+
         console.log(
             "Posts loaded:",
             posts.length
         );
 
+
         renderDatabasePosts(
             posts
         );
 
-    } catch (
-        error
-    ) {
+
+    } catch (error) {
 
         console.error(
             "POST LOAD ERROR:",
             error
         );
+
+
+        posts =
+            [];
+
+
+        updatePostCount();
     }
 }
+
 
 // =========================================================
 // RENDER DATABASE POSTS
@@ -2193,14 +2865,17 @@ function renderDatabasePosts(
             ".posts-scroll-area"
         );
 
+
     if (!feed) {
 
         console.error(
             "#postsScrollArea was not found."
         );
 
+
         return;
     }
+
 
     feed
         .querySelectorAll(
@@ -2210,14 +2885,18 @@ function renderDatabasePosts(
             post => post.remove()
         );
 
+
     if (
         !Array.isArray(
             postData
         )
     ) {
 
+        updatePostCount();
+
         return;
     }
+
 
     const sortedPosts =
         [...postData].sort(
@@ -2233,6 +2912,7 @@ function renderDatabasePosts(
                         0
                     ).getTime();
 
+
                 const dateB =
                     new Date(
                         b.created_at ||
@@ -2240,9 +2920,12 @@ function renderDatabasePosts(
                         0
                     ).getTime();
 
+
                 return dateB - dateA;
+
             }
         );
+
 
     sortedPosts.forEach(
         postDataItem => {
@@ -2252,24 +2935,29 @@ function renderDatabasePosts(
                     postDataItem
                 );
 
+
             feed.appendChild(
                 post
             );
 
+
             attachPostEvents(
                 post
             );
+
         }
     );
 
+
     updatePostCount();
+
 
     setupPostAuthorClicks();
 }
 
 
 // =========================================================
-// CREATE DATABASE POST
+// CREATE DATABASE POST ELEMENT
 // =========================================================
 
 function createDatabasePostElement(
@@ -2281,12 +2969,15 @@ function createDatabasePostElement(
             "article"
         );
 
+
     post.className =
         "post database-post";
+
 
     const postId =
         postData.id ??
         postData.post_id;
+
 
     if (
         postId !== undefined &&
@@ -2299,12 +2990,14 @@ function createDatabasePostElement(
             );
     }
 
+
     const authorUserId =
         postData.userId ??
         postData.user_id ??
         postData.authorId ??
         postData.author_id ??
         null;
+
 
     if (
         authorUserId !== null &&
@@ -2317,6 +3010,7 @@ function createDatabasePostElement(
             );
     }
 
+
     const authorName =
         postData.name ||
         postData.username ||
@@ -2324,30 +3018,36 @@ function createDatabasePostElement(
         postData.author_name ||
         "Campus2Career User";
 
+
     const profilePic =
         postData.profilePic ||
         postData.profile_pic ||
         postData.author_profile_pic ||
         "https://via.placeholder.com/50";
 
+
     const content =
         postData.content ||
         "";
+
 
     const createdAt =
         postData.created_at ||
         postData.createdAt ||
         "";
 
+
     const imageURL =
         postData.image_url ||
         postData.imageUrl ||
         "";
 
+
     const videoURL =
         postData.video_url ||
         postData.videoUrl ||
         "";
+
 
     const likes =
         Number(
@@ -2357,6 +3057,7 @@ function createDatabasePostElement(
             0
         );
 
+
     const comments =
         Number(
             postData.comments_count ??
@@ -2364,6 +3065,7 @@ function createDatabasePostElement(
             postData.comments ??
             0
         );
+
 
     const shares =
         Number(
@@ -2373,6 +3075,7 @@ function createDatabasePostElement(
             0
         );
 
+
     const liked =
         Boolean(
             postData.liked_by_current_user ??
@@ -2381,40 +3084,67 @@ function createDatabasePostElement(
             false
         );
 
+
     let mediaHTML =
         "";
 
+
+    // -----------------------------------------------------
+    // IMAGE
+    // -----------------------------------------------------
+
     if (
-        imageURL
+        isValidMediaUrl(
+            imageURL
+        )
     ) {
 
         mediaHTML += `
+
             <img
                 src="${escapeHTML(imageURL)}"
                 class="post-image"
                 alt="Post Image"
                 loading="lazy"
             >
+
         `;
     }
 
+
+    // -----------------------------------------------------
+    // VIDEO
+    // -----------------------------------------------------
+
     if (
-        videoURL
+        isValidMediaUrl(
+            videoURL
+        )
     ) {
 
         mediaHTML += `
+
             <video
                 controls
                 class="post-video"
                 preload="metadata"
             >
+
                 <source
                     src="${escapeHTML(videoURL)}"
                 >
+
                 Your browser does not support video playback.
+
             </video>
+
         `;
     }
+
+
+    // -----------------------------------------------------
+    // POST HTML
+    // -----------------------------------------------------
 
     post.innerHTML = `
 
@@ -2425,6 +3155,7 @@ function createDatabasePostElement(
                 alt="${escapeHTML(authorName)}"
                 loading="lazy"
             >
+
 
             <div
                 class="post-author-clickable"
@@ -2445,6 +3176,7 @@ function createDatabasePostElement(
                     ${escapeHTML(authorName)}
                 </h3>
 
+
                 <p>
                     ${escapeHTML(
                         formatDate(
@@ -2457,6 +3189,7 @@ function createDatabasePostElement(
 
         </div>
 
+
         ${
             content
                 ? `
@@ -2467,7 +3200,9 @@ function createDatabasePostElement(
                 : ""
         }
 
+
         ${mediaHTML}
+
 
         <div class="post-stats">
 
@@ -2476,10 +3211,12 @@ function createDatabasePostElement(
                 ${likes === 1 ? "Like" : "Likes"}
             </span>
 
+
             <span class="comment-count">
                 💬 ${comments}
                 ${comments === 1 ? "Comment" : "Comments"}
             </span>
+
 
             <span class="share-count">
                 🔄 ${shares}
@@ -2487,6 +3224,7 @@ function createDatabasePostElement(
             </span>
 
         </div>
+
 
         <div class="actions">
 
@@ -2501,6 +3239,7 @@ function createDatabasePostElement(
                 }
             </button>
 
+
             <button
                 type="button"
                 class="comment-btn"
@@ -2508,12 +3247,14 @@ function createDatabasePostElement(
                 💬 Comment
             </button>
 
+
             <button
                 type="button"
                 class="share-btn"
             >
                 🔄 Share
             </button>
+
 
             <button
                 type="button"
@@ -2524,21 +3265,27 @@ function createDatabasePostElement(
 
         </div>
 
+
         <div class="comments"></div>
+
     `;
+
 
     post.dataset.liked =
         String(
             liked
         );
 
+
     const currentUserId =
         getCurrentUserId();
+
 
     const deleteButton =
         post.querySelector(
             ".delete-btn"
         );
+
 
     if (
         deleteButton &&
@@ -2553,27 +3300,35 @@ function createDatabasePostElement(
             "none";
     }
 
+
     const profileImage =
         post.querySelector(
             ".post-header > img"
         );
+
 
     if (profileImage) {
 
         profileImage.onerror =
             () => {
 
+                profileImage.onerror =
+                    null;
+
+
                 profileImage.src =
                     "https://via.placeholder.com/50";
+
             };
     }
+
 
     return post;
 }
 
 
 // =========================================================
-// POST AUTHOR CLICK
+// POST AUTHOR CLICK HANDLER
 // =========================================================
 
 function setupPostAuthorClicks() {
@@ -2593,35 +3348,41 @@ function setupPostAuthorClicks() {
                     return;
                 }
 
+
                 const userId =
                     author.dataset.userId;
+
 
                 if (!userId) {
 
                     return;
                 }
 
+
                 author.dataset.profileClickAttached =
                     "true";
+
 
                 author.style.cursor =
                     "pointer";
 
-                author.title =
-                    "View profile";
 
                 author.addEventListener(
                     "click",
                     event => {
 
                         event.preventDefault();
+
                         event.stopPropagation();
+
 
                         openPublicProfile(
                             userId
                         );
+
                     }
                 );
+
             }
         );
 }
@@ -2629,6 +3390,15 @@ function setupPostAuthorClicks() {
 
 // =========================================================
 // CREATE POST
+// =========================================================
+//
+// IMPORTANT:
+//
+// The existing backend expects image_url/video_url strings.
+// It does NOT provide a multipart file-upload route.
+//
+// Therefore local File objects are not converted into fake
+// filenames such as "photo.jpg".
 // =========================================================
 
 async function createPost() {
@@ -2638,35 +3408,48 @@ async function createPost() {
             "postInput"
         );
 
+
     const imageUpload =
         document.getElementById(
             "imageUpload"
         );
+
 
     const videoUpload =
         document.getElementById(
             "videoUpload"
         );
 
+
     if (!postInput) {
 
         return;
     }
 
+
     const text =
         postInput.value.trim();
 
+
     const imageFile =
         imageUpload &&
+        imageUpload.files &&
         imageUpload.files.length > 0
+
             ? imageUpload.files[0]
+
             : null;
+
 
     const videoFile =
         videoUpload &&
+        videoUpload.files &&
         videoUpload.files.length > 0
+
             ? videoUpload.files[0]
+
             : null;
+
 
     if (
         text === "" &&
@@ -2678,8 +3461,10 @@ async function createPost() {
             "Create a post first."
         );
 
+
         return;
     }
+
 
     if (
         text.length > 500
@@ -2689,8 +3474,29 @@ async function createPost() {
             "Your post cannot exceed 500 characters."
         );
 
+
         return;
     }
+
+
+    // -----------------------------------------------------
+    // MEDIA
+    // -----------------------------------------------------
+
+    if (
+        imageFile ||
+        videoFile
+    ) {
+
+        alert(
+            "Local image/video upload is not connected to persistent storage yet. " +
+            "The current server expects image_url/video_url rather than uploaded files."
+        );
+
+
+        return;
+    }
+
 
     try {
 
@@ -2700,16 +3506,13 @@ async function createPost() {
                 text,
 
             image_url:
-                imageFile
-                    ? imageFile.name
-                    : null,
+                null,
 
             video_url:
-                videoFile
-                    ? videoFile.name
-                    : null
+                null
 
         };
+
 
         const response =
             await authenticatedFetch(
@@ -2730,6 +3533,7 @@ async function createPost() {
                 }
             );
 
+
         if (
             handleAuthError(
                 response
@@ -2739,28 +3543,32 @@ async function createPost() {
             return;
         }
 
+
         const result =
             await readJsonResponse(
                 response
             );
 
+
         if (!response.ok) {
 
             throw new Error(
                 result.error ||
+                result.message ||
                 "Unable to save post."
             );
         }
+
 
         console.log(
             "Post saved:",
             result
         );
 
-        await loadPosts();
 
         postInput.value =
             "";
+
 
         if (
             imageUpload
@@ -2770,6 +3578,7 @@ async function createPost() {
                 "";
         }
 
+
         if (
             videoUpload
         ) {
@@ -2778,16 +3587,20 @@ async function createPost() {
                 "";
         }
 
+
         updateCharacterCount();
 
-    } catch (
-        error
-    ) {
+
+        await loadPosts();
+
+
+    } catch (error) {
 
         console.error(
             "CREATE POST ERROR:",
             error
         );
+
 
         alert(
             "Unable to save post.\n\n" +
@@ -2798,7 +3611,7 @@ async function createPost() {
 
 
 // =========================================================
-// POST UI
+// SETUP POST FEATURES
 // =========================================================
 
 function setupPostFeatures() {
@@ -2808,29 +3621,40 @@ function setupPostFeatures() {
             "postInput"
         );
 
+
     const postButton =
         document.getElementById(
             "postBtn"
         );
+
 
     const imageUpload =
         document.getElementById(
             "imageUpload"
         );
 
+
     const videoUpload =
         document.getElementById(
             "videoUpload"
         );
 
+
     if (
-        postInput
+        postInput &&
+        postInput.dataset.eventsAttached !==
+            "true"
     ) {
+
+        postInput.dataset.eventsAttached =
+            "true";
+
 
         postInput.addEventListener(
             "input",
             updateCharacterCount
         );
+
 
         postInput.addEventListener(
             "keydown",
@@ -2845,13 +3669,21 @@ function setupPostFeatures() {
 
                     createPost();
                 }
+
             }
         );
     }
 
+
     if (
-        postButton
+        postButton &&
+        postButton.dataset.eventsAttached !==
+            "true"
     ) {
+
+        postButton.dataset.eventsAttached =
+            "true";
+
 
         postButton.addEventListener(
             "click",
@@ -2859,9 +3691,16 @@ function setupPostFeatures() {
         );
     }
 
+
     if (
-        imageUpload
+        imageUpload &&
+        imageUpload.dataset.eventsAttached !==
+            "true"
     ) {
+
+        imageUpload.dataset.eventsAttached =
+            "true";
+
 
         imageUpload.addEventListener(
             "change",
@@ -2875,13 +3714,21 @@ function setupPostFeatures() {
                     videoUpload.value =
                         "";
                 }
+
             }
         );
     }
 
+
     if (
-        videoUpload
+        videoUpload &&
+        videoUpload.dataset.eventsAttached !==
+            "true"
     ) {
+
+        videoUpload.dataset.eventsAttached =
+            "true";
+
 
         videoUpload.addEventListener(
             "change",
@@ -2895,9 +3742,11 @@ function setupPostFeatures() {
                     imageUpload.value =
                         "";
                 }
+
             }
         );
     }
+
 
     updateCharacterCount();
 }
@@ -2914,10 +3763,12 @@ function updateCharacterCount() {
             "postInput"
         );
 
+
     const counter =
         document.getElementById(
             "charCount"
         );
+
 
     if (
         !input ||
@@ -2926,6 +3777,7 @@ function updateCharacterCount() {
 
         return;
     }
+
 
     if (
         input.value.length >
@@ -2938,6 +3790,7 @@ function updateCharacterCount() {
                 500
             );
     }
+
 
     counter.textContent =
         `${input.value.length}/500`;
@@ -2955,20 +3808,26 @@ function updatePostCount() {
             "postCount"
         );
 
+
     if (!counter) {
+
         return;
     }
 
+
     const currentUserId =
         getCurrentUserId();
+
 
     if (!currentUserId) {
 
         counter.textContent =
             "0";
 
+
         return;
     }
+
 
     const myPosts =
         posts.filter(
@@ -2983,12 +3842,15 @@ function updatePostCount() {
                         0
                     );
 
+
                 return (
                     authorId ===
                     currentUserId
                 );
+
             }
         );
+
 
     counter.textContent =
         String(
@@ -2998,7 +3860,7 @@ function updatePostCount() {
 
 
 // =========================================================
-// POST EVENTS
+// ATTACH POST EVENTS
 // =========================================================
 
 function attachPostEvents(
@@ -3014,22 +3876,26 @@ function attachPostEvents(
         return;
     }
 
+
     post.dataset.eventsAttached =
         "true";
 
-    // -----------------------------------------------------
+
+    // =====================================================
     // LIKE
-    // -----------------------------------------------------
+    // =====================================================
 
     const likeButton =
         post.querySelector(
             ".like-btn"
         );
 
+
     const likeCount =
         post.querySelector(
             ".like-count"
         );
+
 
     if (
         likeButton &&
@@ -3043,23 +3909,38 @@ function attachPostEvents(
                 const postId =
                     post.dataset.postId;
 
+
                 if (!postId) {
 
                     return;
                 }
 
+
+                if (
+                    likeButton.disabled
+                ) {
+
+                    return;
+                }
+
+
+                likeButton.disabled =
+                    true;
+
+
                 try {
 
                     const response =
-                    await authenticatedFetch(
-                `${POSTS_API}/${encodeURIComponent(
-                            postId
-                        )}/like`,
-                    {
-                        method:
-                            "POST"
-                        }
-                    );
+                        await authenticatedFetch(
+                            `${POSTS_API}/${encodeURIComponent(
+                                postId
+                            )}/like`,
+                            {
+                                method:
+                                    "POST"
+                            }
+                        );
+
 
                     if (
                         handleAuthError(
@@ -3070,18 +3951,22 @@ function attachPostEvents(
                         return;
                     }
 
+
                     const result =
                         await readJsonResponse(
                             response
                         );
 
+
                     if (!response.ok) {
 
                         throw new Error(
                             result.error ||
+                            result.message ||
                             "Unable to update like."
                         );
                     }
+
 
                     const count =
                         Number(
@@ -3093,20 +3978,25 @@ function attachPostEvents(
                             )
                         );
 
+
                     const liked =
                         result.liked !== undefined
+
                             ? Boolean(
                                 result.liked
                             )
+
                             : !(
                                 post.dataset.liked ===
                                 "true"
                             );
 
+
                     post.dataset.liked =
                         String(
                             liked
                         );
+
 
                     likeCount.textContent =
                         `👍 ${count} ${
@@ -3115,37 +4005,47 @@ function attachPostEvents(
                                 : "Likes"
                         }`;
 
+
                     likeButton.textContent =
                         liked
                             ? "❤️ Liked"
                             : "👍 Like";
 
-                } catch (
-                    error
-                ) {
+
+                } catch (error) {
 
                     console.error(
                         "LIKE ERROR:",
                         error
                     );
 
+
                     alert(
                         "Unable to update like.\n\n" +
                         error.message
                     );
+
+
+                } finally {
+
+                    likeButton.disabled =
+                        false;
                 }
+
             }
         );
     }
 
-    // -----------------------------------------------------
+
+    // =====================================================
     // COMMENT
-    // -----------------------------------------------------
+    // =====================================================
 
     const commentButton =
         post.querySelector(
             ".comment-btn"
         );
+
 
     if (
         commentButton
@@ -3158,15 +4058,18 @@ function attachPostEvents(
                 const postId =
                     post.dataset.postId;
 
+
                 if (!postId) {
 
                     return;
                 }
 
+
                 const comment =
                     prompt(
                         "Write your comment:"
                     );
+
 
                 if (
                     !comment ||
@@ -3175,6 +4078,7 @@ function attachPostEvents(
 
                     return;
                 }
+
 
                 try {
 
@@ -3200,6 +4104,7 @@ function attachPostEvents(
                             }
                         );
 
+
                     if (
                         handleAuthError(
                             response
@@ -3209,51 +4114,85 @@ function attachPostEvents(
                         return;
                     }
 
+
                     const result =
                         await readJsonResponse(
                             response
                         );
 
+
                     if (!response.ok) {
 
                         throw new Error(
                             result.error ||
+                            result.message ||
                             "Unable to save comment."
                         );
                     }
 
-                    await loadPosts();
 
                     await loadPostComments(
                         postId
                     );
 
-                } catch (
-                    error
-                ) {
+
+                    const commentCount =
+                        post.querySelector(
+                            ".comment-count"
+                        );
+
+
+                    if (
+                        commentCount
+                    ) {
+
+                        const currentCount =
+                            extractNumber(
+                                commentCount.textContent
+                            );
+
+
+                        const newCount =
+                            currentCount + 1;
+
+
+                        commentCount.textContent =
+                            `💬 ${newCount} ${
+                                newCount === 1
+                                    ? "Comment"
+                                    : "Comments"
+                            }`;
+                    }
+
+
+                } catch (error) {
 
                     console.error(
                         "COMMENT ERROR:",
                         error
                     );
 
+
                     alert(
                         "Unable to save comment.\n\n" +
                         error.message
                     );
                 }
+
             }
         );
     }
 
-    // -----------------------------------------------------
+
+    // =====================================================
     // SHARE
-    // -----------------------------------------------------
+    // =====================================================
 
     const shareButton =
         post.querySelector(
             ".share-btn"
         );
+
 
     if (
         shareButton
@@ -3266,10 +4205,12 @@ function attachPostEvents(
                 const postId =
                     post.dataset.postId;
 
+
                 if (!postId) {
 
                     return;
                 }
+
 
                 try {
 
@@ -3284,6 +4225,7 @@ function attachPostEvents(
                             }
                         );
 
+
                     if (
                         handleAuthError(
                             response
@@ -3293,23 +4235,28 @@ function attachPostEvents(
                         return;
                     }
 
+
                     const result =
                         await readJsonResponse(
                             response
                         );
 
+
                     if (!response.ok) {
 
                         throw new Error(
                             result.error ||
+                            result.message ||
                             "Unable to update share."
                         );
                     }
+
 
                     const shareCount =
                         post.querySelector(
                             ".share-count"
                         );
+
 
                     if (
                         shareCount
@@ -3325,6 +4272,7 @@ function attachPostEvents(
                                 )
                             );
 
+
                         shareCount.textContent =
                             `🔄 ${count} ${
                                 count === 1
@@ -3333,14 +4281,21 @@ function attachPostEvents(
                             }`;
                     }
 
+
                     const shareText =
                         post.querySelector(
                             ".post-text"
                         )?.textContent ||
                         "Campus2Career post";
 
+
+                    const shareUrl =
+                        `${window.location.origin}${window.location.pathname}#post-${postId}`;
+
+
                     if (
-                        navigator.share
+                        typeof navigator.share ===
+                        "function"
                     ) {
 
                         try {
@@ -3351,64 +4306,72 @@ function attachPostEvents(
                                     "Campus2Career",
 
                                 text:
-                                    shareText
+                                    shareText,
+
+                                url:
+                                    shareUrl
 
                             });
 
-                        } catch (
-                            error
-                        ) {
+                        } catch (shareError) {
 
                             if (
-                                error.name !==
+                                shareError.name !==
                                 "AbortError"
                             ) {
 
                                 console.warn(
-                                    "Share cancelled."
+                                    "Native sharing failed:",
+                                    shareError
                                 );
                             }
                         }
 
                     } else if (
-                        navigator.clipboard
+                        navigator.clipboard &&
+                        typeof navigator.clipboard.writeText ===
+                        "function"
                     ) {
 
                         await navigator.clipboard.writeText(
-                            shareText
+                            `${shareText}\n${shareUrl}`
                         );
 
+
                         alert(
-                            "Post content copied to clipboard."
+                            "Post link copied to clipboard."
                         );
                     }
 
-                } catch (
-                    error
-                ) {
+
+                } catch (error) {
 
                     console.error(
                         "SHARE ERROR:",
                         error
                     );
 
+
                     alert(
                         "Unable to share post.\n\n" +
                         error.message
                     );
                 }
+
             }
         );
     }
 
-    // -----------------------------------------------------
+
+    // =====================================================
     // DELETE
-    // -----------------------------------------------------
+    // =====================================================
 
     const deleteButton =
         post.querySelector(
             ".delete-btn"
         );
+
 
     if (
         deleteButton
@@ -3421,10 +4384,12 @@ function attachPostEvents(
                 const postId =
                     post.dataset.postId;
 
+
                 if (!postId) {
 
                     return;
                 }
+
 
                 if (
                     !confirm(
@@ -3434,6 +4399,7 @@ function attachPostEvents(
 
                     return;
                 }
+
 
                 try {
 
@@ -3448,6 +4414,7 @@ function attachPostEvents(
                             }
                         );
 
+
                     if (
                         handleAuthError(
                             response
@@ -3457,37 +4424,65 @@ function attachPostEvents(
                         return;
                     }
 
+
                     const result =
                         await readJsonResponse(
                             response
                         );
 
+
                     if (!response.ok) {
 
                         throw new Error(
                             result.error ||
+                            result.message ||
                             "Unable to delete post."
                         );
                     }
 
+
+                    posts =
+                        posts.filter(
+                            postItem => {
+
+                                const itemId =
+                                    postItem.id ??
+                                    postItem.post_id;
+
+
+                                return (
+                                    String(
+                                        itemId
+                                    ) !==
+                                    String(
+                                        postId
+                                    )
+                                );
+
+                            }
+                        );
+
+
                     post.remove();
+
 
                     updatePostCount();
 
-                } catch (
-                    error
-                ) {
+
+                } catch (error) {
 
                     console.error(
                         "DELETE ERROR:",
                         error
                     );
 
+
                     alert(
                         "Unable to delete post.\n\n" +
                         error.message
                     );
                 }
+
             }
         );
     }
@@ -3514,61 +4509,82 @@ async function loadPostComments(
                         "GET",
 
                     headers: {
-                        "Accept":
+                        Accept:
                             "application/json"
                     }
                 }
             );
+
 
         const data =
             await readJsonResponse(
                 response
             );
 
+
         if (!response.ok) {
 
-            return;
+            throw new Error(
+                data.error ||
+                data.message ||
+                "Unable to load comments."
+            );
         }
 
+
         const post =
-            document.querySelector(
-                `.post[data-post-id="${CSS.escape(
+            Array.from(
+                document.querySelectorAll(
+                    ".post[data-post-id]"
+                )
+            ).find(
+                element =>
+                    String(
+                        element.dataset.postId
+                    ) ===
                     String(
                         postId
                     )
-                )}"]`
             );
+
 
         if (!post) {
 
             return;
         }
 
+
         const box =
             post.querySelector(
                 ".comments"
             );
+
 
         if (!box) {
 
             return;
         }
 
+
         const comments =
             Array.isArray(
                 data
             )
+
                 ? data
-                : (
-                    Array.isArray(
-                        data.comments
-                    )
-                        ? data.comments
-                        : []
-                );
+
+                : Array.isArray(
+                    data.comments
+                )
+
+                    ? data.comments
+
+                    : [];
+
 
         box.innerHTML =
             "";
+
 
         comments.forEach(
             comment => {
@@ -3578,10 +4594,12 @@ async function loadPostComments(
                         "p"
                     );
 
+
                 const author =
                     comment.name ||
                     comment.username ||
                     "User";
+
 
                 element.textContent =
                     `${author}: ${
@@ -3589,15 +4607,16 @@ async function loadPostComments(
                         ""
                     }`;
 
+
                 box.appendChild(
                     element
                 );
+
             }
         );
 
-    } catch (
-        error
-    ) {
+
+    } catch (error) {
 
         console.error(
             "COMMENTS LOAD ERROR:",
@@ -3608,7 +4627,7 @@ async function loadPostComments(
 
 
 // =========================================================
-// INITIAL EXISTING POSTS
+// INITIALIZE EXISTING POSTS
 // =========================================================
 
 function initializeExistingPosts() {
@@ -3623,10 +4642,13 @@ function initializeExistingPosts() {
                 attachPostEvents(
                     post
                 );
+
             }
         );
 
+
     setupPostAuthorClicks();
+
 
     updatePostCount();
 }
@@ -3643,14 +4665,30 @@ function setupSearch() {
             ".search-box input"
         );
 
+
     if (!searchInput) {
 
         return;
     }
 
+
     createSearchResultsPanel(
         searchInput
     );
+
+
+    if (
+        searchInput.dataset.eventsAttached ===
+        "true"
+    ) {
+
+        return;
+    }
+
+
+    searchInput.dataset.eventsAttached =
+        "true";
+
 
     searchInput.addEventListener(
         "input",
@@ -3661,9 +4699,11 @@ function setupSearch() {
                     .trim()
                     .toLowerCase();
 
+
             if (!query) {
 
                 hideSearchResults();
+
 
                 document
                     .querySelectorAll(
@@ -3674,17 +4714,22 @@ function setupSearch() {
 
                             post.style.display =
                                 "";
+
                         }
                     );
+
 
                 return;
             }
 
+
             performGlobalSearch(
                 query
             );
+
         }
     );
+
 
     document.addEventListener(
         "click",
@@ -3695,10 +4740,12 @@ function setupSearch() {
                     "globalSearchResults"
                 );
 
+
             if (!panel) {
 
                 return;
             }
+
 
             if (
                 event.target.closest(
@@ -3712,14 +4759,16 @@ function setupSearch() {
                 return;
             }
 
+
             hideSearchResults();
+
         }
     );
 }
 
 
 // =========================================================
-// SEARCH PANEL
+// CREATE SEARCH PANEL
 // =========================================================
 
 function createSearchResultsPanel(
@@ -3735,62 +4784,80 @@ function createSearchResultsPanel(
         return;
     }
 
+
     const box =
         input.closest(
             ".search-box"
         );
+
 
     if (!box) {
 
         return;
     }
 
+
     box.style.position =
         "relative";
+
 
     const panel =
         document.createElement(
             "div"
         );
 
+
     panel.id =
         "globalSearchResults";
+
 
     panel.style.position =
         "absolute";
 
+
     panel.style.top =
         "calc(100% + 8px)";
+
 
     panel.style.left =
         "0";
 
+
     panel.style.right =
         "0";
+
 
     panel.style.maxHeight =
         "420px";
 
+
     panel.style.overflowY =
         "auto";
+
 
     panel.style.background =
         "var(--card, #fff)";
 
+
     panel.style.border =
         "1px solid #E5E7EB";
+
 
     panel.style.borderRadius =
         "12px";
 
+
     panel.style.boxShadow =
         "0 15px 35px rgba(0,0,0,.16)";
+
 
     panel.style.zIndex =
         "99999";
 
+
     panel.style.display =
         "none";
+
 
     box.appendChild(
         panel
@@ -3806,12 +4873,29 @@ function performGlobalSearch(
     query
 ) {
 
+    const normalizedQuery =
+        String(
+            query || ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    if (!normalizedQuery) {
+
+        hideSearchResults();
+
+        return;
+    }
+
+
     const results =
         [];
 
-    // -----------------------------------------------------
+
+    // =====================================================
     // PEOPLE
-    // -----------------------------------------------------
+    // =====================================================
 
     people.forEach(
         person => {
@@ -3823,6 +4907,7 @@ function performGlobalSearch(
                     person.id
                 );
 
+
             const name =
                 String(
                     person.name ||
@@ -3831,6 +4916,7 @@ function performGlobalSearch(
                     ""
                 );
 
+
             const headline =
                 String(
                     person.headline ||
@@ -3838,23 +4924,27 @@ function performGlobalSearch(
                     ""
                 );
 
+
             const location =
                 String(
                     person.location ||
                     ""
                 );
 
+
             const value =
                 `${name} ${headline} ${location}`
                     .toLowerCase();
 
+
             if (
                 value.includes(
-                    query
+                    normalizedQuery
                 ) &&
                 Number.isInteger(
                     id
-                )
+                ) &&
+                id > 0
             ) {
 
                 results.push({
@@ -3866,7 +4956,8 @@ function performGlobalSearch(
                         id,
 
                     title:
-                        name,
+                        name ||
+                        "Campus2Career User",
 
                     subtitle:
                         headline,
@@ -3876,15 +4967,23 @@ function performGlobalSearch(
 
                 });
             }
+
         }
     );
 
-    // -----------------------------------------------------
+
+    // =====================================================
     // COMPANIES
-    // -----------------------------------------------------
+    // =====================================================
 
     companies.forEach(
         company => {
+
+            const id =
+                Number(
+                    company.id
+                );
+
 
             const name =
                 String(
@@ -3893,11 +4992,13 @@ function performGlobalSearch(
                     ""
                 );
 
+
             const industry =
                 String(
                     company.industry ||
                     ""
                 );
+
 
             const location =
                 String(
@@ -3905,13 +5006,15 @@ function performGlobalSearch(
                     ""
                 );
 
+
             const value =
                 `${name} ${industry} ${location}`
                     .toLowerCase();
 
+
             if (
                 value.includes(
-                    query
+                    normalizedQuery
                 )
             ) {
 
@@ -3921,10 +5024,11 @@ function performGlobalSearch(
                         "company",
 
                     id:
-                        company.id,
+                        id,
 
                     title:
-                        name,
+                        name ||
+                        "Company",
 
                     subtitle:
                         industry,
@@ -3934,18 +5038,23 @@ function performGlobalSearch(
 
                 });
             }
+
         }
     );
 
-    // -----------------------------------------------------
+
+    // =====================================================
     // COURSES
-    // -----------------------------------------------------
+    // =====================================================
 
     courses.forEach(
         course => {
 
             const id =
-                course.id;
+                Number(
+                    course.id
+                );
+
 
             const name =
                 String(
@@ -3955,6 +5064,7 @@ function performGlobalSearch(
                     ""
                 );
 
+
             const field =
                 String(
                     course.field ||
@@ -3962,6 +5072,7 @@ function performGlobalSearch(
                     course.category ||
                     ""
                 );
+
 
             const institution =
                 String(
@@ -3971,6 +5082,7 @@ function performGlobalSearch(
                     ""
                 );
 
+
             const description =
                 String(
                     course.description ||
@@ -3978,13 +5090,15 @@ function performGlobalSearch(
                     ""
                 );
 
+
             const value =
                 `${name} ${field} ${institution} ${description}`
                     .toLowerCase();
 
+
             if (
                 value.includes(
-                    query
+                    normalizedQuery
                 )
             ) {
 
@@ -3997,7 +5111,8 @@ function performGlobalSearch(
                         id,
 
                     title:
-                        name,
+                        name ||
+                        "Course",
 
                     subtitle:
                         field,
@@ -4007,12 +5122,14 @@ function performGlobalSearch(
 
                 });
             }
+
         }
     );
 
-    // -----------------------------------------------------
+
+    // =====================================================
     // POSTS
-    // -----------------------------------------------------
+    // =====================================================
 
     posts.forEach(
         post => {
@@ -4020,6 +5137,7 @@ function performGlobalSearch(
             const id =
                 post.id ??
                 post.post_id;
+
 
             const author =
                 String(
@@ -4029,19 +5147,22 @@ function performGlobalSearch(
                     ""
                 );
 
+
             const content =
                 String(
                     post.content ||
                     ""
                 );
 
+
             const value =
                 `${author} ${content}`
                     .toLowerCase();
 
+
             if (
                 value.includes(
-                    query
+                    normalizedQuery
                 )
             ) {
 
@@ -4068,13 +5189,17 @@ function performGlobalSearch(
 
                 });
             }
+
         }
     );
 
+
     renderSearchResults(
-        results,
-        query
+        results
     );
+
+
+    // Also filter the currently rendered feed.
 
     document
         .querySelectorAll(
@@ -4087,10 +5212,11 @@ function performGlobalSearch(
                     post.innerText
                         .toLowerCase()
                         .includes(
-                            query
+                            normalizedQuery
                         )
                         ? ""
                         : "none";
+
             }
         );
 }
@@ -4101,8 +5227,7 @@ function performGlobalSearch(
 // =========================================================
 
 function renderSearchResults(
-    results,
-    query
+    results
 ) {
 
     const panel =
@@ -4110,19 +5235,23 @@ function renderSearchResults(
             "globalSearchResults"
         );
 
+
     if (!panel) {
 
         return;
     }
 
+
     panel.innerHTML =
         "";
+
 
     if (
         results.length === 0
     ) {
 
         panel.innerHTML = `
+
             <div style="
                 padding:16px;
                 text-align:center;
@@ -4130,40 +5259,54 @@ function renderSearchResults(
             ">
                 No results found.
             </div>
+
         `;
+
 
         panel.style.display =
             "block";
 
+
         return;
     }
 
+
     const groups = [
+
         {
             title:
                 "👤 People",
+
             type:
                 "person"
         },
+
         {
             title:
                 "🏢 Companies",
+
             type:
                 "company"
         },
+
         {
             title:
                 "📚 Courses",
+
             type:
                 "course"
         },
+
         {
             title:
                 "📝 Posts",
+
             type:
                 "post"
         }
+
     ];
+
 
     groups.forEach(
         group => {
@@ -4175,6 +5318,7 @@ function renderSearchResults(
                         group.type
                 );
 
+
             if (
                 items.length ===
                 0
@@ -4183,29 +5327,37 @@ function renderSearchResults(
                 return;
             }
 
+
             const heading =
                 document.createElement(
                     "div"
                 );
 
+
             heading.textContent =
                 group.title;
+
 
             heading.style.padding =
                 "10px 14px 6px";
 
+
             heading.style.color =
                 "#0A66C2";
+
 
             heading.style.fontSize =
                 "11px";
 
+
             heading.style.fontWeight =
                 "700";
+
 
             panel.appendChild(
                 heading
             );
+
 
             items
                 .slice(
@@ -4220,14 +5372,18 @@ function renderSearchResults(
                                 "div"
                             );
 
+
                         row.style.padding =
                             "10px 14px";
+
 
                         row.style.cursor =
                             "pointer";
 
+
                         row.style.borderTop =
                             "1px solid #F1F5F9";
+
 
                         row.innerHTML = `
 
@@ -4240,6 +5396,7 @@ function renderSearchResults(
                                     result.title
                                 )}
                             </div>
+
 
                             ${
                                 result.subtitle
@@ -4256,6 +5413,7 @@ function renderSearchResults(
                                     `
                                     : ""
                             }
+
 
                             ${
                                 result.meta
@@ -4275,6 +5433,7 @@ function renderSearchResults(
 
                         `;
 
+
                         row.addEventListener(
                             "click",
                             () => {
@@ -4282,16 +5441,21 @@ function renderSearchResults(
                                 handleSearchResult(
                                     result
                                 );
+
                             }
                         );
+
 
                         panel.appendChild(
                             row
                         );
+
                     }
                 );
+
         }
     );
+
 
     panel.style.display =
         "block";
@@ -4308,6 +5472,7 @@ function handleSearchResult(
 
     hideSearchResults();
 
+
     if (
         item.type ===
         "person"
@@ -4317,44 +5482,68 @@ function handleSearchResult(
             item.id
         );
 
+
         return;
     }
+
 
     if (
         item.type ===
         "company"
     ) {
 
+        const companyId =
+            Number(
+                item.id
+            );
+
+
         if (
-            item.id
+            Number.isInteger(
+                companyId
+            ) &&
+            companyId > 0
         ) {
 
             window.location.href =
-                `CompanyProfile.html?id=${encodeURIComponent(
-                    item.id
+                `${COMPANY_PAGE}?id=${encodeURIComponent(
+                    companyId
                 )}`;
         }
 
+
         return;
     }
+
 
     if (
         item.type ===
         "course"
     ) {
 
+        const courseId =
+            Number(
+                item.id
+            );
+
+
         if (
-            item.id
+            Number.isInteger(
+                courseId
+            ) &&
+            courseId > 0
         ) {
 
             window.location.href =
-                `courses.html?courseId=${encodeURIComponent(
-                    item.id
+                `${COURSES_PAGE}?courseId=${encodeURIComponent(
+                    courseId
                 )}`;
         }
 
+
         return;
     }
+
 
     if (
         item.type ===
@@ -4362,39 +5551,59 @@ function handleSearchResult(
     ) {
 
         if (
-            item.id
+            item.id === undefined ||
+            item.id === null
         ) {
 
-            const post =
-                document.querySelector(
-                    `.post[data-post-id="${CSS.escape(
-                        String(
-                            item.id
-                        )
-                    )}"]`
+            return;
+        }
+
+
+        const safeId =
+            String(
+                item.id
+            );
+
+
+        const post =
+            Array.from(
+                document.querySelectorAll(
+                    ".post[data-post-id]"
+                )
+            ).find(
+                element =>
+                    String(
+                        element.dataset.postId
+                    ) ===
+                    safeId
+            );
+
+
+        if (post) {
+
+            document
+                .querySelectorAll(
+                    ".post"
+                )
+                .forEach(
+                    element => {
+
+                        element.style.display =
+                            "";
+
+                    }
                 );
 
-            if (post) {
 
-                document
-                    .querySelectorAll(
-                        ".post"
-                    )
-                    .forEach(
-                        element => {
+            post.scrollIntoView({
 
-                            element.style.display =
-                                "";
-                        }
-                    );
+                behavior:
+                    "smooth",
 
-                post.scrollIntoView({
-                    behavior:
-                        "smooth",
-                    block:
-                        "center"
-                });
-            }
+                block:
+                    "center"
+
+            });
         }
     }
 }
@@ -4410,6 +5619,7 @@ function hideSearchResults() {
         document.getElementById(
             "globalSearchResults"
         );
+
 
     if (
         panel
@@ -4432,15 +5642,18 @@ function setupDarkMode() {
             "header"
         );
 
+
     if (!header) {
 
         return;
     }
 
+
     let button =
         document.querySelector(
             ".dark-toggle"
         );
+
 
     if (!button) {
 
@@ -4449,26 +5662,51 @@ function setupDarkMode() {
                 "button"
             );
 
+
         button.type =
             "button";
 
+
         button.className =
             "dark-toggle";
+
+
+        button.setAttribute(
+            "aria-label",
+            "Toggle dark mode"
+        );
+
 
         header.appendChild(
             button
         );
     }
 
-    function updateButton() {
 
-        button.textContent =
-            document.body.classList.contains(
-                "dark-mode"
-            )
-                ? "☀️"
-                : "🌙";
-    }
+    const updateButton =
+        () => {
+
+            const dark =
+                document.body.classList.contains(
+                    "dark-mode"
+                );
+
+
+            button.textContent =
+                dark
+                    ? "☀️"
+                    : "🌙";
+
+
+            button.setAttribute(
+                "aria-label",
+                dark
+                    ? "Switch to light mode"
+                    : "Switch to dark mode"
+            );
+
+        };
+
 
     if (
         localStorage.getItem(
@@ -4481,7 +5719,22 @@ function setupDarkMode() {
         );
     }
 
+
     updateButton();
+
+
+    if (
+        button.dataset.eventsAttached ===
+        "true"
+    ) {
+
+        return;
+    }
+
+
+    button.dataset.eventsAttached =
+        "true";
+
 
     button.addEventListener(
         "click",
@@ -4491,10 +5744,12 @@ function setupDarkMode() {
                 "dark-mode"
             );
 
+
             const dark =
                 document.body.classList.contains(
                     "dark-mode"
                 );
+
 
             localStorage.setItem(
                 "theme",
@@ -4503,7 +5758,9 @@ function setupDarkMode() {
                     : "light"
             );
 
+
             updateButton();
+
         }
     );
 }
@@ -4520,10 +5777,12 @@ function setupMobileMenu() {
             "header"
         );
 
+
     const nav =
         document.querySelector(
             "nav"
         );
+
 
     if (
         !header ||
@@ -4533,10 +5792,12 @@ function setupMobileMenu() {
         return;
     }
 
+
     let button =
         document.querySelector(
             ".menu-toggle"
         );
+
 
     if (!button) {
 
@@ -4545,65 +5806,123 @@ function setupMobileMenu() {
                 "button"
             );
 
+
         button.type =
             "button";
+
 
         button.className =
             "menu-toggle";
 
+
         button.textContent =
             "☰";
+
 
         button.setAttribute(
             "aria-label",
             "Open navigation"
         );
 
+
         header.prepend(
             button
         );
     }
 
-    function updateMenu() {
 
-        if (
-            window.innerWidth <=
-            768
-        ) {
+    const updateMenu =
+        () => {
 
-            button.style.display =
-                "flex";
+            if (
+                window.innerWidth <=
+                768
+            ) {
 
-            nav.style.display =
-                "none";
+                button.style.display =
+                    "flex";
 
-            button.onclick =
-                () => {
+
+                nav.style.flexDirection =
+                    "column";
+
+
+                if (
+                    nav.dataset.mobileOpen !==
+                    "true"
+                ) {
 
                     nav.style.display =
-                        nav.style.display ===
-                        "flex"
-                            ? "none"
-                            : "flex";
+                        "none";
+                }
 
-                    nav.style.flexDirection =
-                        "column";
-                };
 
-        } else {
+            } else {
 
-            button.style.display =
-                "none";
+                button.style.display =
+                    "none";
 
-            nav.style.display =
-                "flex";
 
-            nav.style.flexDirection =
-                "row";
-        }
-    }
+                nav.style.display =
+                    "flex";
+
+
+                nav.style.flexDirection =
+                    "row";
+
+
+                nav.dataset.mobileOpen =
+                    "false";
+            }
+
+        };
+
 
     updateMenu();
+
+
+    if (
+        button.dataset.eventsAttached !==
+        "true"
+    ) {
+
+        button.dataset.eventsAttached =
+            "true";
+
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                if (
+                    window.innerWidth >
+                    768
+                ) {
+
+                    return;
+                }
+
+
+                const isOpen =
+                    nav.dataset.mobileOpen ===
+                    "true";
+
+
+                nav.dataset.mobileOpen =
+                    isOpen
+                        ? "false"
+                        : "true";
+
+
+                nav.style.display =
+                    isOpen
+                        ? "none"
+                        : "flex";
+
+            }
+        );
+    }
+
 
     window.addEventListener(
         "resize",
@@ -4614,6 +5933,14 @@ function setupMobileMenu() {
 
 // =========================================================
 // CONNECTION BUTTONS
+// =========================================================
+//
+// IMPORTANT:
+//
+// Only show "Connected" after the server confirms success.
+//
+// If /api/connections doesn't exist, the UI stays "Connect"
+// instead of falsely pretending the connection was saved.
 // =========================================================
 
 function setupConnectionButtons() {
@@ -4633,8 +5960,10 @@ function setupConnectionButtons() {
                     return;
                 }
 
+
                 button.dataset.eventsAttached =
                     "true";
+
 
                 button.addEventListener(
                     "click",
@@ -4642,8 +5971,12 @@ function setupConnectionButtons() {
 
                         event.stopPropagation();
 
+
                         const targetId =
-                            button.dataset.connectUser;
+                            Number(
+                                button.dataset.connectUser
+                            );
+
 
                         if (
                             button.disabled
@@ -4652,88 +5985,129 @@ function setupConnectionButtons() {
                             return;
                         }
 
-                        /*
-                         * This calls your optional
-                         * connection endpoint.
-                         *
-                         * If your server does not yet
-                         * contain /api/connections,
-                         * the visual state is still updated.
-                         */
 
                         if (
-                            targetId
+                            !Number.isInteger(
+                                targetId
+                            ) ||
+                            targetId <= 0
                         ) {
 
-                            try {
-
-                                const response =
-                                    await authenticatedFetch(
-                                        `${API_BASE}/connections`,
-                                        {
-                                            method:
-                                                "POST",
-
-                                            headers: {
-                                                "Content-Type":
-                                                    "application/json"
-                                            },
-
-                                            body:
-                                                JSON.stringify({
-                                                    userId:
-                                                        Number(
-                                                            targetId
-                                                        )
-                                                })
-                                        }
-                                    );
-
-                                if (
-                                    handleAuthError(
-                                        response
-                                    )
-                                ) {
-
-                                    return;
-                                }
-
-                                if (
-                                    response.ok
-                                ) {
-
-                                    button.textContent =
-                                        "Connected";
-
-                                    button.disabled =
-                                        true;
-
-                                    await loadMyProfile();
-                                    incrementConnectionCount();
-
-                                    return;
-                                }
-
-                            } catch (
-                                error
-                            ) {
-
-                                console.warn(
-                                    "Connection endpoint unavailable.",
-                                    error
-                                );
-                            }
+                            return;
                         }
 
-                        button.textContent =
-                            "Connected";
+
+                        const originalText =
+                            button.textContent;
+
 
                         button.disabled =
                             true;
 
-                        incrementConnectionCount();
+
+                        button.textContent =
+                            "Connecting...";
+
+
+                        try {
+
+                            const response =
+                                await authenticatedFetch(
+                                    CONNECTIONS_API,
+                                    {
+                                        method:
+                                            "POST",
+
+                                        headers: {
+                                            "Content-Type":
+                                                "application/json"
+                                        },
+
+                                        body:
+                                            JSON.stringify({
+                                                userId:
+                                                    targetId
+                                            })
+                                    }
+                                );
+
+
+                            if (
+                                handleAuthError(
+                                    response
+                                )
+                            ) {
+
+                                return;
+                            }
+
+
+                            const data =
+                                await readJsonResponse(
+                                    response
+                                );
+
+
+                            if (
+                                response.status ===
+                                404
+                            ) {
+
+                                throw new Error(
+                                    "The connections API is not implemented on the server yet."
+                                );
+                            }
+
+
+                            if (
+                                !response.ok
+                            ) {
+
+                                throw new Error(
+                                    data.error ||
+                                    data.message ||
+                                    "Unable to create connection."
+                                );
+                            }
+
+
+                            button.textContent =
+                                "Connected";
+
+
+                            button.disabled =
+                                true;
+
+
+                            await loadMyProfile();
+
+
+                        } catch (error) {
+
+                            console.error(
+                                "CONNECTION ERROR:",
+                                error
+                            );
+
+
+                            button.textContent =
+                                originalText ||
+                                "Connect";
+
+
+                            button.disabled =
+                                false;
+
+
+                            alert(
+                                "Unable to connect this user.\n\n" +
+                                error.message
+                            );
+                        }
+
                     }
                 );
+
             }
         );
 }
@@ -4750,16 +6124,19 @@ function incrementConnectionCount() {
             "connectionsCount"
         );
 
+
     if (!counter) {
 
         return;
     }
+
 
     const count =
         parseInt(
             counter.textContent,
             10
         ) || 0;
+
 
     counter.textContent =
         String(
@@ -4779,16 +6156,32 @@ function setupEditProfile() {
             "editProfileLink"
         );
 
+
     if (!editButton) {
 
         return;
     }
+
+
+    if (
+        editButton.dataset.eventsAttached ===
+        "true"
+    ) {
+
+        return;
+    }
+
+
+    editButton.dataset.eventsAttached =
+        "true";
+
 
     editButton.addEventListener(
         "click",
         event => {
 
             event.preventDefault();
+
 
             if (
                 !getAuthToken() ||
@@ -4799,16 +6192,18 @@ function setupEditProfile() {
                     "Please log in before editing your profile."
                 );
 
+
                 window.location.href =
-                    "login.html";
+                    LOGIN_PAGE;
+
 
                 return;
             }
 
-            // Only own profile editor.
 
             window.location.href =
-                "profile.html";
+                PROFILE_PAGE;
+
         }
     );
 }
@@ -4827,10 +6222,12 @@ function formatDate(
         return "";
     }
 
+
     const date =
         new Date(
             value
         );
+
 
     if (
         Number.isNaN(
@@ -4842,6 +6239,7 @@ function formatDate(
             value
         );
     }
+
 
     return date.toLocaleString(
         "en-IN",
@@ -4866,16 +6264,96 @@ function extractNumber(
 
     const match =
         String(
-            value
+            value ?? ""
         ).match(
-            /\d+/
+            /\d+(?:\.\d+)?/
         );
+
 
     return match
         ? Number(
             match[0]
         )
         : 0;
+}
+
+
+// =========================================================
+// VALID HTTP URL
+// =========================================================
+
+function isValidHttpUrl(
+    value
+) {
+
+    if (
+        !value ||
+        typeof value !==
+        "string"
+    ) {
+
+        return false;
+    }
+
+
+    try {
+
+        const parsed =
+            new URL(
+                value.trim()
+            );
+
+
+        return (
+            parsed.protocol ===
+                "http:" ||
+
+            parsed.protocol ===
+                "https:"
+        );
+
+
+    } catch (error) {
+
+        return false;
+    }
+}
+
+
+// =========================================================
+// VALID MEDIA URL
+// =========================================================
+
+function isValidMediaUrl(
+    value
+) {
+
+    if (
+        typeof value !==
+        "string"
+    ) {
+
+        return false;
+    }
+
+
+    const trimmed =
+        value.trim();
+
+
+    return (
+        isValidHttpUrl(
+            trimmed
+        ) ||
+
+        trimmed.startsWith(
+            "data:image/"
+        ) ||
+
+        trimmed.startsWith(
+            "data:video/"
+        )
+    );
 }
 
 
@@ -4892,175 +6370,246 @@ function escapeHTML(
             "div"
         );
 
+
     div.textContent =
         value ?? "";
 
+
     return div.innerHTML;
 }
+
 
 // =========================================================
 // AI CHATBOT
 // =========================================================
 
-// =========================================================
-// AI CHATBOT SETUP
-// =========================================================
-
 function setupAIChatbot() {
 
     const chatButton =
-        document.getElementById("aiChatButton");
+        document.getElementById(
+            "aiChatButton"
+        );
+
 
     const chatWindow =
-        document.getElementById("aiChatWindow");
+        document.getElementById(
+            "aiChatWindow"
+        );
+
 
     const closeButton =
-        document.getElementById("aiChatClose");
+        document.getElementById(
+            "aiChatClose"
+        );
+
 
     const input =
-        document.getElementById("aiChatInput");
+        document.getElementById(
+            "aiChatInput"
+        );
+
 
     const sendButton =
-        document.getElementById("aiChatSend");
+        document.getElementById(
+            "aiChatSend"
+        );
+
 
     const messages =
-        document.getElementById("aiChatBody");
-
-    const startTestButton =
-    document.createElement("button");
-
-startTestButton.type = "button";
-startTestButton.className =
-    "ai-start-test-btn";
-
-startTestButton.textContent =
-    "🎯 Start Industry Readiness Test";
-
-messages.appendChild(
-    startTestButton
-);
-
-startTestButton.addEventListener(
-    "click",
-    () => {
-        startIndustryReadinessTest();
-    }
-);
-
-
-    // -----------------------------------------------------
-    // CHECK HTML ELEMENTS
-    // -----------------------------------------------------
-
-    console.log("Checking Campus2Career AI chatbot...");
-
-    console.log("aiChatButton:", chatButton);
-    console.log("aiChatWindow:", chatWindow);
-    console.log("aiChatClose:", closeButton);
-    console.log("aiChatInput:", input);
-    console.log("aiChatSend:", sendButton);
-    console.log("aiChatBody:", messages);
-
-
-    if (!chatButton) {
-        console.error(
-            "ERROR: #aiChatButton not found."
+        document.getElementById(
+            "aiChatBody"
         );
-        return;
-    }
-
-    if (!chatWindow) {
-        console.error(
-            "ERROR: #aiChatWindow not found."
-        );
-        return;
-    }
-
-    if (!input) {
-        console.error(
-            "ERROR: #aiChatInput not found."
-        );
-        return;
-    }
-
-    if (!sendButton) {
-        console.error(
-            "ERROR: #aiChatSend not found."
-        );
-        return;
-    }
-
-    if (!messages) {
-        console.error(
-            "ERROR: #aiChatBody not found."
-        );
-        return;
-    }
 
 
-    // -----------------------------------------------------
-    // OPEN CHAT
-    // -----------------------------------------------------
-
-    chatButton.addEventListener(
-        "click",
-        function (event) {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            console.log(
-                "AI logo clicked."
-            );
-
-
-            // Force the window to become visible
-
-            chatWindow.style.display =
-                "flex";
-
-            chatWindow.style.visibility =
-                "visible";
-
-            chatWindow.style.opacity =
-                "1";
-
-            chatWindow.classList.add(
-                "active"
-            );
-
-
-            // Focus input
-
-            setTimeout(
-                function () {
-
-                    input.focus();
-
-                },
-                100
-            );
-
-        }
+    console.log(
+        "Checking Campus2Career AI chatbot..."
     );
 
 
     // -----------------------------------------------------
-    // CLOSE CHAT
+    // Validate elements BEFORE using them.
     // -----------------------------------------------------
 
-    if (closeButton) {
+    if (!chatButton) {
+
+        console.warn(
+            "#aiChatButton not found."
+        );
+
+
+        return;
+    }
+
+
+    if (!chatWindow) {
+
+        console.warn(
+            "#aiChatWindow not found."
+        );
+
+
+        return;
+    }
+
+
+    if (!input) {
+
+        console.warn(
+            "#aiChatInput not found."
+        );
+
+
+        return;
+    }
+
+
+    if (!sendButton) {
+
+        console.warn(
+            "#aiChatSend not found."
+        );
+
+
+        return;
+    }
+
+
+    if (!messages) {
+
+        console.warn(
+            "#aiChatBody not found."
+        );
+
+
+        return;
+    }
+
+
+    // -----------------------------------------------------
+    // INDUSTRY TEST BUTTON
+    // -----------------------------------------------------
+
+    let startTestButton =
+        messages.querySelector(
+            ".ai-start-test-btn"
+        );
+
+
+    if (!startTestButton) {
+
+        startTestButton =
+            document.createElement(
+                "button"
+            );
+
+
+        startTestButton.type =
+            "button";
+
+
+        startTestButton.className =
+            "ai-start-test-btn";
+
+
+        startTestButton.textContent =
+            "🎯 Start Industry Readiness Test";
+
+
+        messages.appendChild(
+            startTestButton
+        );
+
+
+        startTestButton.addEventListener(
+            "click",
+            () => {
+
+                startIndustryReadinessTest();
+
+            }
+        );
+    }
+
+
+    // -----------------------------------------------------
+    // OPEN
+    // -----------------------------------------------------
+
+    if (
+        chatButton.dataset.eventsAttached !==
+        "true"
+    ) {
+
+        chatButton.dataset.eventsAttached =
+            "true";
+
+
+        chatButton.addEventListener(
+            "click",
+            event => {
+
+                event.preventDefault();
+
+                event.stopPropagation();
+
+
+                chatWindow.style.display =
+                    "flex";
+
+
+                chatWindow.style.visibility =
+                    "visible";
+
+
+                chatWindow.style.opacity =
+                    "1";
+
+
+                chatWindow.classList.add(
+                    "active"
+                );
+
+
+                setTimeout(
+                    () => {
+
+                        input.focus();
+
+                    },
+                    100
+                );
+
+            }
+        );
+    }
+
+
+    // -----------------------------------------------------
+    // CLOSE
+    // -----------------------------------------------------
+
+    if (
+        closeButton &&
+        closeButton.dataset.eventsAttached !==
+            "true"
+    ) {
+
+        closeButton.dataset.eventsAttached =
+            "true";
+
 
         closeButton.addEventListener(
             "click",
-            function (event) {
+            event => {
 
                 event.preventDefault();
+
                 event.stopPropagation();
 
 
                 chatWindow.style.display =
                     "none";
+
 
                 chatWindow.classList.remove(
                     "active"
@@ -5068,7 +6617,6 @@ startTestButton.addEventListener(
 
             }
         );
-
     }
 
 
@@ -5076,39 +6624,61 @@ startTestButton.addEventListener(
     // SEND BUTTON
     // -----------------------------------------------------
 
-    sendButton.addEventListener(
-        "click",
-        function (event) {
+    if (
+        sendButton.dataset.eventsAttached !==
+        "true"
+    ) {
 
-            event.preventDefault();
+        sendButton.dataset.eventsAttached =
+            "true";
 
-            sendAIMessage();
 
-        }
-    );
+        sendButton.addEventListener(
+            "click",
+            event => {
+
+                event.preventDefault();
+
+
+                sendAIMessage();
+
+            }
+        );
+    }
 
 
     // -----------------------------------------------------
     // ENTER KEY
     // -----------------------------------------------------
 
-    input.addEventListener(
-        "keydown",
-        function (event) {
+    if (
+        input.dataset.eventsAttached !==
+        "true"
+    ) {
 
-            if (
-                event.key === "Enter" &&
-                !event.shiftKey
-            ) {
+        input.dataset.eventsAttached =
+            "true";
 
-                event.preventDefault();
 
-                sendAIMessage();
+        input.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Enter" &&
+                    !event.shiftKey
+                ) {
+
+                    event.preventDefault();
+
+
+                    sendAIMessage();
+
+                }
 
             }
-
-        }
-    );
+        );
+    }
 
 
     console.log(
@@ -5116,9 +6686,8 @@ startTestButton.addEventListener(
     );
 
 
-
     // =====================================================
-    // SEND MESSAGE
+    // SEND AI MESSAGE
     // =====================================================
 
     async function sendAIMessage() {
@@ -5130,35 +6699,8 @@ startTestButton.addEventListener(
         if (!userMessage) {
 
             return;
-
         }
 
-
-        // -------------------------------------------------
-        // Check API URL
-        // -------------------------------------------------
-
-        if (
-            !AI_CHATBOT_URL ||
-            AI_CHATBOT_URL.trim() === ""
-        ) {
-
-            addAIMessage(
-                "AI chatbot URL is not configured yet."
-            );
-
-            console.error(
-                "AI_CHATBOT_URL is empty."
-            );
-
-            return;
-
-        }
-
-
-        // -------------------------------------------------
-        // Display user message
-        // -------------------------------------------------
 
         addUserMessage(
             userMessage
@@ -5172,6 +6714,7 @@ startTestButton.addEventListener(
         input.disabled =
             true;
 
+
         sendButton.disabled =
             true;
 
@@ -5184,26 +6727,10 @@ startTestButton.addEventListener(
 
         try {
 
-            console.log(
-                "Sending message:",
-                userMessage
-            );
-
-            console.log(
-                "Sending to:",
-                AI_CHATBOT_URL
-            );
-
-
-            // =============================================
-            // SEND USER MESSAGE TO AI API
-            // =============================================
-
             const response =
                 await fetch(
-                    AI_CHATBOT_URL.trim(),
+                    AI_CHATBOT_URL,
                     {
-
                         method:
                             "POST",
 
@@ -5212,7 +6739,7 @@ startTestButton.addEventListener(
                             "Content-Type":
                                 "application/json",
 
-                            "Accept":
+                            Accept:
                                 "application/json"
 
                         },
@@ -5233,36 +6760,42 @@ startTestButton.addEventListener(
                 await response.text();
 
 
-            console.log(
-                "HTTP status:",
-                response.status
-            );
-
-            console.log(
-                "AI response:",
-                rawResponse
-            );
-
-
             if (!response.ok) {
 
-                throw new Error(
-                    `AI server returned HTTP ${response.status}`
-                );
+                let errorMessage =
+                    `AI server returned HTTP ${response.status}`;
 
+
+                try {
+
+                    const errorData =
+                        JSON.parse(
+                            rawResponse
+                        );
+
+
+                    errorMessage =
+                        errorData.message ||
+                        errorData.error ||
+                        errorMessage;
+
+
+                } catch (error) {
+                    // Keep HTTP fallback message.
+                }
+
+
+                throw new Error(
+                    errorMessage
+                );
             }
 
-
-            // Remove thinking message
 
             if (thinking) {
 
                 thinking.remove();
-
             }
 
-
-            // Extract response
 
             const reply =
                 extractAIReply(
@@ -5275,20 +6808,15 @@ startTestButton.addEventListener(
                 throw new Error(
                     "The AI endpoint returned an empty response."
                 );
-
             }
 
-
-            // Display answer
 
             addAIMessage(
                 reply
             );
 
 
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.error(
                 "AI CHATBOT ERROR:",
@@ -5299,7 +6827,6 @@ startTestButton.addEventListener(
             if (thinking) {
 
                 thinking.remove();
-
             }
 
 
@@ -5314,15 +6841,14 @@ startTestButton.addEventListener(
             input.disabled =
                 false;
 
+
             sendButton.disabled =
                 false;
 
+
             input.focus();
-
         }
-
     }
-
 
 
     // =====================================================
@@ -5339,17 +6865,12 @@ startTestButton.addEventListener(
         ) {
 
             return "";
-
         }
 
 
         const text =
             rawResponse.trim();
 
-
-        // ---------------------------------------------
-        // Try JSON
-        // ---------------------------------------------
 
         try {
 
@@ -5365,7 +6886,6 @@ startTestButton.addEventListener(
             ) {
 
                 return data.reply.trim();
-
             }
 
 
@@ -5375,7 +6895,6 @@ startTestButton.addEventListener(
             ) {
 
                 return data.response.trim();
-
             }
 
 
@@ -5385,7 +6904,6 @@ startTestButton.addEventListener(
             ) {
 
                 return data.answer.trim();
-
             }
 
 
@@ -5395,7 +6913,6 @@ startTestButton.addEventListener(
             ) {
 
                 return data.message.trim();
-
             }
 
 
@@ -5405,7 +6922,6 @@ startTestButton.addEventListener(
             ) {
 
                 return data.content.trim();
-
             }
 
 
@@ -5415,11 +6931,12 @@ startTestButton.addEventListener(
             ) {
 
                 return data.text.trim();
-
             }
 
 
-            // OpenAI format
+            // ------------------------------------------------
+            // OpenAI-compatible response.
+            // ------------------------------------------------
 
             if (
                 Array.isArray(
@@ -5439,7 +6956,6 @@ startTestButton.addEventListener(
                     return String(
                         choice.message.content
                     ).trim();
-
                 }
 
 
@@ -5450,13 +6966,13 @@ startTestButton.addEventListener(
                     return String(
                         choice.text
                     ).trim();
-
                 }
-
             }
 
 
-            // Gemini format
+            // ------------------------------------------------
+            // Gemini response.
+            // ------------------------------------------------
 
             if (
                 Array.isArray(
@@ -5465,17 +6981,14 @@ startTestButton.addEventListener(
                 data.candidates.length > 0
             ) {
 
-                const candidate =
-                    data.candidates[0];
-
-
                 const result =
-                    candidate
+                    data.candidates[0]
                         ?.content
                         ?.parts
                         ?.map(
                             part =>
-                                part?.text || ""
+                                part?.text ||
+                                ""
                         )
                         .join("")
                         .trim();
@@ -5486,26 +6999,18 @@ startTestButton.addEventListener(
                 ) {
 
                     return result;
-
                 }
-
             }
 
 
             return "";
 
-        } catch (
-            error
-        ) {
 
-            // Plain-text response
+        } catch (error) {
 
             return text;
-
         }
-
     }
-
 
 
     // =====================================================
@@ -5537,9 +7042,7 @@ startTestButton.addEventListener(
 
         messages.scrollTop =
             messages.scrollHeight;
-
     }
-
 
 
     // =====================================================
@@ -5574,17 +7077,19 @@ startTestButton.addEventListener(
 
 
         return element;
-
     }
-
 }
+
+
+// =========================================================
+// START INDUSTRY READINESS TEST
+// =========================================================
 
 async function startIndustryReadinessTest() {
 
     const token =
-        localStorage.getItem(
-            TOKEN_KEY
-        );
+        getAuthToken();
+
 
     if (!token) {
 
@@ -5592,89 +7097,125 @@ async function startIndustryReadinessTest() {
             "Please log in first."
         );
 
+
         window.location.href =
-            "login.html";
+            LOGIN_PAGE;
+
 
         return;
     }
+
 
     const messages =
         document.getElementById(
             "aiChatBody"
         );
 
+
     if (!messages) {
+
         return;
     }
 
+
     try {
 
-        messages.innerHTML = "";
+        messages.innerHTML = `
 
-        const loading =
-            document.createElement(
-                "div"
-            );
+            <div class="ai-message">
+                🎯 Preparing your Industry Readiness Test...
+            </div>
 
-        loading.className =
-            "ai-message";
+        `;
 
-        loading.textContent =
-            "🎯 Preparing your Industry Readiness Test...";
-
-        messages.appendChild(
-            loading
-        );
 
         const response =
             await authenticatedFetch(
                 INDUSTRY_TEST_START_URL,
                 {
-                    method: "POST"
+                    method:
+                        "POST"
                 }
             );
+
 
         if (
             handleAuthError(
                 response
             )
         ) {
+
             return;
         }
+
 
         const data =
             await readJsonResponse(
                 response
             );
 
+
         if (!response.ok) {
-            console.error("Industry test server response:", data);
+
             throw new Error(
                 data.message ||
-        data.error ||
-        `Server returned HTTP ${response.status}`
+                data.error ||
+                `Server returned HTTP ${response.status}`
             );
         }
+
+
+        if (
+            !Array.isArray(
+                data.questions
+            ) ||
+            data.questions.length !== 20
+        ) {
+
+            throw new Error(
+                "The server did not return exactly 20 test questions."
+            );
+        }
+
+
+        if (
+            data.testId === undefined ||
+            data.testId === null
+        ) {
+
+            throw new Error(
+                "The server did not return a valid test ID."
+            );
+        }
+
 
         industryTest =
             data;
 
+
         industryTestAnswers =
             new Array(
-                20
+                data.questions.length
             ).fill(null);
+
 
         industryCurrentQuestion =
             0;
 
+
         messages.innerHTML =
             "";
 
+
         addTestIntro(
-            data.tagline
+            data.tagline ||
+            data.professionalTagline ||
+            ""
         );
 
+
         showIndustryQuestion();
+
 
     } catch (error) {
 
@@ -5683,8 +7224,10 @@ async function startIndustryReadinessTest() {
             error
         );
 
+
         messages.innerHTML =
             "";
+
 
         addAIMessageToChat(
             "Unable to start the Industry Readiness Test.\n\n" +
@@ -5692,6 +7235,11 @@ async function startIndustryReadinessTest() {
         );
     }
 }
+
+
+// =========================================================
+// TEST INTRO
+// =========================================================
 
 function addTestIntro(
     tagline
@@ -5702,41 +7250,69 @@ function addTestIntro(
             "aiChatBody"
         );
 
+
     if (!messages) {
+
         return;
     }
+
 
     const element =
         document.createElement(
             "div"
         );
 
+
     element.className =
         "ai-message";
 
+
     element.innerHTML = `
-        <strong>🎯 Industry Readiness Test</strong>
+
+        <strong>
+            🎯 Industry Readiness Test
+        </strong>
+
 
         <p>
             This test contains 20 MCQs based on your professional tagline.
         </p>
 
+
         <p>
-            <strong>Your tagline:</strong><br>
-            ${escapeHTML(tagline)}
+
+            <strong>
+                Your professional context:
+            </strong>
+
+            <br>
+
+            ${escapeHTML(
+                tagline ||
+                "Not provided"
+            )}
+
         </p>
+
 
         <p>
             Answer all 20 questions. Your final
             score, grade and test rating will be
             stored in your Campus2Career profile.
         </p>
+
     `;
+
 
     messages.appendChild(
         element
     );
 }
+
+
+// =========================================================
+// SHOW INDUSTRY QUESTION
+// =========================================================
 
 function showIndustryQuestion() {
 
@@ -5745,72 +7321,144 @@ function showIndustryQuestion() {
             "aiChatBody"
         );
 
-    if (!messages || !industryTest) {
+
+    if (
+        !messages ||
+        !industryTest
+    ) {
+
         return;
     }
+
+
+    const questions =
+        Array.isArray(
+            industryTest.questions
+        )
+            ? industryTest.questions
+            : [];
+
+
+    if (
+        questions.length ===
+        0
+    ) {
+
+        addAIMessageToChat(
+            "The test returned no questions."
+        );
+
+
+        return;
+    }
+
+
+    const question =
+        questions[
+            industryCurrentQuestion
+        ];
+
+
+    if (!question) {
+
+        return;
+    }
+
+
+    const questionNumber =
+        industryCurrentQuestion + 1;
+
 
     messages.innerHTML =
         "";
 
-    const question =
-        industryTest.questions[
-            industryCurrentQuestion
-        ];
-
-    const questionNumber =
-        industryCurrentQuestion + 1;
 
     const wrapper =
         document.createElement(
             "div"
         );
 
+
     wrapper.className =
         "industry-test-question";
 
+
     wrapper.innerHTML = `
+
         <div class="test-progress">
-            Question ${questionNumber} of 20
+
+            Question
+            ${questionNumber}
+            of
+            ${questions.length}
+
         </div>
+
 
         <h3>
             ${escapeHTML(
-                question.question
+                question.question ||
+                ""
             )}
         </h3>
 
-        <div class="test-options">
-            ${question.options.map(
-                (
-                    option,
-                    index
-                ) => `
-                    <button
-                        type="button"
-                        class="test-option"
-                        data-index="${index}"
-                    >
-                        <span>
-                            ${
-                                String.fromCharCode(
-                                    65 + index
-                                )
-                            }.
-                        </span>
 
-                        ${escapeHTML(
-                            option
-                        )}
-                    </button>
-                `
-            ).join("")}
+        <div class="test-options">
+
+            ${
+                Array.isArray(
+                    question.options
+                )
+
+                    ? question.options
+                        .map(
+                            (
+                                option,
+                                index
+                            ) => `
+
+                                <button
+                                    type="button"
+                                    class="test-option"
+                                    data-index="${index}"
+                                >
+
+                                    <span>
+                                        ${
+                                            String.fromCharCode(
+                                                65 +
+                                                index
+                                            )
+                                        }.
+                                    </span>
+
+                                    ${escapeHTML(
+                                        option
+                                    )}
+
+                                </button>
+
+                            `
+                        )
+                        .join("")
+
+                    : `
+                        <p>
+                            No answer options were returned.
+                        </p>
+                    `
+            }
+
         </div>
+
     `;
+
 
     const options =
         wrapper.querySelectorAll(
             ".test-option"
         );
+
 
     options.forEach(
         button => {
@@ -5819,63 +7467,99 @@ function showIndustryQuestion() {
                 "click",
                 () => {
 
+                    if (
+                        button.disabled
+                    ) {
+
+                        return;
+                    }
+
+
                     const selected =
                         Number(
                             button.dataset.index
                         );
+
+
+                    if (
+                        !Number.isInteger(
+                            selected
+                        )
+                    ) {
+
+                        return;
+                    }
+
 
                     industryTestAnswers[
                         industryCurrentQuestion
                     ] =
                         selected;
 
+
                     options.forEach(
                         option => {
+
                             option.disabled =
                                 true;
+
                         }
                     );
+
 
                     button.classList.add(
                         "selected"
                     );
+
 
                     setTimeout(
                         () => {
 
                             if (
                                 industryCurrentQuestion <
-                                19
+                                questions.length - 1
                             ) {
 
                                 industryCurrentQuestion++;
+
 
                                 showIndustryQuestion();
 
                             } else {
 
                                 submitIndustryReadinessTest(
+
                                     industryTest.testId,
+
                                     industryTestAnswers
+
                                 );
+
                             }
 
                         },
                         250
                     );
+
                 }
             );
         }
     );
 
+
     messages.appendChild(
         wrapper
     );
+
 
     messages.scrollTop =
         messages.scrollHeight;
 }
 
+
+// =========================================================
+// SUBMIT INDUSTRY READINESS TEST
+// =========================================================
 
 async function submitIndustryReadinessTest(
     testId,
@@ -5887,22 +7571,67 @@ async function submitIndustryReadinessTest(
             "aiChatBody"
         );
 
+
     try {
+
+        if (!testId) {
+
+            throw new Error(
+                "Invalid test ID."
+            );
+        }
+
+
+        if (
+            !Array.isArray(
+                answers
+            ) ||
+            answers.length !== 20
+        ) {
+
+            throw new Error(
+                "Exactly 20 answers are required."
+            );
+        }
+
+
+        if (
+            answers.some(
+                answer =>
+                    !Number.isInteger(
+                        Number(
+                            answer
+                        )
+                    )
+            )
+        ) {
+
+            throw new Error(
+                "Please answer all 20 questions."
+            );
+        }
+
 
         if (messages) {
 
             messages.innerHTML = `
+
                 <div class="ai-message">
+
                     ⏳ Calculating your Industry Readiness result...
+
                 </div>
+
             `;
         }
+
 
         const response =
             await authenticatedFetch(
                 INDUSTRY_TEST_SUBMIT_URL,
                 {
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
                         "Content-Type":
@@ -5911,61 +7640,82 @@ async function submitIndustryReadinessTest(
 
                     body:
                         JSON.stringify({
+
                             testId:
                                 testId,
 
                             answers:
-                                answers
+                                answers.map(
+                                    Number
+                                )
+
                         })
                 }
             );
+
 
         if (
             handleAuthError(
                 response
             )
         ) {
+
             return;
         }
+
 
         const data =
             await readJsonResponse(
                 response
             );
 
+
         if (!response.ok) {
 
             throw new Error(
                 data.message ||
-                "Failed to submit test"
+                data.error ||
+                "Failed to submit test."
             );
         }
+
 
         console.log(
             "Industry Test Result:",
             data
         );
 
+
         showIndustryReadinessResult(
             data
         );
 
-        // Refresh profile score if profile is open
-        loadMyProfile();
 
-    } catch (
-        error
-    ) {
+        // Refresh profile values.
+
+        await loadMyProfile();
+
+
+        // Refresh latest result.
+
+        await loadLatestIndustryReadiness(
+            false
+        );
+
+
+    } catch (error) {
 
         console.error(
             "TEST SUBMISSION ERROR:",
             error
         );
 
+
         if (messages) {
 
             messages.innerHTML =
                 "";
+
 
             addAIMessageToChat(
                 "Unable to save your test result.\n\n" +
@@ -5976,6 +7726,10 @@ async function submitIndustryReadinessTest(
 }
 
 
+// =========================================================
+// SHOW INDUSTRY RESULT
+// =========================================================
+
 function showIndustryReadinessResult(
     data
 ) {
@@ -5985,73 +7739,177 @@ function showIndustryReadinessResult(
             "aiChatBody"
         );
 
+
     if (!messages) {
+
         return;
     }
 
+
     messages.innerHTML =
         "";
+
+
+    const score =
+        Number(
+            data.score
+        );
+
+
+    const totalQuestions =
+        Number(
+            data.totalQuestions
+        ) || 20;
+
+
+    const percentage =
+        Number(
+            data.percentage
+        );
+
+
+    const testRating =
+        Number(
+            data.testRating
+        );
+
+
+    const grade =
+        data.grade ||
+        "-";
+
 
     const result =
         document.createElement(
             "div"
         );
 
+
     result.className =
         "industry-test-result";
 
+
     result.innerHTML = `
+
         <div class="result-icon">
             🎯
         </div>
+
 
         <h2>
             Assessment Complete
         </h2>
 
+
         <div class="result-score">
-            ${data.score}/${data.totalQuestions}
+            ${score}/${totalQuestions}
         </div>
+
 
         <div class="result-percentage">
-            ${Number(
-                data.percentage
-            ).toFixed(0)}%
+            ${percentage.toFixed(0)}%
         </div>
+
 
         <div class="result-grade">
-            Grade: <strong>
+
+            Grade:
+
+            <strong>
                 ${escapeHTML(
-                    data.grade
+                    grade
                 )}
             </strong>
+
         </div>
+
 
         <div class="result-rating">
+
             Test Rating:
+
             <strong>
-                ${Number(
-                    data.testRating
-                ).toFixed(1)}/5.0
+
+                ${
+                    Number.isFinite(
+                        testRating
+                    )
+
+                        ? `${testRating.toFixed(1)}/5.0`
+
+                        : "-"
+                }
+
             </strong>
+
         </div>
 
+
         <div class="result-message">
+
             ${
-                Number(data.percentage) >= 80
+                percentage >= 80
+
                     ? "Excellent! You show strong industry readiness."
-                    : Number(data.percentage) >= 60
+
+                    : percentage >= 60
+
                         ? "Good foundation. Keep developing your skills."
+
                         : "Keep learning and practising to improve your industry readiness."
             }
+
         </div>
+
     `;
+
 
     messages.appendChild(
         result
     );
+
+
+    // -----------------------------------------------------
+    // TAKE TEST AGAIN
+    // -----------------------------------------------------
+
+    const restartButton =
+        document.createElement(
+            "button"
+        );
+
+
+    restartButton.type =
+        "button";
+
+
+    restartButton.className =
+        "ai-start-test-btn";
+
+
+    restartButton.textContent =
+        "🎯 Take Test Again";
+
+
+    restartButton.addEventListener(
+        "click",
+        () => {
+
+            startIndustryReadinessTest();
+
+        }
+    );
+
+
+    messages.appendChild(
+        restartButton
+    );
 }
 
+
+// =========================================================
+// ADD AI MESSAGE TO CHAT
+// =========================================================
 
 function addAIMessageToChat(
     text
@@ -6062,73 +7920,92 @@ function addAIMessageToChat(
             "aiChatBody"
         );
 
+
     if (!messages) {
+
         return;
     }
+
 
     const element =
         document.createElement(
             "div"
         );
 
+
     element.className =
         "ai-message";
 
+
     element.textContent =
         text;
+
 
     messages.appendChild(
         element
     );
 
+
     messages.scrollTop =
         messages.scrollHeight;
 }
-// =========================================================
-// INITIALIZE AFTER HTML LOAD
-// =========================================================
 
 
 // =========================================================
-// OPTIONAL GLOBAL FUNCTIONS
+// OPTIONAL PUBLIC FUNCTIONS
 // =========================================================
 
 window.setupAIChatbot =
     setupAIChatbot;
 
 
-
-
-// =========================================================
-// INITIALIZE GLOBAL FUNCTIONS
-// =========================================================
-
 window.loadMyProfile =
     loadMyProfile;
+
+
+window.loadLatestIndustryReadiness =
+    loadLatestIndustryReadiness;
+
 
 window.loadPeopleYouMayKnow =
     loadPeopleYouMayKnow;
 
+
 window.loadCompanies =
     loadCompanies;
+
 
 window.loadCourses =
     loadCourses;
 
+
 window.loadPosts =
     loadPosts;
+
 
 window.createPost =
     createPost;
 
+
 window.openPublicProfile =
     openPublicProfile;
+
 
 window.updateProfileCompletion =
     updateProfileCompletion;
 
+
 window.performGlobalSearch =
     performGlobalSearch;
+
+
+window.startIndustryReadinessTest =
+    startIndustryReadinessTest;
+
+
+window.submitIndustryReadinessTest =
+    submitIndustryReadinessTest;
+
 
 console.log(
     "Campus2Career script.js loaded successfully."

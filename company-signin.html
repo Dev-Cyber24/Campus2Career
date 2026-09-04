@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -19,13 +20,11 @@
 
 </head>
 
-
 <body>
 
     <div class="page-wrapper">
 
         <div class="signin-card">
-
 
             <!-- ======================================
                  CAMPUS2CAREER LOGO
@@ -80,7 +79,6 @@
 
                 <form id="companySigninForm">
 
-
                     <!-- GMAIL -->
 
                     <div class="form-group">
@@ -129,6 +127,7 @@
                                 type="button"
                                 id="togglePassword"
                                 class="password-toggle"
+                                aria-label="Show password"
                             >
                                 Show
                             </button>
@@ -148,7 +147,9 @@
                     <div
                         id="signinMessage"
                         class="signin-message"
-                        style="display:none;"
+                        style="display: none;"
+                        role="alert"
+                        aria-live="polite"
                     ></div>
 
 
@@ -161,7 +162,6 @@
                     >
                         Sign In
                     </button>
-
 
                 </form>
 
@@ -176,7 +176,7 @@
                         Don't have a company account?
                     </span>
 
-                    <a href="company-signup.html">
+                    <a href="Co-signup.html">
                         Create Account
                     </a>
 
@@ -189,8 +189,14 @@
     </div>
 
 
-    <script src="company-signin.js"></script>
+    <!-- COMPANY SIGN-IN JAVASCRIPT -->
+
+    <script
+        src="company-signin.js"
+        defer
+    ></script>
 
 </body>
 
 </html>
+

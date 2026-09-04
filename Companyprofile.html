@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,12 +10,25 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Company Portal</title>
+    <title>
+        Company Portal | Campus2Career
+    </title>
+
+
+    <!-- =====================================================
+         COMPANY PROFILE CSS
+         Actual project filename: Comprof.css
+    ====================================================== -->
 
     <link
         rel="stylesheet"
         href="Comprof.css"
     >
+
+
+    <!-- =====================================================
+         FONT AWESOME
+    ====================================================== -->
 
     <link
         rel="stylesheet"
@@ -28,41 +40,52 @@
 
 <body>
 
-    <!-- =========================================
+
+    <!-- =====================================================
          MAIN CONTAINER
-    ========================================== -->
+    ====================================================== -->
 
     <div class="container">
 
 
-        <!-- =====================================
+        <!-- =================================================
              LEFT SIDEBAR
-        ====================================== -->
+        ================================================== -->
 
         <aside class="sidebar">
+
 
             <h1>
                 Companies
             </h1>
 
 
-            <!-- Search -->
+            <!-- =================================================
+                 COMPANY SEARCH
+            ================================================== -->
 
             <div class="search-box">
 
-                <i class="fas fa-search"></i>
+                <i
+                    class="fas fa-search"
+                    aria-hidden="true"
+                ></i>
+
 
                 <input
-                    type="text"
+                    type="search"
                     id="searchCompany"
                     placeholder="Search Companies..."
                     autocomplete="off"
+                    aria-label="Search companies"
                 >
 
             </div>
 
 
-            <!-- Company List -->
+            <!-- =================================================
+                 COMPANY LIST
+            ================================================== -->
 
             <div id="companyContainer">
 
@@ -75,9 +98,10 @@
         </aside>
 
 
-        <!-- =====================================
+
+        <!-- =================================================
              RIGHT MAIN CONTENT
-        ====================================== -->
+        ================================================== -->
 
         <main
             class="main-content"
@@ -85,7 +109,9 @@
         >
 
 
-            <!-- Company Banner -->
+            <!-- =================================================
+                 COMPANY BANNER
+            ================================================== -->
 
             <div
                 class="company-banner"
@@ -93,14 +119,20 @@
             ></div>
 
 
-            <!-- =================================
+
+            <!-- =================================================
                  COMPANY HEADER
-            ================================== -->
+            ================================================== -->
 
-            <section class="profile-header">
+            <section
+                class="profile-header"
+                aria-label="Company information"
+            >
 
 
-                <!-- Main Logo -->
+                <!-- =============================================
+                     MAIN COMPANY LOGO
+                ============================================== -->
 
                 <div class="main-company-logo-container">
 
@@ -114,13 +146,16 @@
                 </div>
 
 
-                <!-- Company Name / Industry -->
+                <!-- =============================================
+                     COMPANY NAME / INDUSTRY
+                ============================================== -->
 
                 <div class="company-header-text">
 
                     <h1 id="companyName">
                         Select a Company
                     </h1>
+
 
                     <p id="companyIndustry">
                         Industry
@@ -131,9 +166,10 @@
             </section>
 
 
-            <!-- =================================
+
+            <!-- =================================================
                  COMPANY DETAILS
-            ================================== -->
+            ================================================== -->
 
             <section class="profile-card">
 
@@ -148,18 +184,24 @@
                 </p>
 
 
-                <!-- Company Information -->
+
+                <!-- =================================================
+                     COMPANY INFORMATION
+                ================================================== -->
 
                 <div class="info-grid">
 
 
-                    <!-- Industry -->
+                    <!-- =============================================
+                         INDUSTRY
+                    ============================================== -->
 
                     <div>
 
                         <strong>
                             Industry
                         </strong>
+
 
                         <p id="industry">
                             -
@@ -168,7 +210,9 @@
                     </div>
 
 
-                    <!-- Location -->
+                    <!-- =============================================
+                         LOCATION
+                    ============================================== -->
 
                     <div>
 
@@ -176,24 +220,27 @@
                             Location
                         </strong>
 
+
                         <p id="location">
                             -
                         </p>
 
                     </div>
 
-
                 </div>
 
 
-                <!-- =================================
+
+                <!-- =================================================
                      ACTION BUTTONS
-                ================================== -->
+                ================================================== -->
 
                 <div class="action-buttons">
 
 
-                    <!-- Website -->
+                    <!-- =============================================
+                         WEBSITE
+                    ============================================== -->
 
                     <a
                         id="websiteLink"
@@ -206,7 +253,10 @@
                     </a>
 
 
-                    <!-- Follow -->
+
+                    <!-- =============================================
+                         FOLLOW
+                    ============================================== -->
 
                     <button
                         type="button"
@@ -217,28 +267,40 @@
                     </button>
 
 
-                    <!-- =================================
+
+                    <!-- =============================================
                          APPLY
-                    ================================== -->
+                         Handled by CO.js
+                    ============================================== -->
 
                     <button
                         type="button"
                         id="applyBtn"
                         class="apply-btn"
                     >
-                        <i class="fas fa-paper-plane"></i>
+
+                        <i
+                            class="fas fa-paper-plane"
+                            aria-hidden="true"
+                        ></i>
+
                         Apply Now
+
                     </button>
 
                 </div>
 
 
-                <!-- =================================
+
+                <!-- =================================================
                      APPLICATION STATUS
-                ================================== -->
+                     Handled by CO.js
+                ================================================== -->
 
                 <div
                     id="applicationMessage"
+                    role="status"
+                    aria-live="polite"
                     style="
                         display:none;
                         margin-top:15px;
@@ -250,298 +312,26 @@
 
             </section>
 
-
         </main>
 
     </div>
 
 
-    <!-- =========================================
-         COMPANY PORTAL JAVASCRIPT
-    ========================================== -->
 
-    <script src="CO.js"></script>
-
-
-    <!-- =========================================
-         APPLY BUTTON
-    ========================================== -->
-
-    <script>
-
-        "use strict";
-
-
-        /*
-         * The logged-in candidate's ID is stored
-         * during login/signup.
-         */
-        const loggedInUserId =
-            Number(
-                localStorage.getItem(
-                    "userId"
-                )
-            );
-
-
-        const applyButton =
-            document.getElementById(
-                "applyBtn"
-            );
-
-
-        const applicationMessage =
-            document.getElementById(
-                "applicationMessage"
-            );
-
-
-        /*
-         * Display application messages.
-         */
-        function showApplicationMessage(
-            message,
-            success = true
-        ) {
-
-            if (!applicationMessage) {
-                return;
-            }
-
-
-            applicationMessage.textContent =
-                message;
-
-
-            applicationMessage.style.display =
-                "block";
-
-
-            applicationMessage.style.background =
-                success
-                    ? "#dcfce7"
-                    : "#fee2e2";
-
-
-            applicationMessage.style.color =
-                success
-                    ? "#166534"
-                    : "#991b1b";
-
-
-            applicationMessage.style.border =
-                success
-                    ? "1px solid #86efac"
-                    : "1px solid #fca5a5";
-        }
-
-
-        /*
-         * Apply to the currently selected job.
-         *
-         * CO.js should set:
-         *
-         * window.selectedJobId
-         *
-         * when the recruiter/company page
-         * selects a job.
-         */
-        applyButton?.addEventListener(
-            "click",
-            async function () {
-
-                /*
-                 * Validate login.
-                 */
-                if (
-                    !Number.isInteger(
-                        loggedInUserId
-                    ) ||
-                    loggedInUserId <= 0
-                ) {
-
-                    showApplicationMessage(
-                        "Please login before applying.",
-                        false
-                    );
-
-                    return;
-                }
-
-
-                /*
-                 * Get selected job/company.
-                 */
-                const jobId =
-                    Number(
-                        window.selectedJobId
-                    );
-
-
-                const companyId =
-                    Number(
-                        window.selectedCompanyId
-                    );
-
-
-                /*
-                 * A job is required because
-                 * applications are stored against
-                 * jobs in the applications table.
-                 */
-                if (
-                    !Number.isInteger(
-                        jobId
-                    ) ||
-                    jobId <= 0
-                ) {
-
-                    showApplicationMessage(
-                        "Please select a job before applying.",
-                        false
-                    );
-
-                    return;
-                }
-
-
-                /*
-                 * Prevent accidental
-                 * double clicking.
-                 */
-                applyButton.disabled =
-                    true;
-
-
-                applyButton.innerHTML =
-                    `
-                        <i class="fas fa-spinner fa-spin"></i>
-                        Applying...
-                    `;
-
-
-                try {
-
-                    const token =
-                        localStorage.getItem(
-                            "authToken"
-                        );
-
-
-                    if (!token) {
-
-                        throw new Error(
-                            "Your login session has expired."
-                        );
-                    }
-
-
-                    /*
-                     * Send the logged-in user's
-                     * application to the backend.
-                     *
-                     * The backend should obtain
-                     * the real user ID from the JWT.
-                     */
-                    const response =
-                        await fetch(
-                            "http://localhost:5000/api/applications",
-                            {
-                                method: "POST",
-
-                                headers: {
-                                    "Content-Type":
-                                        "application/json",
-
-                                    "Authorization":
-                                        `Bearer ${token}`
-                                },
-
-                                body:
-                                    JSON.stringify({
-                                        job_id:
-                                            jobId,
-
-                                        company_id:
-                                            Number.isInteger(
-                                                companyId
-                                            ) &&
-                                            companyId > 0
-                                                ? companyId
-                                                : null
-                                    })
-                            }
-                        );
-
-
-                    const data =
-                        await response.json();
-
-
-                    if (
-                        !response.ok
-                    ) {
-
-                        throw new Error(
-                            data.message ||
-                            data.error ||
-                            "Application failed."
-                        );
-                    }
-
-
-                    showApplicationMessage(
-                        data.message ||
-                        "Application submitted successfully.",
-                        true
-                    );
-
-
-                    applyButton.innerHTML =
-                        `
-                            <i class="fas fa-check"></i>
-                            Applied
-                        `;
-
-
-                    applyButton.classList.add(
-                        "applied"
-                    );
-
-
-                } catch (error) {
-
-                    console.error(
-                        "Application error:",
-                        error
-                    );
-
-
-                    showApplicationMessage(
-                        error.message ||
-                        "Unable to submit application.",
-                        false
-                    );
-
-
-                    applyButton.disabled =
-                        false;
-
-
-                    applyButton.innerHTML =
-                        `
-                            <i class="fas fa-paper-plane"></i>
-                            Apply Now
-                        `;
-                }
-
-            }
-        );
-
-    </script>
+    <!-- =====================================================
+         COMPANY PROFILE JAVASCRIPT
+         Actual project filename: CO.js
+
+         defer ensures the HTML is parsed before JavaScript
+         initializes its DOM references.
+    ====================================================== -->
+
+    <script
+        src="CO.js"
+        defer
+    ></script>
 
 
 </body>
 
 </html>
-

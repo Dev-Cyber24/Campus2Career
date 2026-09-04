@@ -1,5 +1,56 @@
+"use strict";
+
+// =========================================
+// CAMPUS2CAREER
+// COMPANY SIGN IN JAVASCRIPT
+// JWT AUTHENTICATION
+// =========================================
+
+console.log("company-signin.js loaded");
+
+
+// =========================================================
+// API CONFIGURATION
+// =========================================================
+
 const API_BASE_URL =
     "https://campus2career-0pi8.onrender.com/api";
+
+const SIGNIN_API =
+    `${API_BASE_URL}/company/signin`;
+
+
+// =========================================================
+// STORAGE KEYS
+// =========================================================
+
+const COMPANY_TOKEN_KEY =
+    "companyAuthToken";
+
+const COMPANY_ID_KEY =
+    "companyId";
+
+const COMPANY_NAME_KEY =
+    "companyName";
+
+const COMPANY_GMAIL_KEY =
+    "companyGmail";
+
+const COMPANY_USER_ID_KEY =
+    "companyUserId";
+
+
+// =========================================================
+// REDIRECT PAGE
+// =========================================================
+//
+// Actual project filename:
+// COMAIN.html
+//
+// =========================================================
+
+const COMPANY_PORTAL_PAGE =
+    "COMAIN.html";
 
 
 // =========================================================
@@ -7,107 +58,313 @@ const API_BASE_URL =
 // =========================================================
 
 const signinForm =
-    document.getElementById("companySigninForm");
+    document.getElementById(
+        "companySigninForm"
+    );
 
 const gmailInput =
-    document.getElementById("gmail");
+    document.getElementById(
+        "gmail"
+    );
 
 const passwordInput =
-    document.getElementById("password");
+    document.getElementById(
+        "password"
+    );
 
 const togglePassword =
-    document.getElementById("togglePassword");
+    document.getElementById(
+        "togglePassword"
+    );
 
 const signinBtn =
-    document.getElementById("signinBtn");
+    document.getElementById(
+        "signinBtn"
+    );
 
 const signinMessage =
-    document.getElementById("signinMessage");
+    document.getElementById(
+        "signinMessage"
+    );
 
 const gmailError =
-    document.getElementById("gmailError");
+    document.getElementById(
+        "gmailError"
+    );
 
 const passwordError =
-    document.getElementById("passwordError");
+    document.getElementById(
+        "passwordError"
+    );
 
 
 // =========================================================
 // SHOW / HIDE PASSWORD
 // =========================================================
 
-togglePassword.addEventListener("click", () => {
+if (togglePassword) {
 
-    if (passwordInput.type === "password") {
+    togglePassword.addEventListener(
+        "click",
+        event => {
 
-        passwordInput.type = "text";
+            event.preventDefault();
 
-        togglePassword.textContent =
-            "Hide";
 
-    } else {
+            if (!passwordInput) {
+                return;
+            }
 
-        passwordInput.type = "password";
 
-        togglePassword.textContent =
-            "Show";
-    }
+            const isPassword =
+                passwordInput.type ===
+                "password";
 
-});
+
+            passwordInput.type =
+                isPassword
+                    ? "text"
+                    : "password";
+
+
+            togglePassword.textContent =
+                isPassword
+                    ? "Hide"
+                    : "Show";
+
+        }
+    );
+
+}
 
 
 // =========================================================
 // GMAIL VALIDATION
 // =========================================================
 
-function isValidGmail(email) {
+function isValidGmail(
+    email
+) {
 
-    return /^[a-zA-Z0-9._%+-]+@gmail\.com$/i
-        .test(email);
+    return /^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(
+        email
+    );
 
 }
 
 
 // =========================================================
-// MESSAGE
+// SHOW MESSAGE
 // =========================================================
 
-function showMessage(message, type) {
+function showMessage(
+    text,
+    type = "error"
+) {
+
+    if (!signinMessage) {
+
+        console.log(
+            text
+        );
+
+        return;
+
+    }
+
 
     signinMessage.textContent =
-        message;
+        text || "";
+
 
     signinMessage.className =
-        `signin-message ${type}`;
+        text
+            ? `signin-message ${type}`
+            : "signin-message";
+
 
     signinMessage.style.display =
-        "block";
+        text
+            ? "block"
+            : "none";
+
 }
 
+
+// =========================================================
+// CLEAR MESSAGE
+// =========================================================
 
 function clearMessage() {
 
+    if (!signinMessage) {
+        return;
+    }
+
+
     signinMessage.textContent =
         "";
+
 
     signinMessage.style.display =
         "none";
 
+
     signinMessage.className =
         "signin-message";
+
 }
 
 
 // =========================================================
-// CLEAR ERRORS
+// CLEAR FIELD ERRORS
 // =========================================================
 
 function clearErrors() {
 
-    gmailError.textContent =
-        "";
+    if (gmailError) {
 
-    passwordError.textContent =
-        "";
+        gmailError.textContent =
+            "";
+
+    }
+
+
+    if (passwordError) {
+
+        passwordError.textContent =
+            "";
+
+    }
+
+}
+
+
+// =========================================================
+// CLEAR OLD COMPANY SESSION
+// =========================================================
+
+function clearCompanySession() {
+
+    localStorage.removeItem(
+        COMPANY_TOKEN_KEY
+    );
+
+    localStorage.removeItem(
+        COMPANY_ID_KEY
+    );
+
+    localStorage.removeItem(
+        COMPANY_NAME_KEY
+    );
+
+    localStorage.removeItem(
+        COMPANY_GMAIL_KEY
+    );
+
+    localStorage.removeItem(
+        COMPANY_USER_ID_KEY
+    );
+
+}
+
+
+// =========================================================
+// READ API RESPONSE SAFELY
+// =========================================================
+
+async function readResponse(
+    response
+) {
+
+    const contentType =
+        response.headers.get(
+            "content-type"
+        ) || "";
+
+
+    if (
+        contentType
+            .toLowerCase()
+            .includes(
+                "application/json"
+            )
+    ) {
+
+        try {
+
+            return await response.json();
+
+        } catch (error) {
+
+            console.error(
+                "Failed to parse JSON response:",
+                error
+            );
+
+
+            return {};
+
+        }
+
+    }
+
+
+    try {
+
+        return await response.text();
+
+    } catch (error) {
+
+        console.error(
+            "Failed to read response:",
+            error
+        );
+
+
+        return "";
+
+    }
+
+}
+
+
+// =========================================================
+// GET API ERROR
+// =========================================================
+
+function getApiErrorMessage(
+    data,
+    fallback
+) {
+
+    if (
+        data &&
+        typeof data === "object"
+    ) {
+
+        return (
+            data.error ||
+            data.message ||
+            data.detail ||
+            fallback
+        );
+
+    }
+
+
+    if (
+        typeof data === "string" &&
+        data.trim() !== ""
+    ) {
+
+        return data.trim();
+
+    }
+
+
+    return fallback;
+
 }
 
 
@@ -115,246 +372,622 @@ function clearErrors() {
 // SIGN IN
 // =========================================================
 
-signinForm.addEventListener(
-    "submit",
-    async (event) => {
+if (signinForm) {
 
-        event.preventDefault();
+    signinForm.addEventListener(
+        "submit",
+        async event => {
 
-        clearErrors();
-
-        clearMessage();
+            event.preventDefault();
 
 
-        // -----------------------------------------
-        // GET VALUES
-        // -----------------------------------------
+            // =====================================
+            // CLEAR PREVIOUS STATE
+            // =====================================
 
-        const gmail =
-            gmailInput.value
-                .trim()
-                .toLowerCase();
+            clearErrors();
 
-        const password =
-            passwordInput.value;
+            clearMessage();
 
 
-        // -----------------------------------------
-        // VALIDATION
-        // -----------------------------------------
+            // =====================================
+            // VERIFY INPUT ELEMENTS
+            // =====================================
 
-        let valid = true;
-
-
-        if (!isValidGmail(gmail)) {
-
-            gmailError.textContent =
-                "Please enter a valid Gmail ID.";
-
-            valid = false;
-        }
-
-
-        if (!password) {
-
-            passwordError.textContent =
-                "Please enter your password.";
-
-            valid = false;
-        }
-
-
-        if (!valid) {
-
-            return;
-        }
-
-
-        // -----------------------------------------
-        // BUTTON
-        // -----------------------------------------
-
-        signinBtn.disabled =
-            true;
-
-        signinBtn.textContent =
-            "Signing In...";
-
-
-        try {
-
-            // -------------------------------------
-            // CALL BACKEND
-            // -------------------------------------
-
-            const response =
-                await fetch(
-                    `${API_BASE_URL}/company/signin`,
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-
-                            gmail: gmail,
-
-                            password: password
-
-                        })
-                    }
-                );
-
-
-            // -------------------------------------
-            // RESPONSE
-            // -------------------------------------
-
-            const data =
-                await response.json();
-
-
-            // -------------------------------------
-            // LOGIN FAILED
-            // -------------------------------------
-
-            if (!response.ok) {
+            if (
+                !gmailInput ||
+                !passwordInput
+            ) {
 
                 showMessage(
-                    data.error ||
-                    data.message ||
-                    "Invalid company credentials.",
+                    "Login fields are missing.",
                     "error"
                 );
+
+
+                console.error(
+                    "gmail or password input not found."
+                );
+
 
                 return;
             }
 
 
+            // =====================================
+            // GET VALUES
+            // =====================================
+
+            const gmail =
+                gmailInput.value
+                    .trim()
+                    .toLowerCase();
+
+
+            const password =
+                passwordInput.value;
+
+
+            // =====================================
+            // VALIDATION
+            // =====================================
+
+            let valid =
+                true;
+
+
             // -------------------------------------
-            // GET TOKEN
+            // GMAIL
             // -------------------------------------
 
-            const token =
-                data.token ||
-                data.accessToken;
+            if (!gmail) {
+
+                if (gmailError) {
+
+                    gmailError.textContent =
+                        "Please enter your Gmail ID.";
+
+                }
 
 
-            if (!token) {
+                valid =
+                    false;
 
-                showMessage(
-                    "Login succeeded, but the server did not return an authentication token.",
-                    "error"
-                );
+            }
+
+            else if (
+                !isValidGmail(
+                    gmail
+                )
+            ) {
+
+                if (gmailError) {
+
+                    gmailError.textContent =
+                        "Please enter a valid Gmail ID.";
+
+                }
+
+
+                valid =
+                    false;
+
+            }
+
+
+            // -------------------------------------
+            // PASSWORD
+            // -------------------------------------
+
+            if (!password) {
+
+                if (passwordError) {
+
+                    passwordError.textContent =
+                        "Please enter your password.";
+
+                }
+
+
+                valid =
+                    false;
+            }
+
+
+            if (!valid) {
 
                 return;
-            }
-
-
-            // -------------------------------------
-            // STORE COMPANY SESSION
-            // -------------------------------------
-
-            localStorage.setItem(
-                "companyAuthToken",
-                token
-            );
-
-
-            // Company ID
-
-            if (data.company?.id) {
-
-                localStorage.setItem(
-                    "companyId",
-                    data.company.id
-                );
-
-            } else if (data.company_id) {
-
-                localStorage.setItem(
-                    "companyId",
-                    data.company_id
-                );
 
             }
 
 
-            // Company name
+            // =====================================
+            // DISABLE BUTTON
+            // =====================================
 
-            if (data.company?.company_name) {
+            const originalButtonText =
+                signinBtn?.textContent ||
+                "Sign In";
 
-                localStorage.setItem(
-                    "companyName",
-                    data.company.company_name
-                );
 
-            } else if (data.company_name) {
+            if (signinBtn) {
 
-                localStorage.setItem(
-                    "companyName",
-                    data.company_name
-                );
+                signinBtn.disabled =
+                    true;
+
+
+                signinBtn.textContent =
+                    "Signing In...";
 
             }
 
-
-            // Gmail
-
-            localStorage.setItem(
-                "companyGmail",
-                gmail
-            );
-
-
-            // -------------------------------------
-            // SUCCESS MESSAGE
-            // -------------------------------------
 
             showMessage(
-                "Login successful. Redirecting to Company Portal...",
+                "Checking company credentials...",
                 "success"
             );
 
 
-            // -------------------------------------
-            // REDIRECT
-            // -------------------------------------
+            try {
 
-            setTimeout(() => {
+                // =================================
+                // CLEAR OLD SESSION
+                // =================================
 
-                window.location.href =
-                    "COMAIN.html";
-
-            }, 1000);
+                clearCompanySession();
 
 
-        } catch (error) {
+                // =================================
+                // CALL BACKEND
+                // =================================
 
-            console.error(
-                "Company signin error:",
-                error
-            );
-
-
-            showMessage(
-                "Unable to connect to the server. Please make sure the Campus2Career backend is running on port 5000.",
-                "error"
-            );
+                console.log(
+                    "Company signin API:",
+                    SIGNIN_API
+                );
 
 
-        } finally {
+                const response =
+                    await fetch(
+                        SIGNIN_API,
+                        {
+                            method:
+                                "POST",
 
-            signinBtn.disabled =
-                false;
+                            headers: {
 
-            signinBtn.textContent =
-                "Sign In";
+                                "Content-Type":
+                                    "application/json",
+
+                                "Accept":
+                                    "application/json"
+
+                            },
+
+                            body:
+                                JSON.stringify({
+
+                                    gmail:
+                                        gmail,
+
+                                    password:
+                                        password
+
+                                })
+                        }
+                    );
+
+
+                console.log(
+                    "Company signin HTTP status:",
+                    response.status
+                );
+
+
+                // =================================
+                // READ RESPONSE
+                // =================================
+
+                const data =
+                    await readResponse(
+                        response
+                    );
+
+
+                console.log(
+                    "Company signin response:",
+                    data
+                );
+
+
+                // =================================
+                // LOGIN FAILED
+                // =================================
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        getApiErrorMessage(
+                            data,
+                            "Invalid company Gmail ID or password."
+                        )
+                    );
+
+                }
+
+
+                // =================================
+                // VERIFY SUCCESS FLAG
+                // =================================
+
+                if (
+                    data?.success === false
+                ) {
+
+                    throw new Error(
+                        getApiErrorMessage(
+                            data,
+                            "Company login failed."
+                        )
+                    );
+
+                }
+
+
+                // =================================
+                // GET JWT
+                // =================================
+
+                const token =
+                    data?.token ||
+                    data?.accessToken ||
+                    "";
+
+
+                if (
+                    typeof token !== "string" ||
+                    token.trim() === ""
+                ) {
+
+                    throw new Error(
+                        "Login succeeded, but the server did not return an authentication token."
+                    );
+
+                }
+
+
+                // =================================
+                // GET COMPANY ID
+                // =================================
+
+                const companyId =
+                    data?.companyId ??
+                    data?.company?.id ??
+                    data?.company_id;
+
+
+                if (
+                    companyId === undefined ||
+                    companyId === null ||
+                    String(
+                        companyId
+                    ).trim() === ""
+                ) {
+
+                    throw new Error(
+                        "Login succeeded, but the server did not return a company ID."
+                    );
+
+                }
+
+
+                const numericCompanyId =
+                    Number(
+                        companyId
+                    );
+
+
+                if (
+                    !Number.isInteger(
+                        numericCompanyId
+                    ) ||
+                    numericCompanyId <= 0
+                ) {
+
+                    throw new Error(
+                        "The company ID returned by the server is invalid."
+                    );
+
+                }
+
+
+                // =================================
+                // GET USER ID
+                // =================================
+
+                const userId =
+                    data?.userId ??
+                    data?.company?.userId ??
+                    null;
+
+
+                // =================================
+                // GET COMPANY NAME
+                // =================================
+
+                const companyName =
+                    data?.company?.company_name ??
+                    data?.company_name ??
+                    "";
+
+
+                // =================================
+                // GET COMPANY EMAIL
+                // =================================
+
+                const companyEmail =
+                    data?.email ??
+                    data?.company?.email ??
+                    gmail;
+
+
+                // =================================
+                // STORE JWT
+                // =================================
+
+                localStorage.setItem(
+                    COMPANY_TOKEN_KEY,
+                    token.trim()
+                );
+
+
+                // =================================
+                // STORE COMPANY ID
+                // =================================
+
+                localStorage.setItem(
+                    COMPANY_ID_KEY,
+                    String(
+                        numericCompanyId
+                    )
+                );
+
+
+                // =================================
+                // STORE COMPANY NAME
+                // =================================
+
+                if (
+                    companyName
+                ) {
+
+                    localStorage.setItem(
+                        COMPANY_NAME_KEY,
+                        String(
+                            companyName
+                        )
+                    );
+
+                }
+
+
+                // =================================
+                // STORE COMPANY GMAIL
+                // =================================
+
+                localStorage.setItem(
+                    COMPANY_GMAIL_KEY,
+                    String(
+                        companyEmail
+                    )
+                );
+
+
+                // =================================
+                // STORE USER ID
+                // =================================
+
+                if (
+                    userId !== null &&
+                    userId !== undefined &&
+                    String(
+                        userId
+                    ).trim() !== ""
+                ) {
+
+                    localStorage.setItem(
+                        COMPANY_USER_ID_KEY,
+                        String(
+                            userId
+                        )
+                    );
+
+                }
+
+
+                // =================================
+                // STORE COMPLETE COMPANY OBJECT
+                // =================================
+
+                if (
+                    data?.company &&
+                    typeof data.company ===
+                        "object"
+                ) {
+
+                    localStorage.setItem(
+                        "companyData",
+                        JSON.stringify(
+                            data.company
+                        )
+                    );
+
+                }
+
+
+                // =================================
+                // VERIFY STORAGE
+                // =================================
+
+                const savedToken =
+                    localStorage.getItem(
+                        COMPANY_TOKEN_KEY
+                    );
+
+
+                const savedCompanyId =
+                    localStorage.getItem(
+                        COMPANY_ID_KEY
+                    );
+
+
+                if (
+                    !savedToken ||
+                    !savedCompanyId
+                ) {
+
+                    throw new Error(
+                        "Company login data could not be stored correctly."
+                    );
+
+                }
+
+
+                // =================================
+                // LOG SUCCESS
+                // =================================
+
+                console.log(
+                    "Company login successful."
+                );
+
+
+                console.log(
+                    "Company ID:",
+                    savedCompanyId
+                );
+
+
+                console.log(
+                    "Company User ID:",
+                    userId
+                );
+
+
+                console.log(
+                    "Company Name:",
+                    companyName
+                );
+
+
+                // =================================
+                // SUCCESS MESSAGE
+                // =================================
+
+                showMessage(
+                    "Login successful. Redirecting to Company Portal...",
+                    "success"
+                );
+
+
+                // =================================
+                // REDIRECT
+                // =================================
+
+                setTimeout(
+                    () => {
+
+                        window.location.href =
+                            COMPANY_PORTAL_PAGE;
+
+                    },
+                    800
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "========================================="
+                );
+
+
+                console.error(
+                    "COMPANY SIGNIN ERROR:",
+                    error
+                );
+
+
+                console.error(
+                    "========================================="
+                );
+
+
+                // =================================
+                // REMOVE INVALID SESSION
+                // =================================
+
+                clearCompanySession();
+
+
+                // =================================
+                // SHOW ERROR
+                // =================================
+
+                showMessage(
+                    error.message ||
+                    "Unable to sign in. Please try again.",
+                    "error"
+                );
+
+
+            } finally {
+
+                // =================================
+                // RESTORE BUTTON
+                // =================================
+
+                if (signinBtn) {
+
+                    signinBtn.disabled =
+                        false;
+
+
+                    signinBtn.textContent =
+                        originalButtonText ||
+                        "Sign In";
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+else {
+
+    console.error(
+        "Company signin form #companySigninForm was not found."
+    );
+
+}
+
+
+// =========================================================
+// GLOBAL HELPERS
+// =========================================================
+
+window.companySignin =
+    function () {
+
+        if (
+            signinForm
+        ) {
+
+            signinForm.requestSubmit();
 
         }
 
-    }
-);
+    };

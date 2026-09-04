@@ -1,5 +1,58 @@
+"use strict";
+
+// ============================================
+// CAMPUS2CAREER
+// COMPANY REGISTRATION JAVASCRIPT
+// ============================================
+
+console.log("company-signup.js loaded");
+
+
+// ============================================
+// API CONFIGURATION
+// ============================================
+
 const API_BASE_URL =
     "https://campus2career-0pi8.onrender.com/api";
+
+const SIGNUP_API =
+    `${API_BASE_URL}/company/signup`;
+
+
+// ============================================
+// STORAGE KEYS
+// ============================================
+
+const COMPANY_TOKEN_KEY =
+    "companyAuthToken";
+
+const COMPANY_ID_KEY =
+    "companyId";
+
+const COMPANY_NAME_KEY =
+    "companyName";
+
+const COMPANY_GMAIL_KEY =
+    "companyGmail";
+
+const COMPANY_USER_ID_KEY =
+    "companyUserId";
+
+const COMPANY_DATA_KEY =
+    "companyData";
+
+
+// ============================================
+// REDIRECT PAGE
+// ============================================
+//
+// Actual project filename:
+// company-signin.html
+//
+// ============================================
+
+const COMPANY_SIGNIN_PAGE =
+    "company-signin.html";
 
 
 // ============================================
@@ -7,105 +60,155 @@ const API_BASE_URL =
 // ============================================
 
 const signupForm =
-    document.getElementById("companySignupForm");
+    document.getElementById(
+        "companySignupForm"
+    );
 
 const companyNameInput =
-    document.getElementById("companyName");
+    document.getElementById(
+        "companyName"
+    );
 
 const gmailInput =
-    document.getElementById("gmail");
+    document.getElementById(
+        "gmail"
+    );
 
 const passwordInput =
-    document.getElementById("password");
+    document.getElementById(
+        "password"
+    );
 
 const togglePassword =
-    document.getElementById("togglePassword");
+    document.getElementById(
+        "togglePassword"
+    );
 
 const signupBtn =
-    document.getElementById("signupBtn");
+    document.getElementById(
+        "signupBtn"
+    );
 
 const signupMessage =
-    document.getElementById("signupMessage");
+    document.getElementById(
+        "signupMessage"
+    );
 
 const companyNameError =
-    document.getElementById("companyNameError");
+    document.getElementById(
+        "companyNameError"
+    );
 
 const gmailError =
-    document.getElementById("gmailError");
+    document.getElementById(
+        "gmailError"
+    );
 
 const passwordError =
-    document.getElementById("passwordError");
+    document.getElementById(
+        "passwordError"
+    );
 
 
 // ============================================
 // SHOW / HIDE PASSWORD
 // ============================================
 
-togglePassword.addEventListener("click", () => {
+if (togglePassword) {
 
-    if (passwordInput.type === "password") {
+    togglePassword.addEventListener(
+        "click",
+        event => {
 
-        passwordInput.type = "text";
+            event.preventDefault();
 
-        togglePassword.textContent = "Hide";
 
-    } else {
+            if (!passwordInput) {
+                return;
+            }
 
-        passwordInput.type = "password";
 
-        togglePassword.textContent = "Show";
+            const isPassword =
+                passwordInput.type ===
+                "password";
 
-    }
 
-});
+            passwordInput.type =
+                isPassword
+                    ? "text"
+                    : "password";
+
+
+            togglePassword.textContent =
+                isPassword
+                    ? "Hide"
+                    : "Show";
+
+        }
+    );
+
+}
 
 
 // ============================================
 // MESSAGE FUNCTION
 // ============================================
 
-function showMessage(message, type) {
+function showMessage(
+    text,
+    type = "error"
+) {
 
-    signupMessage.textContent = message;
+    if (!signupMessage) {
+
+        console.log(
+            text
+        );
+
+        return;
+
+    }
+
+
+    signupMessage.textContent =
+        text || "";
+
 
     signupMessage.className =
-        `signup-message ${type}`;
+        text
+            ? `signup-message ${type}`
+            : "signup-message";
 
-    signupMessage.style.display = "block";
+
+    signupMessage.style.display =
+        text
+            ? "block"
+            : "none";
 
 }
 
+
+// ============================================
+// CLEAR MESSAGE
+// ============================================
 
 function clearMessage() {
 
-    signupMessage.style.display = "none";
+    if (!signupMessage) {
+        return;
+    }
 
-    signupMessage.textContent = "";
+
+    signupMessage.textContent =
+        "";
+
+
+    signupMessage.style.display =
+        "none";
+
 
     signupMessage.className =
         "signup-message";
-
-}
-
-
-// ============================================
-// VALIDATE GMAIL
-// ============================================
-
-function isValidGmail(email) {
-
-    return /^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(email);
-
-}
-
-
-// ============================================
-// VALIDATE PASSWORD
-// ============================================
-
-function isValidPassword(password) {
-
-    return password.length >= 8;
 
 }
 
@@ -116,11 +219,194 @@ function isValidPassword(password) {
 
 function clearFieldErrors() {
 
-    companyNameError.textContent = "";
+    if (companyNameError) {
 
-    gmailError.textContent = "";
+        companyNameError.textContent =
+            "";
 
-    passwordError.textContent = "";
+    }
+
+
+    if (gmailError) {
+
+        gmailError.textContent =
+            "";
+
+    }
+
+
+    if (passwordError) {
+
+        passwordError.textContent =
+            "";
+
+    }
+
+}
+
+
+// ============================================
+// CLEAR PREVIOUS COMPANY SESSION
+// ============================================
+
+function clearCompanySession() {
+
+    localStorage.removeItem(
+        COMPANY_TOKEN_KEY
+    );
+
+    localStorage.removeItem(
+        COMPANY_ID_KEY
+    );
+
+    localStorage.removeItem(
+        COMPANY_NAME_KEY
+    );
+
+    localStorage.removeItem(
+        COMPANY_GMAIL_KEY
+    );
+
+    localStorage.removeItem(
+        COMPANY_USER_ID_KEY
+    );
+
+    localStorage.removeItem(
+        COMPANY_DATA_KEY
+    );
+
+}
+
+
+// ============================================
+// VALIDATE GMAIL
+// ============================================
+
+function isValidGmail(
+    email
+) {
+
+    return /^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(
+        email
+    );
+
+}
+
+
+// ============================================
+// VALIDATE PASSWORD
+// ============================================
+//
+// Backend requires at least 8 characters.
+// ============================================
+
+function isValidPassword(
+    password
+) {
+
+    return (
+        typeof password === "string" &&
+        password.length >= 8
+    );
+
+}
+
+
+// ============================================
+// READ API RESPONSE SAFELY
+// ============================================
+
+async function readResponse(
+    response
+) {
+
+    const contentType =
+        response.headers.get(
+            "content-type"
+        ) || "";
+
+
+    if (
+        contentType
+            .toLowerCase()
+            .includes(
+                "application/json"
+            )
+    ) {
+
+        try {
+
+            return await response.json();
+
+        } catch (error) {
+
+            console.error(
+                "Failed to parse JSON response:",
+                error
+            );
+
+
+            return {};
+
+        }
+
+    }
+
+
+    try {
+
+        return await response.text();
+
+    } catch (error) {
+
+        console.error(
+            "Failed to read response:",
+            error
+        );
+
+
+        return "";
+
+    }
+
+}
+
+
+// ============================================
+// GET API ERROR MESSAGE
+// ============================================
+
+function getApiErrorMessage(
+    data,
+    fallback
+) {
+
+    if (
+        data &&
+        typeof data === "object"
+    ) {
+
+        return (
+            data.error ||
+            data.message ||
+            data.detail ||
+            fallback
+        );
+
+    }
+
+
+    if (
+        typeof data === "string" &&
+        data.trim() !== ""
+    ) {
+
+        return data.trim();
+
+    }
+
+
+    return fallback;
 
 }
 
@@ -129,191 +415,540 @@ function clearFieldErrors() {
 // FORM SUBMIT
 // ============================================
 
-signupForm.addEventListener(
-    "submit",
-    async (event) => {
+if (signupForm) {
 
-        event.preventDefault();
+    signupForm.addEventListener(
+        "submit",
+        async event => {
 
-        clearMessage();
-
-        clearFieldErrors();
+            event.preventDefault();
 
 
-        // ------------------------------------
-        // GET VALUES
-        // ------------------------------------
+            clearMessage();
 
-        const companyName =
-            companyNameInput.value.trim();
-
-        const gmail =
-            gmailInput.value.trim().toLowerCase();
-
-        const password =
-            passwordInput.value;
+            clearFieldErrors();
 
 
-        // ------------------------------------
-        // VALIDATION
-        // ------------------------------------
+            // =================================
+            // VERIFY ELEMENTS
+            // =================================
 
-        let valid = true;
-
-
-        if (companyName.length < 2) {
-
-            companyNameError.textContent =
-                "Please enter a valid company name.";
-
-            valid = false;
-
-        }
-
-
-        if (!isValidGmail(gmail)) {
-
-            gmailError.textContent =
-                "Please enter a valid Gmail ID.";
-
-            valid = false;
-
-        }
-
-
-        if (!isValidPassword(password)) {
-
-            passwordError.textContent =
-                "Password must contain at least 8 characters.";
-
-            valid = false;
-
-        }
-
-
-        if (!valid) {
-
-            return;
-
-        }
-
-
-        // ------------------------------------
-        // DISABLE BUTTON
-        // ------------------------------------
-
-        signupBtn.disabled = true;
-
-        signupBtn.textContent =
-            "Creating Account...";
-
-
-        try {
-
-            // --------------------------------
-            // SEND TO BACKEND
-            // --------------------------------
-
-            const response = await fetch(
-                `${API_BASE_URL}/company/signup`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        company_name: companyName,
-
-                        gmail: gmail,
-
-                        password: password
-
-                    })
-
-                }
-            );
-
-
-            // --------------------------------
-            // READ RESPONSE
-            // --------------------------------
-
-            const data =
-                await response.json();
-
-
-            // --------------------------------
-            // BACKEND ERROR
-            // --------------------------------
-
-            if (!response.ok) {
+            if (
+                !companyNameInput ||
+                !gmailInput ||
+                !passwordInput
+            ) {
 
                 showMessage(
-                    data.error ||
-                    data.message ||
-                    "Company registration failed.",
+                    "Registration fields are missing.",
                     "error"
                 );
+
+
+                console.error(
+                    "One or more company signup fields were not found."
+                );
+
 
                 return;
 
             }
 
 
-            // --------------------------------
-            // SUCCESS
-            // --------------------------------
+            // =================================
+            // GET VALUES
+            // =================================
+
+            const companyName =
+                companyNameInput.value
+                    .trim();
+
+
+            const gmail =
+                gmailInput.value
+                    .trim()
+                    .toLowerCase();
+
+
+            const password =
+                passwordInput.value;
+
+
+            // =================================
+            // VALIDATION
+            // =================================
+
+            let valid =
+                true;
+
+
+            // ---------------------------------
+            // COMPANY NAME
+            // ---------------------------------
+
+            if (
+                companyName.length < 2
+            ) {
+
+                if (companyNameError) {
+
+                    companyNameError.textContent =
+                        "Please enter a valid company name.";
+
+                }
+
+
+                valid =
+                    false;
+
+            }
+
+
+            // ---------------------------------
+            // GMAIL
+            // ---------------------------------
+
+            if (!gmail) {
+
+                if (gmailError) {
+
+                    gmailError.textContent =
+                        "Please enter your Gmail ID.";
+
+                }
+
+
+                valid =
+                    false;
+
+            }
+
+            else if (
+                !isValidGmail(
+                    gmail
+                )
+            ) {
+
+                if (gmailError) {
+
+                    gmailError.textContent =
+                        "Please enter a valid Gmail ID.";
+
+                }
+
+
+                valid =
+                    false;
+
+            }
+
+
+            // ---------------------------------
+            // PASSWORD
+            // ---------------------------------
+
+            if (!password) {
+
+                if (passwordError) {
+
+                    passwordError.textContent =
+                        "Please enter your password.";
+
+                }
+
+
+                valid =
+                    false;
+
+            }
+
+            else if (
+                !isValidPassword(
+                    password
+                )
+            ) {
+
+                if (passwordError) {
+
+                    passwordError.textContent =
+                        "Password must contain at least 8 characters.";
+
+                }
+
+
+                valid =
+                    false;
+
+            }
+
+
+            if (!valid) {
+
+                return;
+
+            }
+
+
+            // =================================
+            // BUTTON STATE
+            // =================================
+
+            const originalButtonText =
+                signupBtn?.textContent ||
+                "Create Company Account";
+
+
+            if (signupBtn) {
+
+                signupBtn.disabled =
+                    true;
+
+
+                signupBtn.textContent =
+                    "Creating Account...";
+
+            }
+
 
             showMessage(
-                "Company account created successfully. Redirecting to Company Sign In...",
+                "Creating your company account...",
                 "success"
             );
 
 
-            // --------------------------------
-            // OPTIONAL TOKEN CLEAR
-            // --------------------------------
+            try {
 
-            localStorage.removeItem("companyAuthToken");
+                // =================================
+                // CLEAR PREVIOUS COMPANY SESSION
+                // =================================
 
-
-            // --------------------------------
-            // REDIRECT TO SIGN IN
-            // --------------------------------
-
-            setTimeout(() => {
-
-                window.location.href =
-                    "company-signin.html";
-
-            }, 1500);
+                clearCompanySession();
 
 
-        } catch (error) {
+                // =================================
+                // BUILD REQUEST
+                // =================================
 
-            console.error(
-                "Company signup error:",
-                error
-            );
+                const requestData = {
+
+                    company_name:
+                        companyName,
+
+                    gmail:
+                        gmail,
+
+                    password:
+                        password
+
+                };
 
 
-            showMessage(
-                "Unable to connect to the server. Please make sure the Campus2Career backend is running on port 5000.",
-                "error"
-            );
+                console.log(
+                    "Company signup API:",
+                    SIGNUP_API
+                );
 
 
-        } finally {
+                console.log(
+                    "Company signup data:",
+                    {
+                        company_name:
+                            companyName,
 
-            signupBtn.disabled = false;
+                        gmail:
+                            gmail,
 
-            signupBtn.textContent =
-                "Create Company Account";
+                        password:
+                            "[hidden]"
+                    }
+                );
+
+
+                // =================================
+                // SEND TO BACKEND
+                // =================================
+
+                const response =
+                    await fetch(
+                        SIGNUP_API,
+                        {
+                            method:
+                                "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json",
+
+                                "Accept":
+                                    "application/json"
+
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    requestData
+                                )
+                        }
+                    );
+
+
+                // =================================
+                // READ RESPONSE
+                // =================================
+
+                console.log(
+                    "Company signup HTTP status:",
+                    response.status
+                );
+
+
+                const data =
+                    await readResponse(
+                        response
+                    );
+
+
+                console.log(
+                    "Company signup response:",
+                    data
+                );
+
+
+                // =================================
+                // BACKEND ERROR
+                // =================================
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        getApiErrorMessage(
+                            data,
+                            "Company registration failed."
+                        )
+                    );
+
+                }
+
+
+                // =================================
+                // VERIFY SUCCESS RESPONSE
+                // =================================
+
+                if (
+                    data?.success === false
+                ) {
+
+                    throw new Error(
+                        getApiErrorMessage(
+                            data,
+                            "Company registration failed."
+                        )
+                    );
+
+                }
+
+
+                // =================================
+                // GET CREATED COMPANY ID
+                // =================================
+
+                const companyId =
+                    data?.companyId ??
+                    data?.id ??
+                    null;
+
+
+                // =================================
+                // GET CREATED USER ID
+                // =================================
+
+                const userId =
+                    data?.userId ??
+                    null;
+
+
+                // =================================
+                // SAVE COMPANY ID
+                // =================================
+
+                if (
+                    companyId !== null &&
+                    companyId !== undefined
+                ) {
+
+                    localStorage.setItem(
+                        COMPANY_ID_KEY,
+                        String(
+                            companyId
+                        )
+                    );
+
+                }
+
+
+                // =================================
+                // SAVE USER ID
+                // =================================
+
+                if (
+                    userId !== null &&
+                    userId !== undefined
+                ) {
+
+                    localStorage.setItem(
+                        COMPANY_USER_ID_KEY,
+                        String(
+                            userId
+                        )
+                    );
+
+                }
+
+
+                // =================================
+                // SAVE COMPANY NAME
+                // =================================
+
+                localStorage.setItem(
+                    COMPANY_NAME_KEY,
+                    companyName
+                );
+
+
+                // =================================
+                // SAVE GMAIL
+                // =================================
+
+                localStorage.setItem(
+                    COMPANY_GMAIL_KEY,
+                    gmail
+                );
+
+
+                // =================================
+                // IMPORTANT:
+                // SIGNUP DOES NOT AUTHENTICATE
+                // THE COMPANY
+                // =================================
+
+                localStorage.removeItem(
+                    COMPANY_TOKEN_KEY
+                );
+
+
+                // =================================
+                // IMPORTANT:
+                // DO NOT ASSUME COMPANY OBJECT
+                // =================================
+
+                if (
+                    data?.company &&
+                    typeof data.company ===
+                        "object"
+                ) {
+
+                    localStorage.setItem(
+                        COMPANY_DATA_KEY,
+                        JSON.stringify(
+                            data.company
+                        )
+                    );
+
+                }
+
+
+                // =================================
+                // SUCCESS MESSAGE
+                // =================================
+
+                showMessage(
+                    data?.message ||
+                    "Company account created successfully. Redirecting to Company Sign In...",
+                    "success"
+                );
+
+
+                // =================================
+                // REDIRECT TO SIGN IN
+                // =================================
+
+                setTimeout(
+                    () => {
+
+                        window.location.href =
+                            COMPANY_SIGNIN_PAGE;
+
+                    },
+                    1000
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "============================================"
+                );
+
+
+                console.error(
+                    "COMPANY SIGNUP ERROR:",
+                    error
+                );
+
+
+                console.error(
+                    "============================================"
+                );
+
+
+                showMessage(
+                    error.message ||
+                    "Unable to register company. Please try again.",
+                    "error"
+                );
+
+
+            } finally {
+
+                // =================================
+                // RESTORE BUTTON
+                // =================================
+
+                if (signupBtn) {
+
+                    signupBtn.disabled =
+                        false;
+
+
+                    signupBtn.textContent =
+                        originalButtonText ||
+                        "Create Company Account";
+
+                }
+
+            }
 
         }
+    );
 
-    }
-);
+}
+
+else {
+
+    console.error(
+        "Company signup form #companySignupForm was not found."
+    );
+
+}
+
+
+// ============================================
+// GLOBAL ACCESS
+// ============================================
+
+window.isValidGmail =
+    isValidGmail;
+
+window.isValidCompanyPassword =
+    isValidPassword;

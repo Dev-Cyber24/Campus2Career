@@ -6426,16 +6426,15 @@ function setupAIChatbot() {
     );
 
 
-    // -----------------------------------------------------
-    // Validate elements BEFORE using them.
-    // -----------------------------------------------------
+    // =====================================================
+    // VALIDATE REQUIRED ELEMENTS
+    // =====================================================
 
     if (!chatButton) {
 
         console.warn(
             "#aiChatButton not found."
         );
-
 
         return;
     }
@@ -6447,7 +6446,6 @@ function setupAIChatbot() {
             "#aiChatWindow not found."
         );
 
-
         return;
     }
 
@@ -6457,7 +6455,6 @@ function setupAIChatbot() {
         console.warn(
             "#aiChatInput not found."
         );
-
 
         return;
     }
@@ -6469,7 +6466,6 @@ function setupAIChatbot() {
             "#aiChatSend not found."
         );
 
-
         return;
     }
 
@@ -6480,14 +6476,13 @@ function setupAIChatbot() {
             "#aiChatBody not found."
         );
 
-
         return;
     }
 
 
-    // -----------------------------------------------------
-    // INDUSTRY TEST BUTTON
-    // -----------------------------------------------------
+    // =====================================================
+    // INDUSTRY READINESS TEST BUTTON
+    // =====================================================
 
     let startTestButton =
         messages.querySelector(
@@ -6522,18 +6517,36 @@ function setupAIChatbot() {
 
         startTestButton.addEventListener(
             "click",
-            () => {
+            event => {
 
-                startIndustryReadinessTest();
+                event.preventDefault();
+
+
+                if (
+                    typeof startIndustryReadinessTest ===
+                    "function"
+                ) {
+
+                    startIndustryReadinessTest();
+
+                }
+                else {
+
+                    addAIMessage(
+                        "The Industry Readiness Test is currently unavailable."
+                    );
+
+                }
 
             }
         );
+
     }
 
 
-    // -----------------------------------------------------
-    // OPEN
-    // -----------------------------------------------------
+    // =====================================================
+    // OPEN CHAT
+    // =====================================================
 
     if (
         chatButton.dataset.eventsAttached !==
@@ -6553,40 +6566,63 @@ function setupAIChatbot() {
                 event.stopPropagation();
 
 
-                chatWindow.style.display =
-                    "flex";
+                const isHidden =
+                    chatWindow.style.display ===
+                    "none";
 
 
-                chatWindow.style.visibility =
-                    "visible";
+                if (isHidden) {
+
+                    chatWindow.style.display =
+                        "flex";
+
+                    chatWindow.style.visibility =
+                        "visible";
+
+                    chatWindow.style.opacity =
+                        "1";
+
+                    chatWindow.classList.add(
+                        "active"
+                    );
 
 
-                chatWindow.style.opacity =
-                    "1";
+                    setTimeout(
+                        () => {
 
+                            input.focus();
 
-                chatWindow.classList.add(
-                    "active"
-                );
+                        },
+                        100
+                    );
 
+                }
+                else {
 
-                setTimeout(
-                    () => {
+                    chatWindow.style.display =
+                        "none";
 
-                        input.focus();
+                    chatWindow.style.visibility =
+                        "hidden";
 
-                    },
-                    100
-                );
+                    chatWindow.style.opacity =
+                        "0";
+
+                    chatWindow.classList.remove(
+                        "active"
+                    );
+
+                }
 
             }
         );
+
     }
 
 
-    // -----------------------------------------------------
-    // CLOSE
-    // -----------------------------------------------------
+    // =====================================================
+    // CLOSE CHAT
+    // =====================================================
 
     if (
         closeButton &&
@@ -6610,6 +6646,11 @@ function setupAIChatbot() {
                 chatWindow.style.display =
                     "none";
 
+                chatWindow.style.visibility =
+                    "hidden";
+
+                chatWindow.style.opacity =
+                    "0";
 
                 chatWindow.classList.remove(
                     "active"
@@ -6617,12 +6658,415 @@ function setupAIChatbot() {
 
             }
         );
+
     }
 
 
-    // -----------------------------------------------------
-    // SEND BUTTON
-    // -----------------------------------------------------
+    // =====================================================
+    // ADD USER MESSAGE
+    // =====================================================
+
+    function addUserMessage(
+        text
+    ) {
+
+        if (!text) {
+
+            return;
+
+        }
+
+
+        const message =
+            document.createElement(
+                "div"
+            );
+
+
+        message.className =
+            "user-message";
+
+
+        message.textContent =
+            text;
+
+
+        messages.appendChild(
+            message
+        );
+
+
+        messages.scrollTop =
+            messages.scrollHeight;
+
+    }
+
+
+    // =====================================================
+    // ADD AI MESSAGE
+    // =====================================================
+
+    function addAIMessage(
+        text
+    ) {
+
+        if (!text) {
+
+            return;
+
+        }
+
+
+        const message =
+            document.createElement(
+                "div"
+            );
+
+
+        message.className =
+            "ai-message";
+
+
+        message.textContent =
+            text;
+
+
+        messages.appendChild(
+            message
+        );
+
+
+        messages.scrollTop =
+            messages.scrollHeight;
+
+    }
+
+
+    // =====================================================
+    // GENERATE AI RESPONSE
+    // =====================================================
+
+    function generateAIResponse(
+        userText
+    ) {
+
+        const text =
+            String(
+                userText || ""
+            )
+                .toLowerCase()
+                .trim();
+
+
+        // -------------------------------------------------
+        // GREETING
+        // -------------------------------------------------
+
+        if (
+            text === "hi" ||
+            text === "hello" ||
+            text === "hey" ||
+            text.includes("hello campus") ||
+            text.includes("hi campus")
+        ) {
+
+            return (
+                "Hello! 👋 I'm your Campus2Career AI assistant. " +
+                "I can help you with courses, companies, jobs, " +
+                "internships, profiles and career opportunities."
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // HELP
+        // -------------------------------------------------
+
+        if (
+            text.includes("help") ||
+            text.includes("what can you do") ||
+            text.includes("how can you help")
+        ) {
+
+            return (
+                "I can help you navigate Campus2Career. " +
+                "You can ask me about courses, companies, " +
+                "jobs, internships, your profile, or the " +
+                "Industry Readiness Test."
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // COURSES
+        // -------------------------------------------------
+
+        if (
+            text.includes("course") ||
+            text.includes("courses") ||
+            text.includes("learn") ||
+            text.includes("study") ||
+            text.includes("training")
+        ) {
+
+            return (
+                "You can explore available courses from the " +
+                "Courses section. Courses can include information " +
+                "such as field, level, learning mode, duration " +
+                "and institution."
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // COMPANY
+        // -------------------------------------------------
+
+        if (
+            text.includes("company") ||
+            text.includes("companies") ||
+            text.includes("employer")
+        ) {
+
+            return (
+                "You can explore companies through the Company Portal. " +
+                "The portal provides company information and career-related "
+                + "opportunities."
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // JOBS
+        // -------------------------------------------------
+
+        if (
+            text.includes("job") ||
+            text.includes("jobs") ||
+            text.includes("career")
+        ) {
+
+            return (
+                "Campus2Career is designed to connect students and " +
+                "professionals with career opportunities. Check the " +
+                "Company Portal and available job opportunities."
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // INTERNSHIP
+        // -------------------------------------------------
+
+        if (
+            text.includes("internship") ||
+            text.includes("internships") ||
+            text.includes("intern")
+        ) {
+
+            return (
+                "You can look for internship opportunities through " +
+                "the career and company sections of Campus2Career. " +
+                "Internships can help you gain practical industry experience."
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // PROFILE
+        // -------------------------------------------------
+
+        if (
+            text.includes("profile") ||
+            text.includes("edit profile") ||
+            text.includes("my profile")
+        ) {
+
+            return (
+                "You can update your professional profile by selecting " +
+                "Edit Profile. Keep your headline, skills, education, " +
+                "experience and other details up to date."
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // CONNECTIONS
+        // -------------------------------------------------
+
+        if (
+            text.includes("connection") ||
+            text.includes("connections") ||
+            text.includes("connect")
+        ) {
+
+            return (
+                "You can connect with other people through the " +
+                "People You May Know section. Select Connect on a " +
+                "profile to build your professional network."
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // INDUSTRY READINESS
+        // -------------------------------------------------
+
+        if (
+            text.includes("industry readiness") ||
+            text.includes("readiness test") ||
+            text.includes("readiness") ||
+            text.includes("assessment")
+        ) {
+
+            return (
+                "You can take the Industry Readiness Test to evaluate " +
+                "your preparation for the professional environment. " +
+                "Use the 'Start Industry Readiness Test' button below."
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // POST
+        // -------------------------------------------------
+
+        if (
+            text.includes("post") ||
+            text.includes("posts") ||
+            text.includes("share something")
+        ) {
+
+            return (
+                "You can create a post from the main portal. " +
+                "Write your message in the post box and use the " +
+                "Post button to publish it."
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // LIKE
+        // -------------------------------------------------
+
+        if (
+            text.includes("like") ||
+            text.includes("likes")
+        ) {
+
+            return (
+                "You can like posts from the main feed. " +
+                "The like count is synchronized with the Campus2Career backend."
+            );
+
+        }
+
+
+        // -------------------------------------------------
+        // DEFAULT
+        // -------------------------------------------------
+
+        return (
+            "I'm your Campus2Career AI assistant. " +
+            "Ask me about courses, companies, jobs, " +
+            "internships, your profile, connections, " +
+            "posts or the Industry Readiness Test."
+        );
+
+    }
+
+
+    // =====================================================
+    // SEND AI MESSAGE
+    // =====================================================
+
+    function sendAIMessage() {
+
+        const text =
+            input.value.trim();
+
+
+        if (!text) {
+
+            return;
+
+        }
+
+
+        // Add user message
+        addUserMessage(
+            text
+        );
+
+
+        // Clear input
+        input.value =
+            "";
+
+
+        // Disable button temporarily
+        sendButton.disabled =
+            true;
+
+
+        // Small response delay
+        setTimeout(
+            () => {
+
+                try {
+
+                    const response =
+                        generateAIResponse(
+                            text
+                        );
+
+
+                    addAIMessage(
+                        response
+                    );
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "AI chatbot response error:",
+                        error
+                    );
+
+
+                    addAIMessage(
+                        "Sorry, I couldn't process that message right now."
+                    );
+
+                }
+
+
+                sendButton.disabled =
+                    false;
+
+
+                input.focus();
+
+            },
+            400
+        );
+
+    }
+
+
+    // =====================================================
+    // SEND BUTTON EVENT
+    // =====================================================
 
     if (
         sendButton.dataset.eventsAttached !==
@@ -6644,12 +7088,13 @@ function setupAIChatbot() {
 
             }
         );
+
     }
 
 
-    // -----------------------------------------------------
-    // ENTER KEY
-    // -----------------------------------------------------
+    // =====================================================
+    // ENTER KEY EVENT
+    // =====================================================
 
     if (
         input.dataset.eventsAttached !==
@@ -6665,7 +7110,8 @@ function setupAIChatbot() {
             event => {
 
                 if (
-                    event.key === "Enter" &&
+                    event.key ===
+                    "Enter" &&
                     !event.shiftKey
                 ) {
 
@@ -6678,13 +7124,35 @@ function setupAIChatbot() {
 
             }
         );
+
     }
+
+
+    // =====================================================
+    // MAKE FUNCTIONS AVAILABLE FOR DEBUGGING
+    // =====================================================
+
+    window.sendAIMessage =
+        sendAIMessage;
+
+
+    window.generateAIResponse =
+        generateAIResponse;
+
+
+    window.addAIMessage =
+        addAIMessage;
+
+
+    window.addUserMessage =
+        addUserMessage;
 
 
     console.log(
         "Campus2Career AI chatbot initialized successfully."
     );
 
+}
 
     // =====================================================
     // SEND AI MESSAGE

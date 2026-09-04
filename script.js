@@ -43,12 +43,10 @@ const INDUSTRY_TEST_SUBMIT_URL =
 // PAGE FILES
 // =========================================================
 
-const PAGES = {
-    login: "login.html",
-    profile: "Profile.html",
-    companyProfile: "Companyprofile.html",
-    courses: "Courses.html"
-};
+
+ const COMPANY_PAGE = "Companyprofile.html";
+const PROFILE_PAGE = "Profile.html";
+const COURSES_PAGE = "Courses.html";
 
 let industryTest = null;
 let industryTestAnswers = [];
@@ -139,7 +137,7 @@ async function initializePortal() {
             "No valid authentication session."
         );
 
-        navigateTo(PAGES.login);
+       window.location.href = "login.html";
 
         return;
     }
@@ -3053,15 +3051,15 @@ function attachPostEvents(
                 try {
 
                     const response =
-                        await authenticatedFetch(
-                            `${POSTS_API}/${encodeURIComponent(
-                                postId
-                            )}/like`,
-                            {
-                                method:
-                                    "POST"
-                            }
-                        );
+                    await authenticatedFetch(
+                `${POSTS_API}/${encodeURIComponent(
+                            postId
+                        )}/like`,
+                    {
+                        method:
+                            "POST"
+                        }
+                    );
 
                     if (
                         handleAuthError(

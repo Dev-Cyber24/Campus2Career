@@ -11,7 +11,7 @@
 // =========================================================
 
 const API_BASE =
-    "http://localhost:5000/api";
+    "https://campus2career-0pi8.onrender.com/api";
 
 const PUBLIC_PROFILE_API =
     `${API_BASE}/user-profile`;
@@ -29,7 +29,8 @@ const POSTS_API =
     `${API_BASE}/posts`;
 
 
-const AI_CHATBOT_URL = "http://localhost:5000/api/ai-chat";
+const AI_CHATBOT_URL =
+    "https://campus2career-0pi8.onrender.com/api/ai-chat";
 
 const INDUSTRY_TEST_START_URL =
     `${API_BASE}/industry-readiness/start`;

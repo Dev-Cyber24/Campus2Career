@@ -12,7 +12,7 @@ console.log("Backend.js loaded");
 // =========================================
 
 const API_URL =
-    "http://localhost:5000/api/login";
+   "https://campus2career-0pi8.onrender.com/api/login";
 
 
 // =========================================

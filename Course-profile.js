@@ -1,15 +1,30 @@
+"use strict";
 
 // =========================================
 // CAMPUS2CAREER COURSE FORM JAVASCRIPT
+// CREATE COURSE
 // =========================================
+
+console.log("courses.js loaded");
 
 
 // =========================================
 // API
 // =========================================
 
+const API_BASE_URL =
+    "https://campus2career-0pi8.onrender.com";
+
 const COURSES_API =
-    "https://campus2career-0pi8.onrender.com/api/courses";
+    `${API_BASE_URL}/api/courses`;
+
+
+// =========================================
+// STORAGE KEYS
+// =========================================
+
+const TOKEN_KEY =
+    "authToken";
 
 
 // =========================================
@@ -123,6 +138,52 @@ const previewLink =
 
 
 // =========================================
+// AUTHENTICATION
+// =========================================
+
+function getAuthToken() {
+
+    const token =
+        localStorage.getItem(
+            TOKEN_KEY
+        );
+
+    return (
+        token &&
+        token.trim()
+            ? token.trim()
+            : null
+    );
+
+}
+
+
+// =========================================
+// CLEAR AUTH DATA
+// =========================================
+
+function clearAuthData() {
+
+    localStorage.removeItem(
+        "authToken"
+    );
+
+    localStorage.removeItem(
+        "userId"
+    );
+
+    localStorage.removeItem(
+        "username"
+    );
+
+    localStorage.removeItem(
+        "loginEmail"
+    );
+
+}
+
+
+// =========================================
 // SHOW MESSAGE
 // =========================================
 
@@ -132,16 +193,125 @@ function showMessage(
 ) {
 
     if (!message) {
+
+        if (text) {
+            console.log(text);
+        }
+
         return;
+
     }
 
 
     message.textContent =
-        text;
+        text || "";
 
 
     message.style.color =
-        color;
+        color || "";
+
+
+    message.style.display =
+        text
+            ? "block"
+            : "none";
+
+}
+
+
+// =========================================
+// READ API RESPONSE
+// =========================================
+
+async function readResponse(
+    response
+) {
+
+    const contentType =
+        response.headers.get(
+            "content-type"
+        ) || "";
+
+
+    if (
+        contentType
+            .toLowerCase()
+            .includes(
+                "application/json"
+            )
+    ) {
+
+        try {
+
+            return await response.json();
+
+        } catch (error) {
+
+            console.error(
+                "JSON parsing error:",
+                error
+            );
+
+            return {};
+
+        }
+
+    }
+
+
+    try {
+
+        return await response.text();
+
+    } catch (error) {
+
+        console.error(
+            "Response reading error:",
+            error
+        );
+
+        return "";
+
+    }
+
+}
+
+
+// =========================================
+// GET ERROR MESSAGE
+// =========================================
+
+function getApiErrorMessage(
+    data,
+    fallback
+) {
+
+    if (
+        data &&
+        typeof data === "object"
+    ) {
+
+        return (
+            data.error ||
+            data.message ||
+            data.detail ||
+            fallback
+        );
+
+    }
+
+
+    if (
+        typeof data === "string" &&
+        data.trim()
+    ) {
+
+        return data.trim();
+
+    }
+
+
+    return fallback;
 
 }
 
@@ -152,83 +322,142 @@ function showMessage(
 
 function updatePreview() {
 
+    // ---------------------------------------
+    // COURSE NAME
+    // ---------------------------------------
+
     if (previewName) {
 
         previewName.textContent =
-            courseName.value.trim() ||
+            courseName?.value.trim() ||
             "Course Name";
 
     }
 
 
+    // ---------------------------------------
+    // FIELD
+    // ---------------------------------------
+
     if (previewField) {
 
         previewField.textContent =
-            field.value.trim() ||
+            field?.value.trim() ||
             "Course Field";
 
     }
 
 
+    // ---------------------------------------
+    // DESCRIPTION
+    // ---------------------------------------
+
     if (previewDescription) {
 
         previewDescription.textContent =
-            description.value.trim() ||
+            description?.value.trim() ||
             "Course description will appear here.";
 
     }
 
 
+    // ---------------------------------------
+    // INSTITUTION
+    // ---------------------------------------
+
     if (previewInstitution) {
 
         previewInstitution.textContent =
-            institution.value.trim() ||
+            institution?.value.trim() ||
             "Institution not specified";
 
     }
 
 
+    // ---------------------------------------
+    // LEVEL
+    // ---------------------------------------
+
     if (previewLevel) {
 
         previewLevel.textContent =
-            level.value ||
+            level?.value ||
             "Not specified";
 
     }
 
+
+    // ---------------------------------------
+    // MODE
+    // ---------------------------------------
 
     if (previewMode) {
 
         previewMode.textContent =
-            mode.value ||
+            mode?.value ||
             "Not specified";
 
     }
 
+
+    // ---------------------------------------
+    // DURATION
+    // ---------------------------------------
 
     if (previewDuration) {
 
         previewDuration.textContent =
-            duration.value.trim() ||
+            duration?.value.trim() ||
             "Not specified";
 
     }
 
 
-    // =====================================
-    // COURSE LINK
-    // =====================================
+    // ---------------------------------------
+    // COURSE URL
+    // ---------------------------------------
 
     if (previewLink) {
 
         const url =
-            courseUrl.value.trim();
+            courseUrl?.value.trim() ||
+            "";
 
 
         if (url !== "") {
 
-            previewLink.href =
+            let validUrl =
                 url;
+
+
+            // Add https:// when omitted
+            if (
+                !/^https?:\/\//i.test(
+                    validUrl
+                )
+            ) {
+
+                validUrl =
+                    `https://${validUrl}`;
+
+            }
+
+
+            previewLink.href =
+                validUrl;
+
+
+            previewLink.target =
+                "_blank";
+
+
+            previewLink.rel =
+                "noopener noreferrer";
+
+
+            previewLink.textContent =
+                "View Course";
+
 
             previewLink.style.display =
                 "block";
@@ -238,6 +467,21 @@ function updatePreview() {
             previewLink.removeAttribute(
                 "href"
             );
+
+
+            previewLink.removeAttribute(
+                "target"
+            );
+
+
+            previewLink.removeAttribute(
+                "rel"
+            );
+
+
+            previewLink.textContent =
+                "View Course";
+
 
             previewLink.style.display =
                 "none";
@@ -258,28 +502,36 @@ function getCourseData() {
     return {
 
         course_name:
-            courseName.value.trim(),
+            courseName?.value.trim() ||
+            "",
 
         field:
-            field.value.trim(),
+            field?.value.trim() ||
+            "",
 
         description:
-            description.value.trim(),
+            description?.value.trim() ||
+            "",
 
         institution:
-            institution.value.trim(),
+            institution?.value.trim() ||
+            "",
 
         level:
-            level.value,
+            level?.value.trim() ||
+            "",
 
         mode:
-            mode.value,
+            mode?.value.trim() ||
+            "",
 
         duration:
-            duration.value.trim(),
+            duration?.value.trim() ||
+            "",
 
         course_url:
-            courseUrl.value.trim()
+            courseUrl?.value.trim() ||
+            ""
 
     };
 
@@ -294,6 +546,10 @@ function validateCourse(
     data
 ) {
 
+    // ---------------------------------------
+    // COURSE NAME
+    // ---------------------------------------
+
     if (!data.course_name) {
 
         showMessage(
@@ -301,12 +557,20 @@ function validateCourse(
             "red"
         );
 
-        courseName.focus();
+
+        if (courseName) {
+            courseName.focus();
+        }
+
 
         return false;
 
     }
 
+
+    // ---------------------------------------
+    // FIELD
+    // ---------------------------------------
 
     if (!data.field) {
 
@@ -315,19 +579,43 @@ function validateCourse(
             "red"
         );
 
-        field.focus();
+
+        if (field) {
+            field.focus();
+        }
+
 
         return false;
 
     }
 
 
+    // ---------------------------------------
+    // COURSE URL
+    // ---------------------------------------
+
     if (data.course_url) {
+
+        let testUrl =
+            data.course_url;
+
+
+        if (
+            !/^https?:\/\//i.test(
+                testUrl
+            )
+        ) {
+
+            testUrl =
+                `https://${testUrl}`;
+
+        }
+
 
         try {
 
             new URL(
-                data.course_url
+                testUrl
             );
 
         } catch {
@@ -337,7 +625,11 @@ function validateCourse(
                 "red"
             );
 
-            courseUrl.focus();
+
+            if (courseUrl) {
+                courseUrl.focus();
+            }
+
 
             return false;
 
@@ -356,6 +648,62 @@ function validateCourse(
 // =========================================
 
 async function saveCourse() {
+
+    // =====================================
+    // CHECK FORM
+    // =====================================
+
+    if (!courseForm) {
+
+        console.error(
+            "courseForm was not found."
+        );
+
+        return;
+
+    }
+
+
+    // =====================================
+    // GET TOKEN
+    // =====================================
+
+    const token =
+        getAuthToken();
+
+
+    if (!token) {
+
+        showMessage(
+            "❌ Please login before creating a course.",
+            "red"
+        );
+
+
+        console.error(
+            "No authToken found in localStorage."
+        );
+
+
+        setTimeout(
+            () => {
+
+                window.location.href =
+                    "login.html";
+
+            },
+            700
+        );
+
+
+        return;
+
+    }
+
+
+    // =====================================
+    // GET FORM DATA
+    // =====================================
 
     const data =
         getCourseData();
@@ -383,13 +731,40 @@ async function saveCourse() {
 
 
     // =====================================
+    // NORMALIZE COURSE URL
+    // =====================================
+
+    if (
+        data.course_url &&
+        !/^https?:\/\//i.test(
+            data.course_url
+        )
+    ) {
+
+        data.course_url =
+            `https://${data.course_url}`;
+
+    }
+
+
+    // =====================================
     // DISABLE BUTTON
     // =====================================
 
+    let originalButtonText =
+        "Save Course";
+
+
     if (saveCourseBtn) {
+
+        originalButtonText =
+            saveCourseBtn.textContent ||
+            "Save Course";
+
 
         saveCourseBtn.disabled =
             true;
+
 
         saveCourseBtn.textContent =
             "Saving Course...";
@@ -406,14 +781,19 @@ async function saveCourse() {
     try {
 
         // =================================
-        // SEND TO NODE.JS
+        // SEND REQUEST TO NODE.JS
         // =================================
+
+        console.log(
+            "POST:",
+            COURSES_API
+        );
+
 
         const response =
             await fetch(
                 COURSES_API,
                 {
-
                     method:
                         "POST",
 
@@ -423,7 +803,10 @@ async function saveCourse() {
                             "application/json",
 
                         "Accept":
-                            "application/json"
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${token}`
 
                     },
 
@@ -431,17 +814,8 @@ async function saveCourse() {
                         JSON.stringify(
                             data
                         )
-
                 }
             );
-
-
-        // =================================
-        // READ RESPONSE
-        // =================================
-
-        const responseText =
-            await response.text();
 
 
         console.log(
@@ -450,35 +824,37 @@ async function saveCourse() {
         );
 
 
+        // =================================
+        // READ SERVER RESPONSE
+        // =================================
+
+        const result =
+            await readResponse(
+                response
+            );
+
+
         console.log(
             "Courses API response:",
-            responseText
+            result
         );
 
 
-        let result =
-            {};
-
+        // =================================
+        // SESSION EXPIRED
+        // =================================
 
         if (
-            responseText &&
-            responseText.trim() !== ""
+            response.status === 401 ||
+            response.status === 403
         ) {
 
-            try {
+            clearAuthData();
 
-                result =
-                    JSON.parse(
-                        responseText
-                    );
 
-            } catch {
-
-                throw new Error(
-                    "The server returned HTML/text instead of JSON."
-                );
-
-            }
+            throw new Error(
+                "Your login session has expired. Please login again."
+            );
 
         }
 
@@ -490,11 +866,66 @@ async function saveCourse() {
         if (!response.ok) {
 
             throw new Error(
+                getApiErrorMessage(
+                    result,
+                    `Server returned HTTP ${response.status}.`
+                )
+            );
 
-                result.error ||
+        }
 
-                `Server returned HTTP ${response.status}.`
 
+        // =================================
+        // VERIFY SUCCESS
+        // =================================
+
+        if (
+            result &&
+            typeof result === "object" &&
+            result.success === false
+        ) {
+
+            throw new Error(
+                getApiErrorMessage(
+                    result,
+                    "Course could not be created."
+                )
+            );
+
+        }
+
+
+        // =================================
+        // GET CREATED COURSE ID
+        // =================================
+
+        const createdCourseId =
+            result?.courseId ??
+            result?.course?.id ??
+            result?.id ??
+            null;
+
+
+        // =================================
+        // SAVE ID
+        // =================================
+
+        if (
+            createdCourseId !== null &&
+            createdCourseId !== undefined
+        ) {
+
+            localStorage.setItem(
+                "lastCourseId",
+                String(
+                    createdCourseId
+                )
+            );
+
+
+            console.log(
+                "Created course ID:",
+                createdCourseId
             );
 
         }
@@ -504,42 +935,28 @@ async function saveCourse() {
         // SUCCESS
         // =================================
 
-        console.log(
-            "Course saved successfully:",
-            result
-        );
-
-
         showMessage(
+            result?.message ||
             "✅ Course saved successfully!",
             "green"
         );
 
 
-        // ---------------------------------
-        // Save ID locally
-        // ---------------------------------
-
-        if (
-            result.id
-        ) {
-
-            localStorage.setItem(
-                "lastCourseId",
-                String(
-                    result.id
-                )
-            );
-
-        }
+        console.log(
+            "Course created successfully."
+        );
 
 
-        // ---------------------------------
-        // Reset form
-        // ---------------------------------
+        // =================================
+        // RESET FORM
+        // =================================
 
         courseForm.reset();
 
+
+        // =================================
+        // RESET PREVIEW
+        // =================================
 
         updatePreview();
 
@@ -553,20 +970,28 @@ async function saveCourse() {
 
 
         showMessage(
-            "❌ " + error.message,
+            "❌ " +
+            (
+                error.message ||
+                "Unable to save course."
+            ),
             "red"
         );
 
-
     } finally {
+
+        // =================================
+        // RESTORE BUTTON
+        // =================================
 
         if (saveCourseBtn) {
 
             saveCourseBtn.disabled =
                 false;
 
+
             saveCourseBtn.textContent =
-                "Save Course";
+                originalButtonText;
 
         }
 
@@ -602,19 +1027,12 @@ if (courseForm) {
 const previewFields = [
 
     courseName,
-
     field,
-
     institution,
-
     description,
-
     level,
-
     mode,
-
     duration,
-
     courseUrl
 
 ];
@@ -623,20 +1041,21 @@ const previewFields = [
 previewFields.forEach(
     element => {
 
-        if (element) {
-
-            element.addEventListener(
-                "input",
-                updatePreview
-            );
-
-
-            element.addEventListener(
-                "change",
-                updatePreview
-            );
-
+        if (!element) {
+            return;
         }
+
+
+        element.addEventListener(
+            "input",
+            updatePreview
+        );
+
+
+        element.addEventListener(
+            "change",
+            updatePreview
+        );
 
     }
 );
@@ -658,4 +1077,3 @@ window.saveCourse =
 
 window.updateCoursePreview =
     updatePreview;
-

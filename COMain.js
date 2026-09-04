@@ -13,7 +13,8 @@
    - recruiter candidate search
 ========================================================= */
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL =
+    "https://campus2career-0pi8.onrender.com/api";
 const COMPANY_API = `${API_BASE_URL}/company`;
 const COMPANY_PROFILE_API = `${COMPANY_API}/my-profile`;
 const COMPANY_JOBS_API = `${COMPANY_API}/jobs`;

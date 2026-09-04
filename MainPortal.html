@@ -12,11 +12,13 @@
 
     <title>Campus2Career</title>
 
+    <!-- Main Portal CSS -->
     <link
         rel="stylesheet"
         href="style.css"
     >
 
+    <!-- Google Font -->
     <link
         rel="preconnect"
         href="https://fonts.googleapis.com"
@@ -24,7 +26,7 @@
 
     <link
         rel="preconnect"
-        href="https://fonts.gstatic.com"
+        href="https://fonts.googleapis.com"
         crossorigin
     >
 
@@ -36,6 +38,10 @@
 </head>
 
 <body>
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
 
 <header>
 
@@ -49,9 +55,12 @@
 
     </div>
 
+
+    <!-- GLOBAL SEARCH -->
+
     <div class="search-box">
 
-        <span class="search-icon">
+        <span class="search-icon" aria-hidden="true">
             🔍
         </span>
 
@@ -60,9 +69,13 @@
             id="globalSearch"
             placeholder="Search people, companies, courses..."
             autocomplete="off"
+            aria-label="Search Campus2Career"
         >
 
     </div>
+
+
+    <!-- NAVIGATION -->
 
     <nav>
 
@@ -80,6 +93,9 @@
 
     </nav>
 
+
+    <!-- HEADER PROFILE -->
+
     <div class="profile">
 
         <img
@@ -91,388 +107,516 @@
 
 </header>
 
+
+<!-- =========================================================
+     MAIN THREE-COLUMN LAYOUT
+========================================================= -->
+
 <div class="container">
 
-<aside class="left-sidebar">
 
-    <div class="profile-card">
+    <!-- =====================================================
+         LEFT SIDEBAR
+    ====================================================== -->
 
-        <div class="cover"></div>
+    <aside class="left-sidebar">
 
-        <img
-            src="Frog.jpg"
-            class="profile-pic"
-            alt="Profile Picture"
-        >
 
-        <h2 id="profileName">
-            Loading...
-        </h2>
+        <!-- PROFILE CARD -->
 
-        <p class="designation">
-            Loading profile...
-        </p>
+        <div class="profile-card">
 
-        <p class="location"></p>
+            <div class="cover"></div>
 
-        <hr>
-
-        <div class="stats">
-
-            <p>
-
-                Connections
-
-                <span id="connectionsCount">
-                    0
-                </span>
-
-            </p>
-
-            <p>
-
-                Posts
-
-                <span id="postCount">
-                    0
-                </span>
-
-            </p>
-
-        </div>
-
-        <div class="profile-actions">
-
-            <a
-                href="Profile.html"
-                id="editProfileLink"
+            <img
+                src="Frog.jpg"
+                class="profile-pic"
+                alt="Profile Picture"
+                id="sidebarProfilePic"
             >
 
-                ✏ Edit Profile
+            <h2 id="profileName">
+                Loading...
+            </h2>
 
-            </a>
+            <p class="designation" id="designation">
+                Loading profile...
+            </p>
 
-        </div>
+            <p class="location" id="location"></p>
 
-    </div>
+            <hr>
 
-    <div
-        class="recommend-card"
-        id="peopleRecommendationCard"
-    >
 
-        <h3>
-            People You May Know
-        </h3>
+            <!-- PROFILE STATISTICS -->
 
-        <div
-            id="peopleContainer"
-            class="people-container"
-        >
+            <div class="stats">
 
-            <div
-                class="people-loading"
-                id="peopleLoading"
-            >
+                <p>
 
-                Loading people...
+                    Connections
+
+                    <span id="connectionsCount">
+                        0
+                    </span>
+
+                </p>
+
+
+                <p>
+
+                    Posts
+
+                    <span id="postCount">
+                        0
+                    </span>
+
+                </p>
+
+            </div>
+
+
+            <!-- PROFILE ACTION -->
+
+            <div class="profile-actions">
+
+                <a
+                    href="Profile.html"
+                    id="editProfileLink"
+                >
+                    ✏ Edit Profile
+                </a>
 
             </div>
 
         </div>
 
-    </div>
 
-</aside>
+        <!-- =================================================
+             PEOPLE YOU MAY KNOW
+        ================================================== -->
 
-<main>
+        <div
+            class="recommend-card"
+            id="peopleRecommendationCard"
+        >
 
-    <div class="create-post">
+            <h3>
+                People You May Know
+            </h3>
 
-        <div class="post-user">
-
-            <img
-                src="Frog.jpg"
-                alt="User"
+            <div
+                id="peopleContainer"
+                class="people-container"
             >
 
-            <span>
-
-                Share your achievements,
-                projects and ideas...
-
-            </span>
-
-        </div>
-
-        <textarea
-            id="postInput"
-            placeholder="What's on your mind?"
-            maxlength="500"
-            rows="3"
-        ></textarea>
-
-        <div class="post-tools">
-
-            <label class="upload-btn">
-
-                📷 Photo
-
-                <input
-                    type="file"
-                    id="imageUpload"
-                    accept="image/*"
-                    hidden
+                <div
+                    class="people-loading"
+                    id="peopleLoading"
                 >
-
-            </label>
-
-            <label class="upload-btn">
-
-                🎥 Video
-
-                <input
-                    type="file"
-                    id="videoUpload"
-                    accept="video/*"
-                    hidden
-                >
-
-            </label>
-
-            <span id="charCount">
-                0/500
-            </span>
-
-            <button
-                id="postBtn"
-                type="button"
-            >
-                Post
-            </button>
-
-        </div>
-
-    </div>
-
-    <section
-        class="posts-scroll-area"
-        id="postsScrollArea"
-    >
-            <div class="post">
-
-            <div class="post-header">
-
-                <img
-                    src="https://via.placeholder.com/50"
-                    alt="User"
-                >
-
-                <div>
-
-                    <h3>
-                        Campus2Career
-                    </h3>
-
-                    <p>
-                        Welcome to Campus2Career
-                    </p>
-
+                    Loading people...
                 </div>
 
             </div>
 
-            <p class="post-text">
+        </div>
 
-                Welcome to Campus2Career.
-                Build your network,
-                showcase your skills,
-                discover courses,
-                explore companies,
-                and find career opportunities.
+    </aside>
 
-            </p>
 
-            <div class="post-stats">
 
-                <span class="like-count">
-                    👍 0 Likes
+    <!-- =====================================================
+         CENTER MAIN CONTENT
+    ====================================================== -->
+
+    <main>
+
+
+        <!-- =================================================
+             CREATE POST
+        ================================================== -->
+
+        <div class="create-post">
+
+            <div class="post-user">
+
+                <img
+                    src="Frog.jpg"
+                    alt="User"
+                    id="createPostProfilePic"
+                >
+
+                <span>
+                    Share your achievements,
+                    projects and ideas...
                 </span>
 
-                <span class="comment-count">
-                    💬 0 Comments
+            </div>
+
+
+            <!-- POST TEXT -->
+
+            <textarea
+                id="postInput"
+                placeholder="What's on your mind?"
+                maxlength="500"
+                rows="3"
+            ></textarea>
+
+
+            <!-- POST TOOLS -->
+
+            <div class="post-tools">
+
+
+                <!-- IMAGE FILE -->
+
+                <label class="upload-btn">
+
+                    📷 Photo
+
+                    <input
+                        type="file"
+                        id="imageUpload"
+                        accept="image/*"
+                        hidden
+                    >
+
+                </label>
+
+
+                <!-- VIDEO FILE -->
+
+                <label class="upload-btn">
+
+                    🎥 Video
+
+                    <input
+                        type="file"
+                        id="videoUpload"
+                        accept="video/*"
+                        hidden
+                    >
+
+                </label>
+
+
+                <!-- CHARACTER COUNT -->
+
+                <span id="charCount">
+                    0/500
                 </span>
 
-                <span class="share-count">
-                    🔄 0 Shares
-                </span>
 
-            </div>
-
-            <div class="actions">
+                <!-- POST BUTTON -->
 
                 <button
+                    id="postBtn"
                     type="button"
-                    class="like-btn"
                 >
-                    👍 Like
-                </button>
-
-                <button
-                    type="button"
-                    class="comment-btn"
-                >
-                    💬 Comment
-                </button>
-
-                <button
-                    type="button"
-                    class="share-btn"
-                >
-                    🔄 Share
-                </button>
-
-                <button
-                    type="button"
-                    class="delete-btn"
-                    style="display:none;"
-                >
-                    🗑 Delete
+                    Post
                 </button>
 
             </div>
 
-            <div class="comments"></div>
-
         </div>
 
-    </section>
 
-</main>
 
-<aside class="right-sidebar">
+        <!-- =================================================
+             POSTS
+        ================================================== -->
 
-    <div class="company-bar">
-
-        <div class="company-header">
-
-            <h2>
-                🏢 Company Portal
-            </h2>
-
-        </div>
-
-        <div
-            class="company-list"
-            id="companyContainer"
+        <section
+            class="posts-scroll-area"
+            id="postsScrollArea"
+            aria-label="Posts"
         >
 
-            <div class="loading-message">
-                Loading companies...
+            <!--
+                script.js will populate posts from:
+
+                GET /api/posts
+
+                This initial post is only fallback content.
+            -->
+
+            <div class="post">
+
+                <div class="post-header">
+
+                    <img
+                        src="https://via.placeholder.com/50"
+                        alt="Campus2Career"
+                    >
+
+                    <div>
+
+                        <h3>
+                            Campus2Career
+                        </h3>
+
+                        <p>
+                            Welcome to Campus2Career
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <p class="post-text">
+
+                    Welcome to Campus2Career.
+                    Build your network,
+                    showcase your skills,
+                    discover courses,
+                    explore companies,
+                    and find career opportunities.
+
+                </p>
+
+
+                <!-- POST STATISTICS -->
+
+                <div class="post-stats">
+
+                    <span class="like-count">
+                        👍 0 Likes
+                    </span>
+
+                    <span class="comment-count">
+                        💬 0 Comments
+                    </span>
+
+                    <span class="share-count">
+                        🔄 0 Shares
+                    </span>
+
+                </div>
+
+
+                <!-- POST ACTIONS -->
+
+                <div class="actions">
+
+                    <button
+                        type="button"
+                        class="like-btn"
+                    >
+                        👍 Like
+                    </button>
+
+                    <button
+                        type="button"
+                        class="comment-btn"
+                    >
+                        💬 Comment
+                    </button>
+
+                    <button
+                        type="button"
+                        class="share-btn"
+                    >
+                        🔄 Share
+                    </button>
+
+                    <button
+                        type="button"
+                        class="delete-btn"
+                        style="display:none;"
+                    >
+                        🗑 Delete
+                    </button>
+
+                </div>
+
+
+                <!-- COMMENTS -->
+
+                <div class="comments"></div>
+
             </div>
 
-        </div>
+        </section>
 
-        <div class="company-link">
+    </main>
 
-            <a href="Companyprofile.html">
-                View All Companies →
-            </a>
 
-        </div>
 
-    </div>
+    <!-- =====================================================
+         RIGHT SIDEBAR
+    ====================================================== -->
 
-    <div
-        class="courses-profile"
-        id="coursesSection"
-    >
+    <aside class="right-sidebar">
 
-        <h2 class="courses-title">
-            📚 Courses
-        </h2>
 
-        <div
-            class="course-list"
-            id="courseContainer"
-        >
+        <!-- =================================================
+             COMPANIES
+        ================================================== -->
 
-            <div class="loading-message">
-                Loading courses...
+        <div class="company-bar">
+
+            <div class="company-header">
+
+                <h2>
+                    🏢 Company Portal
+                </h2>
+
             </div>
 
-        </div>
-
-        <div
-            class="company-link"
-            style="margin-top:15px;"
-        >
-
-            <a href="courses.html">
-                View All Courses →
-            </a>
-
-        </div>
-
-    </div>
-
-    <div class="courses-profile">
-
-        <h2>
-            🎯 Profile Completion
-        </h2>
-
-        <div
-            class="progress-bar"
-            role="progressbar"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            aria-valuenow="0"
-        >
 
             <div
-                id="profileProgress"
-                class="progress"
-                style="width:0%;"
-            ></div>
+                class="company-list"
+                id="companyContainer"
+            >
+
+                <div class="loading-message">
+                    Loading companies...
+                </div>
+
+            </div>
+
+
+            <div class="company-link">
+
+                <a href="Companyprofile.html">
+                    View All Companies →
+                </a>
+
+            </div>
 
         </div>
 
-        <p
-            id="profileCompletion"
-            style="margin-top:10px;"
-        >
-            0% Completed
-        </p>
 
-    </div>
 
-    <div class="advertisement">
+        <!-- =================================================
+             COURSES
+        ================================================== -->
 
-        <h3>
-            Advertisement
-        </h3>
-
-        <img
-            src="https://picsum.photos/300/250"
-            alt="Advertisement"
+        <div
+            class="courses-profile"
+            id="coursesSection"
         >
 
-    </div>
+            <h2 class="courses-title">
+                📚 Courses
+            </h2>
 
-</aside>
+
+            <div
+                class="course-list"
+                id="courseContainer"
+            >
+
+                <div class="loading-message">
+                    Loading courses...
+                </div>
+
+            </div>
+
+
+            <div
+                class="company-link"
+                style="margin-top:15px;"
+            >
+
+                <!-- IMPORTANT:
+                     File name is Courses.html, not courses.html
+                -->
+
+                <a href="Courses.html">
+                    View All Courses →
+                </a>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             PROFILE COMPLETION
+        ================================================== -->
+
+        <div class="courses-profile">
+
+            <h2>
+                🎯 Profile Completion
+            </h2>
+
+
+            <div
+                class="progress-bar"
+                role="progressbar"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="0"
+                id="profileProgressBar"
+            >
+
+                <div
+                    id="profileProgress"
+                    class="progress"
+                    style="width:0%;"
+                ></div>
+
+            </div>
+
+
+            <p
+                id="profileCompletion"
+                style="margin-top:10px;"
+            >
+                0% Completed
+            </p>
+
+        </div>
+
+
+
+        <!-- =================================================
+             ADVERTISEMENT
+        ================================================== -->
+
+        <div class="advertisement">
+
+            <h3>
+                Advertisement
+            </h3>
+
+            <img
+                src="https://picsum.photos/300/250"
+                alt="Advertisement"
+            >
+
+        </div>
+
+    </aside>
 
 </div>
+
+
+
+<!-- =========================================================
+     AI CHATBOT
+========================================================= -->
 
 <div
     class="ai-chatbot-container"
     id="aiChatbot"
 >
 
+
+    <!-- CHAT WINDOW -->
+
     <div
         class="ai-chat-window"
         id="aiChatWindow"
     >
+
+
+        <!-- CHAT HEADER -->
 
         <div class="ai-chat-header">
 
@@ -496,6 +640,9 @@
 
             </div>
 
+
+            <!-- CLOSE BUTTON -->
+
             <button
                 class="ai-chat-close"
                 id="aiChatClose"
@@ -506,6 +653,10 @@
             </button>
 
         </div>
+
+
+
+        <!-- CHAT MESSAGES -->
 
         <div
             class="ai-chat-body"
@@ -528,6 +679,10 @@
 
         </div>
 
+
+
+        <!-- CHAT INPUT -->
+
         <div class="ai-chat-input-area">
 
             <input
@@ -536,7 +691,9 @@
                 class="ai-chat-input"
                 placeholder="Ask me something..."
                 autocomplete="off"
+                aria-label="Ask Campus2Career AI"
             >
+
 
             <button
                 id="aiChatSend"
@@ -551,6 +708,10 @@
 
     </div>
 
+
+
+    <!-- AI OPEN BUTTON -->
+
     <button
         id="aiChatButton"
         class="ai-chatbot-button"
@@ -561,6 +722,12 @@
     </button>
 
 </div>
+
+
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
 
 <footer>
 
@@ -588,6 +755,7 @@
 
     </div>
 
+
     <p>
         © 2026 Campus2Career.
         All Rights Reserved.
@@ -595,7 +763,19 @@
 
 </footer>
 
-<script src="script.js"></script>
+
+
+<!-- =========================================================
+     MAIN PORTAL JAVASCRIPT
+
+     IMPORTANT:
+     defer ensures HTML is parsed before script.js runs.
+========================================================= -->
+
+<script
+    src="script.js"
+    defer
+></script>
 
 </body>
 </html>

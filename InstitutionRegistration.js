@@ -1,6 +1,15 @@
+"use strict";
+
 // =========================================
 // CAMPUS2CAREER
 // INSTITUTION REGISTRATION JAVASCRIPT
+// =========================================
+
+console.log("InstitutionRegistration.js loaded");
+
+
+// =========================================
+// API CONFIGURATION
 // =========================================
 
 const API_BASE_URL =
@@ -9,11 +18,22 @@ const API_BASE_URL =
 const REGISTER_API =
     `${API_BASE_URL}/institution/signup`;
 
+
+// =========================================
+// STORAGE KEYS
+// =========================================
+
 const TOKEN_KEY =
     "institutionAuthToken";
 
 const INSTITUTION_KEY =
     "institutionData";
+
+const INSTITUTION_USER_ID_KEY =
+    "institutionUserId";
+
+const INSTITUTION_ID_KEY =
+    "institutionId";
 
 
 // =========================================
@@ -66,14 +86,25 @@ function showMessage(
 ) {
 
     if (!message) {
+
+        console.log(
+            text
+        );
+
         return;
+
     }
 
+
     message.textContent =
-        text;
+        text || "";
+
 
     message.className =
-        `message show ${type}`;
+        text
+            ? `message show ${type}`
+            : "message";
+
 }
 
 
@@ -84,14 +115,144 @@ function showMessage(
 function hideMessage() {
 
     if (!message) {
+
         return;
+
     }
+
 
     message.textContent =
         "";
 
     message.className =
         "message";
+
+}
+
+
+// =========================================
+// CLEAR OLD INSTITUTION SESSION
+// =========================================
+
+function clearInstitutionSession() {
+
+    localStorage.removeItem(
+        TOKEN_KEY
+    );
+
+    localStorage.removeItem(
+        INSTITUTION_KEY
+    );
+
+    localStorage.removeItem(
+        INSTITUTION_USER_ID_KEY
+    );
+
+    localStorage.removeItem(
+        INSTITUTION_ID_KEY
+    );
+
+    localStorage.removeItem(
+        "institutionEmail"
+    );
+
+}
+
+
+// =========================================
+// READ API RESPONSE SAFELY
+// =========================================
+
+async function readResponse(
+    response
+) {
+
+    const contentType =
+        response.headers.get(
+            "content-type"
+        ) || "";
+
+
+    if (
+        contentType
+            .toLowerCase()
+            .includes(
+                "application/json"
+            )
+    ) {
+
+        try {
+
+            return await response.json();
+
+        } catch (error) {
+
+            console.error(
+                "Failed to parse JSON response:",
+                error
+            );
+
+            return {};
+
+        }
+
+    }
+
+
+    try {
+
+        return await response.text();
+
+    } catch (error) {
+
+        console.error(
+            "Failed to read server response:",
+            error
+        );
+
+        return "";
+
+    }
+
+}
+
+
+// =========================================
+// GET API ERROR
+// =========================================
+
+function getApiErrorMessage(
+    result,
+    fallback = "Registration failed."
+) {
+
+    if (
+        result &&
+        typeof result === "object"
+    ) {
+
+        return (
+            result.error ||
+            result.message ||
+            result.detail ||
+            fallback
+        );
+
+    }
+
+
+    if (
+        typeof result === "string" &&
+        result.trim() !== ""
+    ) {
+
+        return result.trim();
+
+    }
+
+
+    return fallback;
+
 }
 
 
@@ -101,8 +262,16 @@ function hideMessage() {
 
 function validatePasswordRules() {
 
+    if (!password) {
+
+        return false;
+
+    }
+
+
     const value =
         password.value;
+
 
     const lengthRule =
         document.getElementById(
@@ -125,18 +294,32 @@ function validatePasswordRules() {
         );
 
 
+    // =====================================
+    // PASSWORD REQUIREMENTS
+    // =====================================
+
     const lengthValid =
         value.length >= 8;
 
     const upperValid =
-        /[A-Z]/.test(value);
+        /[A-Z]/.test(
+            value
+        );
 
     const lowerValid =
-        /[a-z]/.test(value);
+        /[a-z]/.test(
+            value
+        );
 
     const numberValid =
-        /[0-9]/.test(value);
+        /[0-9]/.test(
+            value
+        );
 
+
+    // =====================================
+    // UPDATE UI
+    // =====================================
 
     if (lengthRule) {
 
@@ -184,6 +367,7 @@ function validatePasswordRules() {
         lowerValid &&
         numberValid
     );
+
 }
 
 
@@ -193,12 +377,26 @@ function validatePasswordRules() {
 
 function validatePasswordMatch() {
 
+    if (
+        !password ||
+        !confirmPassword
+    ) {
+
+        return false;
+
+    }
+
+
     const first =
         password.value;
 
     const second =
         confirmPassword.value;
 
+
+    // =====================================
+    // EMPTY CONFIRM PASSWORD
+    // =====================================
 
     if (!second) {
 
@@ -212,11 +410,19 @@ function validatePasswordMatch() {
 
         }
 
+
         return false;
+
     }
 
 
-    if (first === second) {
+    // =====================================
+    // PASSWORDS MATCH
+    // =====================================
+
+    if (
+        first === second
+    ) {
 
         if (passwordMatch) {
 
@@ -228,9 +434,15 @@ function validatePasswordMatch() {
 
         }
 
+
         return true;
+
     }
 
+
+    // =====================================
+    // PASSWORDS DO NOT MATCH
+    // =====================================
 
     if (passwordMatch) {
 
@@ -242,19 +454,31 @@ function validatePasswordMatch() {
 
     }
 
+
     return false;
+
 }
 
 
 // =========================================
-// TOGGLE PASSWORD
+// TOGGLE PASSWORD VISIBILITY
 // =========================================
 
 if (togglePassword) {
 
     togglePassword.addEventListener(
         "click",
-        () => {
+        event => {
+
+            event.preventDefault();
+
+
+            if (!password) {
+
+                return;
+
+            }
+
 
             const isPassword =
                 password.type ===
@@ -290,6 +514,7 @@ if (password) {
 
             validatePasswordRules();
 
+
             if (
                 confirmPassword &&
                 confirmPassword.value
@@ -304,6 +529,10 @@ if (password) {
 
 }
 
+
+// =========================================
+// LIVE PASSWORD MATCH VALIDATION
+// =========================================
 
 if (confirmPassword) {
 
@@ -327,12 +556,32 @@ if (form) {
 
             event.preventDefault();
 
+
             hideMessage();
 
 
-            // ---------------------------------
-            // PASSWORD VALIDATION
-            // ---------------------------------
+            // =================================
+            // VERIFY REQUIRED ELEMENTS
+            // =================================
+
+            if (
+                !password ||
+                !confirmPassword
+            ) {
+
+                showMessage(
+                    "Password fields are missing.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            // =================================
+            // VALIDATE PASSWORD
+            // =================================
 
             const passwordValid =
                 validatePasswordRules();
@@ -344,112 +593,329 @@ if (form) {
             if (!passwordValid) {
 
                 showMessage(
-                    "Please create a stronger password."
+                    "Please create a stronger password.",
+                    "error"
                 );
 
-                if (password) {
-                    password.focus();
-                }
+
+                password.focus();
 
                 return;
+
             }
 
 
             if (!passwordMatches) {
 
                 showMessage(
-                    "Please make sure both passwords match."
+                    "Please make sure both passwords match.",
+                    "error"
                 );
 
-                if (confirmPassword) {
-                    confirmPassword.focus();
-                }
+
+                confirmPassword.focus();
 
                 return;
+
             }
 
 
-            // ---------------------------------
-            // COLLECT FORM
-            // ---------------------------------
+            // =================================
+            // COLLECT FORM DATA
+            // =================================
 
             const formData =
-                new FormData(form);
+                new FormData(
+                    form
+                );
 
+
+            const institutionName =
+                String(
+                    formData.get(
+                        "institutionName"
+                    ) || ""
+                ).trim();
+
+
+            const institutionType =
+                String(
+                    formData.get(
+                        "institutionType"
+                    ) || ""
+                ).trim();
+
+
+            const email =
+                String(
+                    formData.get(
+                        "email"
+                    ) || ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            const phone =
+                String(
+                    formData.get(
+                        "phone"
+                    ) || ""
+                ).trim();
+
+
+            const website =
+                String(
+                    formData.get(
+                        "website"
+                    ) || ""
+                ).trim();
+
+
+            const address =
+                String(
+                    formData.get(
+                        "address"
+                    ) || ""
+                ).trim();
+
+
+            const city =
+                String(
+                    formData.get(
+                        "city"
+                    ) || ""
+                ).trim();
+
+
+            const state =
+                String(
+                    formData.get(
+                        "state"
+                    ) || ""
+                ).trim();
+
+
+            const country =
+                String(
+                    formData.get(
+                        "country"
+                    ) || ""
+                ).trim();
+
+
+            const description =
+                String(
+                    formData.get(
+                        "description"
+                    ) || ""
+                ).trim();
+
+
+            const passwordValue =
+                password.value;
+
+
+            // =================================
+            // CLIENT VALIDATION
+            // =================================
+
+            if (!institutionName) {
+
+                showMessage(
+                    "Institution name is required.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            if (!institutionType) {
+
+                showMessage(
+                    "Institution type is required.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            if (!email) {
+
+                showMessage(
+                    "Email address is required.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            const emailPattern =
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+
+            if (
+                !emailPattern.test(
+                    email
+                )
+            ) {
+
+                showMessage(
+                    "Please enter a valid email address.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            if (!passwordValue) {
+
+                showMessage(
+                    "Password is required.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            // =================================
+            // OPTIONAL WEBSITE VALIDATION
+            // =================================
+
+            let normalizedWebsite =
+                website;
+
+
+            if (normalizedWebsite) {
+
+                if (
+                    !/^https?:\/\//i.test(
+                        normalizedWebsite
+                    )
+                ) {
+
+                    normalizedWebsite =
+                        `https://${normalizedWebsite}`;
+
+                }
+
+
+                try {
+
+                    new URL(
+                        normalizedWebsite
+                    );
+
+                } catch {
+
+                    showMessage(
+                        "Please enter a valid website URL.",
+                        "error"
+                    );
+
+                    return;
+
+                }
+
+            }
+
+
+            // =================================
+            // CREATE API PAYLOAD
+            // =================================
+
+            /*
+             * These names match what server.js accepts:
+             *
+             * institutionName
+             * institutionType
+             * email
+             * phone
+             * website
+             * address
+             * city
+             * state
+             * country
+             * description
+             * password
+             *
+             * confirmPassword is NOT sent because
+             * the backend does not need it.
+             */
 
             const data = {
 
                 institutionName:
-                    formData.get(
-                        "institutionName"
-                    ),
+                    institutionName,
 
                 institutionType:
-                    formData.get(
-                        "institutionType"
-                    ),
+                    institutionType,
 
                 email:
-                    formData.get(
-                        "email"
-                    ),
+                    email,
 
                 phone:
-                    formData.get(
-                        "phone"
-                    ),
+                    phone,
 
                 website:
-                    formData.get(
-                        "website"
-                    ),
+                    normalizedWebsite,
 
                 address:
-                    formData.get(
-                        "address"
-                    ),
+                    address,
 
                 city:
-                    formData.get(
-                        "city"
-                    ),
+                    city,
 
                 state:
-                    formData.get(
-                        "state"
-                    ),
+                    state,
 
                 country:
-                    formData.get(
-                        "country"
-                    ),
+                    country ||
+                    "India",
 
                 description:
-                    formData.get(
-                        "description"
-                    ),
+                    description,
 
                 password:
-                    formData.get(
-                        "password"
-                    ),
-
-                confirmPassword:
-                    formData.get(
-                        "confirmPassword"
-                    )
+                    passwordValue
 
             };
 
 
-            // ---------------------------------
+            console.log(
+                "Institution registration payload:",
+                {
+                    ...data,
+                    password:
+                        "[hidden]"
+                }
+            );
+
+
+            // =================================
             // BUTTON STATE
-            // ---------------------------------
+            // =================================
+
+            const originalButtonText =
+                registerBtn?.textContent ||
+                "Create Institution Account";
+
 
             if (registerBtn) {
 
                 registerBtn.disabled =
                     true;
+
 
                 registerBtn.textContent =
                     "Creating Account...";
@@ -457,11 +923,30 @@ if (form) {
             }
 
 
+            showMessage(
+                "Creating your institution account...",
+                "success"
+            );
+
+
             try {
 
-                // ---------------------------------
-                // API REQUEST
-                // ---------------------------------
+                // =================================
+                // CLEAR OLD SESSION
+                // =================================
+
+                clearInstitutionSession();
+
+
+                // =================================
+                // SEND REGISTRATION REQUEST
+                // =================================
+
+                console.log(
+                    "Registration API:",
+                    REGISTER_API
+                );
+
 
                 const response =
                     await fetch(
@@ -484,99 +969,168 @@ if (form) {
                                 JSON.stringify(
                                     data
                                 )
-
                         }
                     );
 
 
-                // ---------------------------------
+                console.log(
+                    "Registration HTTP status:",
+                    response.status
+                );
+
+
+                // =================================
                 // READ RESPONSE
-                // ---------------------------------
+                // =================================
 
                 const result =
-                    await response.json();
+                    await readResponse(
+                        response
+                    );
 
 
-                // ---------------------------------
-                // CHECK RESPONSE
-                // ---------------------------------
+                console.log(
+                    "Registration API response:",
+                    result
+                );
+
+
+                // =================================
+                // SERVER ERROR
+                // =================================
 
                 if (!response.ok) {
 
                     throw new Error(
-                        result.error ||
-                        result.message ||
-                        "Registration failed."
-                    );
-
-                }
-
-
-                // ---------------------------------
-                // STORE TOKEN IF RETURNED
-                // ---------------------------------
-
-                if (
-                    result.token
-                ) {
-
-                    localStorage.setItem(
-                        TOKEN_KEY,
-                        result.token
-                    );
-
-                }
-
-
-                // ---------------------------------
-                // STORE INSTITUTION DATA
-                // ---------------------------------
-
-                if (
-                    result.institution
-                ) {
-
-                    localStorage.setItem(
-                        INSTITUTION_KEY,
-                        JSON.stringify(
-                            result.institution
+                        getApiErrorMessage(
+                            result,
+                            "Institution registration failed."
                         )
                     );
 
                 }
 
 
-                // ---------------------------------
-                // STORE INSTITUTION ID
-                // ---------------------------------
+                // =================================
+                // VERIFY SUCCESS
+                // =================================
 
                 if (
-                    result.institutionId
+                    result?.success === false
+                ) {
+
+                    throw new Error(
+                        getApiErrorMessage(
+                            result,
+                            "Institution registration failed."
+                        )
+                    );
+
+                }
+
+
+                // =================================
+                // VERIFY SERVER RESPONSE
+                // =================================
+
+                const returnedUserId =
+                    result?.userId;
+
+                const returnedInstitutionId =
+                    result?.institutionId;
+
+
+                if (
+                    returnedUserId ===
+                        undefined ||
+                    returnedUserId ===
+                        null
+                ) {
+
+                    throw new Error(
+                        "Registration succeeded, but the server did not return the institution user ID."
+                    );
+
+                }
+
+
+                if (
+                    returnedInstitutionId ===
+                        undefined ||
+                    returnedInstitutionId ===
+                        null
+                ) {
+
+                    throw new Error(
+                        "Registration succeeded, but the server did not return the institution ID."
+                    );
+
+                }
+
+
+                // =================================
+                // STORE REGISTRATION IDENTIFIERS
+                // =================================
+
+                localStorage.setItem(
+                    INSTITUTION_USER_ID_KEY,
+                    String(
+                        returnedUserId
+                    )
+                );
+
+
+                localStorage.setItem(
+                    INSTITUTION_ID_KEY,
+                    String(
+                        returnedInstitutionId
+                    )
+                );
+
+
+                if (
+                    result.email
                 ) {
 
                     localStorage.setItem(
-                        "institutionId",
+                        "institutionEmail",
                         String(
-                            result.institutionId
+                            result.email
                         )
                     );
 
                 }
 
 
-                // ---------------------------------
+                // =================================
+                // IMPORTANT:
+                // DO NOT STORE TOKEN HERE
+                // =================================
+
+                /*
+                 * server.js creates the JWT during
+                 * institution SIGNIN, not SIGNUP.
+                 */
+
+                localStorage.removeItem(
+                    TOKEN_KEY
+                );
+
+
+                // =================================
                 // SUCCESS MESSAGE
-                // ---------------------------------
+                // =================================
 
                 showMessage(
+                    result.message ||
                     "Institution registered successfully. Redirecting to login...",
                     "success"
                 );
 
 
-                // ---------------------------------
-                // REDIRECT TO LOGIN
-                // ---------------------------------
+                // =================================
+                // REDIRECT TO INSTITUTION LOGIN
+                // =================================
 
                 setTimeout(
                     () => {
@@ -592,25 +1146,40 @@ if (form) {
             } catch (error) {
 
                 console.error(
-                    "Institution registration error:",
+                    "========================================="
+                );
+
+                console.error(
+                    "INSTITUTION REGISTRATION ERROR:",
                     error
+                );
+
+                console.error(
+                    "========================================="
                 );
 
 
                 showMessage(
                     error.message ||
-                    "Unable to register institution."
+                    "Unable to register institution.",
+                    "error"
                 );
 
 
             } finally {
+
+                // =================================
+                // RESTORE BUTTON
+                // =================================
 
                 if (registerBtn) {
 
                     registerBtn.disabled =
                         false;
 
+
                     registerBtn.textContent =
+                        originalButtonText ||
                         "Create Institution Account";
 
                 }
@@ -621,3 +1190,25 @@ if (form) {
     );
 
 }
+
+else {
+
+    console.error(
+        "Institution registration form #institutionRegistrationForm was not found."
+    );
+
+}
+
+
+// =========================================
+// GLOBAL ACCESS
+// =========================================
+
+window.validatePasswordRules =
+    validatePasswordRules;
+
+window.validatePasswordMatch =
+    validatePasswordMatch;
+
+window.showInstitutionMessage =
+    showMessage;

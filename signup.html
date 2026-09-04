@@ -11,27 +11,73 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Campus2Career - Sign Up</title>
+    <meta
+        name="description"
+        content="Create your Campus2Career professional account."
+    >
+
+    <title>Sign Up | Campus2Career</title>
 
 
-    <!-- Signup JavaScript -->
-    <script src="signup1.js" defer></script>
+    <!-- =====================================
+         SIGNUP JAVASCRIPT
+    ====================================== -->
+
+    <script
+        src="signup1.js"
+        defer
+    ></script>
 
 
     <style>
 
-        * {
+        /* ================================
+           RESET
+        ================================= */
+
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
         }
 
 
+        /* ================================
+           BODY
+        ================================= */
+
+        html {
+            min-height: 100%;
+        }
+
         body {
             margin: 0;
-            padding: 0;
 
-            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
 
-            background-image: url("back.jpg");
+            padding: 24px 16px;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background-image:
+                linear-gradient(
+                    rgba(
+                        244,
+                        247,
+                        251,
+                        0.15
+                    ),
+                    rgba(
+                        244,
+                        247,
+                        251,
+                        0.15
+                    )
+                ),
+                url("back.jpg");
 
             background-size: cover;
 
@@ -39,86 +85,161 @@
 
             background-repeat: no-repeat;
 
-            min-height: 100vh;
+            background-attachment: fixed;
 
             display: flex;
 
             align-items: center;
 
             justify-content: center;
+
+            color: #1f2937;
         }
 
 
-        /* =====================================
+        /* ================================
            MAIN BOX
-        ====================================== */
+        ================================= */
 
         .box {
-            width: 360px;
+            width:
+                min(
+                    380px,
+                    100%
+                );
 
-            background: rgba(255, 255, 255, 0.95);
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.95
+                );
 
             padding: 30px;
 
-            margin: 30px auto;
-
-            border-radius: 12px;
+            border-radius: 14px;
 
             box-shadow:
-                0 0 20px rgba(0, 0, 0, 0.15);
+                0 8px 30px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.15
+                );
+
+            backdrop-filter: blur(4px);
         }
 
 
-        /* =====================================
+        /* ================================
+           LOGO
+        ================================= */
+
+        .logo {
+            width: 100%;
+
+            max-width: 300px;
+
+            height: auto;
+
+            display: block;
+
+            margin:
+                0 auto 20px;
+        }
+
+
+        /* ================================
            HEADING
-        ====================================== */
+        ================================= */
 
         h1 {
-            margin-top: 0;
+            margin:
+                0 0 8px;
 
-            margin-bottom: 8px;
-
-            color: #222;
+            color: #222222;
 
             font-size: 27px;
+
+            line-height: 1.25;
 
             text-align: center;
         }
 
 
         .description {
-            color: #666;
+            color: #666666;
 
             font-size: 14px;
 
             line-height: 1.5;
 
-            margin-bottom: 18px;
+            margin:
+                0 0 20px;
 
             text-align: center;
         }
 
 
-        /* =====================================
+        /* ================================
+           FORM GROUP
+        ================================= */
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+
+        .form-group label {
+            display: block;
+
+            margin-bottom: 6px;
+
+            color: #374151;
+
+            font-size: 14px;
+
+            font-weight: 600;
+        }
+
+
+        /* ================================
            INPUT FIELDS
-        ====================================== */
+        ================================= */
 
         input {
             width: 100%;
 
-            padding: 11px;
+            min-height: 44px;
 
-            margin: 6px 0;
+            padding:
+                11px 12px;
 
-            border: 1px solid #ccc;
+            margin: 0;
 
-            border-radius: 5px;
+            border:
+                1px solid #cccccc;
+
+            border-radius: 6px;
 
             font-size: 14px;
 
+            color: #111827;
+
+            background: #ffffff;
+
             outline: none;
 
-            background: white;
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+
+        input::placeholder {
+            color: #9ca3af;
         }
 
 
@@ -126,21 +247,23 @@
             border-color: #0a66c2;
 
             box-shadow:
-                0 0 3px rgba(
+                0 0 0 3px
+                rgba(
                     10,
                     102,
                     194,
-                    0.3
+                    0.12
                 );
         }
 
 
-        /* =====================================
+        /* ================================
            MESSAGE
-        ====================================== */
+        ================================= */
 
         #message {
-            margin-top: 10px;
+            margin:
+                10px 0 4px;
 
             min-height: 20px;
 
@@ -149,23 +272,27 @@
             font-weight: bold;
 
             font-size: 14px;
+
+            line-height: 1.4;
         }
 
 
-        /* =====================================
+        /* ================================
            SIGN UP BUTTON
-        ====================================== */
+        ================================= */
 
         #signupBtn {
             width: 100%;
 
+            min-height: 44px;
+
             padding: 12px;
 
-            margin-top: 15px;
+            margin-top: 10px;
 
             background: #0a66c2;
 
-            color: white;
+            color: #ffffff;
 
             border: none;
 
@@ -177,7 +304,9 @@
 
             cursor: pointer;
 
-            transition: 0.2s;
+            transition:
+                background 0.2s ease,
+                transform 0.1s ease;
         }
 
 
@@ -186,16 +315,24 @@
         }
 
 
+        #signupBtn:active {
+            transform:
+                translateY(1px);
+        }
+
+
         #signupBtn:disabled {
             background: #7ca8cf;
 
             cursor: not-allowed;
+
+            transform: none;
         }
 
 
-        /* =====================================
+        /* ================================
            LINKS
-        ====================================== */
+        ================================= */
 
         a {
             color: #0a66c2;
@@ -206,54 +343,64 @@
         }
 
 
-        a:hover {
+        a:hover,
+        a:focus-visible {
             text-decoration: underline;
         }
 
 
-        /* =====================================
+        /* ================================
            LOGIN TEXT
-        ====================================== */
+        ================================= */
 
         .login-text {
             text-align: center;
 
             font-size: 13px;
 
-            margin-top: 18px;
+            margin:
+                18px 0 0;
+
+            color: #4b5563;
         }
 
 
-        /* =====================================
-           COMPANY / INSTITUTION PORTAL
-        ====================================== */
+        /* ================================
+           PORTAL SECTION
+        ================================= */
 
         .portal {
             margin-top: 25px;
 
             padding-top: 20px;
 
-            border-top: 1px solid #ddd;
+            border-top:
+                1px solid #dddddd;
         }
 
 
         .portal p {
-            color: #555;
+            color: #555555;
 
             font-size: 13px;
 
             line-height: 1.5;
 
-            margin-bottom: 7px;
+            margin:
+                0 0 7px;
         }
 
 
         .portal strong {
-            color: #222;
+            color: #222222;
         }
 
 
         .portal a {
+            display: inline-block;
+
+            margin-top: 2px;
+
             font-size: 13px;
         }
 
@@ -263,21 +410,36 @@
         }
 
 
-        /* =====================================
+        /* ================================
            MOBILE
-        ====================================== */
+        ================================= */
 
         @media (max-width: 450px) {
 
             body {
-                padding: 15px;
+                padding: 15px 12px;
+
+                align-items: flex-start;
             }
 
 
             .box {
                 width: 100%;
 
-                padding: 25px;
+                padding: 24px 20px;
+
+                margin:
+                    10px 0;
+            }
+
+
+            h1 {
+                font-size: 24px;
+            }
+
+
+            .description {
+                font-size: 13px;
             }
 
         }
@@ -290,173 +452,210 @@
 <body>
 
 
-<div class="box">
+    <main class="box">
 
 
-    <!-- =====================================
-         LOGO
-    ====================================== -->
+        <!-- =====================================
+             LOGO
+        ====================================== -->
 
-    <img
-        src="logo.png"
-        alt="Campus2Career"
-        style="
-            width: 100%;
-            max-width: 300px;
-            display: block;
-            margin: 0 auto 20px;
-        "
-    >
-
-
-    <h1>
-        Create account
-    </h1>
-
-
-    <p class="description">
-        Join NSEC and build your professional profile
-    </p>
-
-
-    <!-- =====================================
-         SIGNUP FORM
-    ====================================== -->
-
-    <form
-        id="signupForm"
-        autocomplete="on"
-    >
-
-
-        <!-- Full Name -->
-
-        <input
-            type="text"
-            id="fullName"
-            name="fullname"
-            placeholder="Full Name"
-            autocomplete="name"
-            required
+        <img
+            src="logo.png"
+            alt="Campus2Career"
+            class="logo"
         >
 
 
-        <!-- Email -->
+        <h1>
+            Create account
+        </h1>
 
-        <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder="Email"
-            autocomplete="email"
-            required
+
+        <p class="description">
+            Join NSEC and build your professional profile
+        </p>
+
+
+        <!-- =====================================
+             SIGNUP FORM
+        ====================================== -->
+
+        <form
+            id="signupForm"
+            autocomplete="on"
         >
 
 
-        <!-- Password -->
+            <!-- FULL NAME -->
 
-        <input
-            type="password"
-            id="password"
-            name="password"
-            placeholder="Password"
-            autocomplete="new-password"
-            required
-        >
+            <div class="form-group">
 
+                <label for="fullName">
+                    Full Name
+                </label>
 
-        <!-- Confirm Password -->
+                <input
+                    type="text"
+                    id="fullName"
+                    name="fullname"
+                    placeholder="Full Name"
+                    autocomplete="name"
+                    required
+                >
 
-        <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            autocomplete="new-password"
-            required
-        >
+            </div>
 
 
-        <!-- Message -->
+            <!-- EMAIL -->
 
-        <p id="message"></p>
+            <div class="form-group">
 
+                <label for="email">
+                    Email
+                </label>
 
-        <!-- Sign Up -->
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Email"
+                    autocomplete="email"
+                    inputmode="email"
+                    required
+                >
 
-        <button
-            type="submit"
-            id="signupBtn"
-        >
-            Sign Up
-        </button>
-
-
-    </form>
-
-
-    <!-- =====================================
-         LOGIN LINK
-    ====================================== -->
-
-    <p class="login-text">
-
-        Already have an account?
-
-        <a href="login.html">
-            Sign in
-        </a>
-
-    </p>
+            </div>
 
 
-    <!-- =====================================
-         COMPANY PORTAL
-    ====================================== -->
+            <!-- PASSWORD -->
 
-    <div class="portal">
+            <div class="form-group">
 
-        <p>
+                <label for="password">
+                    Password
+                </label>
 
-            <strong>
-                Are you a Company?
-            </strong>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                >
 
-            <br>
+            </div>
 
-            Register your company and post jobs,
-            internships and opportunities.
+
+            <!-- CONFIRM PASSWORD -->
+
+            <div class="form-group">
+
+                <label for="confirmPassword">
+                    Confirm Password
+                </label>
+
+                <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    placeholder="Confirm Password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                >
+
+            </div>
+
+
+            <!-- MESSAGE -->
+
+            <p
+                id="message"
+                role="alert"
+                aria-live="polite"
+            ></p>
+
+
+            <!-- SIGN UP -->
+
+            <button
+                type="submit"
+                id="signupBtn"
+            >
+                Sign Up
+            </button>
+
+
+        </form>
+
+
+        <!-- =====================================
+             LOGIN LINK
+        ====================================== -->
+
+        <p class="login-text">
+
+            Already have an account?
+
+            <a href="login.html">
+                Sign in
+            </a>
 
         </p>
 
 
-        <a href="co-signup.html">
-            Company Registration →
-        </a>
+        <!-- =====================================
+             COMPANY PORTAL
+        ====================================== -->
+
+        <section
+            class="portal"
+            aria-label="Company and institution registration"
+        >
+
+            <p>
+
+                <strong>
+                    Are you a Company?
+                </strong>
+
+                <br>
+
+                Register your company and post jobs,
+                internships and opportunities.
+
+            </p>
 
 
-        <p class="institution-text">
-
-            <strong>
-                Are you an Educational Institution?
-            </strong>
-
-            <br>
-
-            Provide courses, learning resources
-            and educational content.
-
-        </p>
+            <a href="Co-signup.html">
+                Company Registration →
+            </a>
 
 
-        <a href="InstitutionRegistration.html">
-            Institution Registration →
-        </a>
+            <p class="institution-text">
 
-    </div>
+                <strong>
+                    Are you an Educational Institution?
+                </strong>
+
+                <br>
+
+                Provide courses, learning resources
+                and educational content.
+
+            </p>
 
 
-</div>
+            <a href="InstitutionRegistration.html">
+                Institution Registration →
+            </a>
+
+        </section>
+
+
+    </main>
 
 
 </body>

@@ -39,9 +39,16 @@ const INDUSTRY_TEST_SUBMIT_URL =
     `${API_BASE}/industry-readiness/submit`;
 
 // In script.js - update line 8 and navigation
-const COMPANY_PAGE = "CompanyProfile.html";  // Match actual filename
-const PROFILE_PAGE = "profile.html";  // Use lowercase
-const COURSES_PAGE = "courses.html";
+// =========================================================
+// PAGE FILES
+// =========================================================
+
+const PAGES = {
+    login: "login.html",
+    profile: "Profile.html",
+    companyProfile: "Companyprofile.html",
+    courses: "Courses.html"
+};
 
 let industryTest = null;
 let industryTestAnswers = [];
@@ -132,8 +139,7 @@ async function initializePortal() {
             "No valid authentication session."
         );
 
-        window.location.href =
-            "login.html";
+        navigateTo(PAGES.login);
 
         return;
     }

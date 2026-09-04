@@ -4,7 +4,7 @@
 // =========================================
 
 const API_BASE_URL =
-    "http://localhost:5000/api";
+    "https://campus2career-0pi8.onrender.com/api";
 
 const REGISTER_API =
     `${API_BASE_URL}/institution/signup`;

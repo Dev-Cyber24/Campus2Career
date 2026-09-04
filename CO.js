@@ -9,14 +9,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // API
     // =========================================
 
-    const API_URL =
-        "http://localhost:5000/api/companies";
+    const API_BASE_URL =
+    "https://campus2career-0pi8.onrender.com";
 
-    const USER_PROFILE_API_URL =
-        "http://localhost:5000/api/user-profile";
+const API_URL =
+    `${API_BASE_URL}/api/companies`;
 
-    const APPLICATION_API_URL =
-        "http://localhost:5000/api/applications";
+const USER_PROFILE_API_URL =
+    `${API_BASE_URL}/api/user-profile`;
+
+const APPLICATION_API_URL =
+    `${API_BASE_URL}/api/applications`;
 
 
     // =========================================

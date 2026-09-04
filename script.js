@@ -38,6 +38,11 @@ const INDUSTRY_TEST_START_URL =
 const INDUSTRY_TEST_SUBMIT_URL =
     `${API_BASE}/industry-readiness/submit`;
 
+// In script.js - update line 8 and navigation
+const COMPANY_PAGE = "CompanyProfile.html";  // Match actual filename
+const PROFILE_PAGE = "profile.html";  // Use lowercase
+const COURSES_PAGE = "courses.html";
+
 let industryTest = null;
 let industryTestAnswers = [];
 let industryCurrentQuestion = 0;

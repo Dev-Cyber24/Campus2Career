@@ -8,7 +8,8 @@
 // API
 // =========================================
 
-const API_URL = "http://localhost:5000/api/signup";
+const API_URL =
+    "https://campus2career-0pi8.onrender.com/api/signup";
 
 
 // =========================================

@@ -2776,7 +2776,6 @@ function renderPortalCourses(
         );
 }
 
-
 // =========================================================
 // LOAD POSTS
 // =========================================================
@@ -2825,6 +2824,15 @@ async function loadPosts() {
             );
         }
 
+
+        // -------------------------------------------------
+        // server.js returns:
+        //
+        // {
+        //     success: true,
+        //     posts: [...]
+        // }
+        // -------------------------------------------------
 
         if (
             Array.isArray(
@@ -2876,6 +2884,106 @@ async function loadPosts() {
 
         updatePostCount();
     }
+}
+
+
+// =========================================================
+// NORMALIZE BACKEND MEDIA URL
+// =========================================================
+//
+// server.js returns:
+//
+// /api/posts/123/image
+// /api/posts/123/video
+//
+// Because the frontend is hosted on GitHub Pages,
+// those relative URLs would otherwise point to GitHub Pages.
+//
+// This converts them into:
+//
+// https://campus2career-0pi8.onrender.com/api/posts/123/image
+//
+// =========================================================
+
+function normalizeMediaUrl(
+    value
+) {
+
+    if (
+        !value ||
+        typeof value !==
+        "string"
+    ) {
+
+        return "";
+    }
+
+
+    const url =
+        value.trim();
+
+
+    if (
+        !url
+    ) {
+
+        return "";
+    }
+
+
+    // Already absolute.
+
+    if (
+        isValidHttpUrl(
+            url
+        )
+    ) {
+
+        return url;
+    }
+
+
+    // Backend returned an API-relative URL.
+
+    if (
+        url.startsWith(
+            "/api/"
+        )
+    ) {
+
+        return (
+            API_BASE.replace(
+                /\/$/,
+                ""
+            ) +
+            url.substring(
+                4
+            )
+        );
+
+    }
+
+
+    // Generic root-relative URL.
+
+    if (
+        url.startsWith(
+            "/"
+        )
+    ) {
+
+        return (
+            API_BASE.replace(
+                /\/api$/,
+                ""
+            ) +
+            url
+        );
+
+    }
+
+
+    return url;
 }
 
 
@@ -2966,6 +3074,12 @@ function renderDatabasePosts(
                 );
 
 
+            if (!post) {
+
+                return;
+            }
+
+
             feed.appendChild(
                 post
             );
@@ -2993,6 +3107,16 @@ function renderDatabasePosts(
 function createDatabasePostElement(
     postData
 ) {
+
+    if (
+        !postData ||
+        typeof postData !==
+        "object"
+    ) {
+
+        return null;
+    }
+
 
     const post =
         document.createElement(
@@ -3067,16 +3191,27 @@ function createDatabasePostElement(
         "";
 
 
+    // -----------------------------------------------------
+    // IMPORTANT:
+    // server.js now returns these as API endpoints.
+    // -----------------------------------------------------
+
     const imageURL =
-        postData.image_url ||
-        postData.imageUrl ||
-        "";
+        normalizeMediaUrl(
+            postData.image_url ||
+            postData.imageUrl ||
+            postData.image_data_url ||
+            ""
+        );
 
 
     const videoURL =
-        postData.video_url ||
-        postData.videoUrl ||
-        "";
+        normalizeMediaUrl(
+            postData.video_url ||
+            postData.videoUrl ||
+            postData.video_data_url ||
+            ""
+        );
 
 
     const likes =
@@ -3108,10 +3243,12 @@ function createDatabasePostElement(
 
     const liked =
         Boolean(
-            postData.liked_by_current_user ??
-            postData.is_liked ??
-            postData.isLiked ??
-            false
+            Number(
+                postData.liked_by_current_user ??
+                postData.is_liked ??
+                postData.isLiked ??
+                0
+            )
         );
 
 
@@ -3119,10 +3256,12 @@ function createDatabasePostElement(
         "";
 
 
+    // =====================================================
+    // IMAGE
+    // =====================================================
+
     if (
-        isValidMediaUrl(
-            imageURL
-        )
+        imageURL
     ) {
 
         mediaHTML += `
@@ -3135,13 +3274,16 @@ function createDatabasePostElement(
             >
 
         `;
+
     }
 
 
+    // =====================================================
+    // VIDEO
+    // =====================================================
+
     if (
-        isValidMediaUrl(
-            videoURL
-        )
+        videoURL
     ) {
 
         mediaHTML += `
@@ -3150,6 +3292,7 @@ function createDatabasePostElement(
                 controls
                 class="post-video"
                 preload="metadata"
+                playsinline
             >
 
                 <source
@@ -3161,8 +3304,13 @@ function createDatabasePostElement(
             </video>
 
         `;
+
     }
 
+
+    // =====================================================
+    // POST HTML
+    // =====================================================
 
     post.innerHTML = `
 
@@ -3289,11 +3437,103 @@ function createDatabasePostElement(
     `;
 
 
+    // =====================================================
+    // IMAGE ERROR HANDLING
+    // =====================================================
+
+    const profileImage =
+        post.querySelector(
+            ".post-header > img"
+        );
+
+
+    if (
+        profileImage
+    ) {
+
+        profileImage.onerror =
+            () => {
+
+                profileImage.onerror =
+                    null;
+
+
+                profileImage.src =
+                    "https://via.placeholder.com/50";
+
+            };
+
+    }
+
+
+    const postImage =
+        post.querySelector(
+            ".post-image"
+        );
+
+
+    if (
+        postImage
+    ) {
+
+        postImage.onerror =
+            () => {
+
+                postImage.style.display =
+                    "none";
+
+                console.warn(
+                    "Unable to load post image:",
+                    imageURL
+                );
+
+            };
+
+    }
+
+
+    // =====================================================
+    // VIDEO ERROR HANDLING
+    // =====================================================
+
+    const postVideo =
+        post.querySelector(
+            ".post-video"
+        );
+
+
+    if (
+        postVideo
+    ) {
+
+        postVideo.addEventListener(
+            "error",
+            () => {
+
+                console.warn(
+                    "Unable to load post video:",
+                    videoURL
+                );
+
+            }
+        );
+
+    }
+
+
+    // =====================================================
+    // LIKE STATE
+    // =====================================================
+
     post.dataset.liked =
         String(
             liked
         );
 
+
+    // =====================================================
+    // DELETE VISIBILITY
+    // =====================================================
 
     const currentUserId =
         getCurrentUserId();
@@ -3316,28 +3556,6 @@ function createDatabasePostElement(
 
         deleteButton.style.display =
             "none";
-    }
-
-
-    const profileImage =
-        post.querySelector(
-            ".post-header > img"
-        );
-
-
-    if (profileImage) {
-
-        profileImage.onerror =
-            () => {
-
-                profileImage.onerror =
-                    null;
-
-
-                profileImage.src =
-                    "https://via.placeholder.com/50";
-
-            };
     }
 
 
@@ -3371,7 +3589,9 @@ function setupPostAuthorClicks() {
                     author.dataset.userId;
 
 
-                if (!userId) {
+                if (
+                    !userId
+                ) {
 
                     return;
                 }
@@ -3409,6 +3629,21 @@ function setupPostAuthorClicks() {
 // =========================================================
 // CREATE POST
 // =========================================================
+//
+// Sends:
+//
+// multipart/form-data
+//
+// Fields:
+//
+// content
+// image
+// video
+//
+// The backend's multer middleware receives the files,
+// converts them into Buffers and stores them in MySQL
+// LONGBLOB columns.
+// =========================================================
 
 async function createPost() {
 
@@ -3430,7 +3665,20 @@ async function createPost() {
         );
 
 
-    if (!postInput) {
+    const postButton =
+        document.getElementById(
+            "postBtn"
+        );
+
+
+    if (
+        !postInput
+    ) {
+
+        console.error(
+            "#postInput not found."
+        );
+
 
         return;
     }
@@ -3441,27 +3689,23 @@ async function createPost() {
 
 
     const imageFile =
-        imageUpload &&
-        imageUpload.files &&
-        imageUpload.files.length > 0
-
+        imageUpload?.files?.length
             ? imageUpload.files[0]
-
             : null;
 
 
     const videoFile =
-        videoUpload &&
-        videoUpload.files &&
-        videoUpload.files.length > 0
-
+        videoUpload?.files?.length
             ? videoUpload.files[0]
-
             : null;
 
 
+    // =====================================================
+    // VALIDATE EMPTY POST
+    // =====================================================
+
     if (
-        text === "" &&
+        !text &&
         !imageFile &&
         !videoFile
     ) {
@@ -3475,8 +3719,13 @@ async function createPost() {
     }
 
 
+    // =====================================================
+    // VALIDATE CONTENT LENGTH
+    // =====================================================
+
     if (
-        text.length > 500
+        text.length >
+        500
     ) {
 
         alert(
@@ -3488,14 +3737,17 @@ async function createPost() {
     }
 
 
+    // =====================================================
+    // VALIDATE IMAGE + VIDEO
+    // =====================================================
+
     if (
-        imageFile ||
+        imageFile &&
         videoFile
     ) {
 
         alert(
-            "Local image/video upload is not connected to persistent storage yet. " +
-            "The current server expects image_url/video_url rather than uploaded files."
+            "Please upload either an image or a video, not both."
         );
 
 
@@ -3503,21 +3755,179 @@ async function createPost() {
     }
 
 
+    // =====================================================
+    // VALIDATE FILE TYPES
+    // =====================================================
+
+    const allowedImageTypes = [
+
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp"
+
+    ];
+
+
+    const allowedVideoTypes = [
+
+        "video/mp4",
+        "video/webm",
+        "video/ogg",
+        "video/quicktime"
+
+    ];
+
+
+    if (
+        imageFile &&
+        !allowedImageTypes.includes(
+            imageFile.type
+        )
+    ) {
+
+        alert(
+            "Unsupported image format.\n\n" +
+            "Supported formats: JPG, PNG, GIF and WEBP."
+        );
+
+
+        return;
+    }
+
+
+    if (
+        videoFile &&
+        !allowedVideoTypes.includes(
+            videoFile.type
+        )
+    ) {
+
+        alert(
+            "Unsupported video format.\n\n" +
+            "Supported formats: MP4, WebM, OGG and MOV."
+        );
+
+
+        return;
+    }
+
+
+    // =====================================================
+    // CLIENT-SIDE SIZE CHECK
+    // =====================================================
+    //
+    // The backend allows up to 100 MB.
+    // We enforce the same limit here to prevent
+    // unnecessary uploads.
+    // =====================================================
+
+    const MAX_FILE_SIZE =
+        100 *
+        1024 *
+        1024;
+
+
+    const selectedFile =
+        imageFile ||
+        videoFile;
+
+
+    if (
+        selectedFile &&
+        selectedFile.size >
+        MAX_FILE_SIZE
+    ) {
+
+        alert(
+            "The selected file is too large.\n\n" +
+            "Maximum allowed size is 100 MB."
+        );
+
+
+        return;
+    }
+
+
+    // =====================================================
+    // CREATE FORM DATA
+    // =====================================================
+
+    const formData =
+        new FormData();
+
+
+    // Always send content, even when empty.
+
+    formData.append(
+        "content",
+        text
+    );
+
+
+    // Backend multer expects "image".
+
+    if (
+        imageFile
+    ) {
+
+        formData.append(
+            "image",
+            imageFile,
+            imageFile.name
+        );
+    }
+
+
+    // Backend multer expects "video".
+
+    if (
+        videoFile
+    ) {
+
+        formData.append(
+            "video",
+            videoFile,
+            videoFile.name
+        );
+    }
+
+
+    // =====================================================
+    // DISABLE POST BUTTON
+    // =====================================================
+
+    const originalButtonText =
+        postButton?.textContent ||
+        "";
+
+
+    if (
+        postButton
+    ) {
+
+        postButton.disabled =
+            true;
+
+
+        postButton.textContent =
+            "Posting...";
+
+    }
+
+
     try {
 
-        const postData = {
-
-            content:
-                text,
-
-            image_url:
-                null,
-
-            video_url:
-                null
-
-        };
-
+        // =================================================
+        // IMPORTANT:
+        //
+        // Do NOT set Content-Type manually.
+        //
+        // The browser automatically creates:
+        //
+        // multipart/form-data;
+        // boundary=...
+        // =================================================
 
         const response =
             await authenticatedFetch(
@@ -3526,15 +3936,8 @@ async function createPost() {
                     method:
                         "POST",
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
                     body:
-                        JSON.stringify(
-                            postData
-                        )
+                        formData
                 }
             );
 
@@ -3555,21 +3958,27 @@ async function createPost() {
             );
 
 
-        if (!response.ok) {
+        if (
+            !response.ok
+        ) {
 
             throw new Error(
                 result.error ||
                 result.message ||
-                "Unable to save post."
+                `Unable to save post (${response.status}).`
             );
         }
 
 
         console.log(
-            "Post saved:",
+            "Post saved successfully:",
             result
         );
 
+
+        // =================================================
+        // CLEAR FORM
+        // =================================================
 
         postInput.value =
             "";
@@ -3581,6 +3990,7 @@ async function createPost() {
 
             imageUpload.value =
                 "";
+
         }
 
 
@@ -3590,11 +4000,16 @@ async function createPost() {
 
             videoUpload.value =
                 "";
+
         }
 
 
         updateCharacterCount();
 
+
+        // =================================================
+        // RELOAD FROM MYSQL
+        // =================================================
 
         await loadPosts();
 
@@ -3611,6 +4026,24 @@ async function createPost() {
             "Unable to save post.\n\n" +
             error.message
         );
+
+
+    } finally {
+
+        if (
+            postButton
+        ) {
+
+            postButton.disabled =
+                false;
+
+
+            postButton.textContent =
+                originalButtonText ||
+                "Post";
+
+        }
+
     }
 }
 
@@ -3645,6 +4078,10 @@ function setupPostFeatures() {
         );
 
 
+    // =====================================================
+    // POST TEXT INPUT
+    // =====================================================
+
     if (
         postInput &&
         postInput.dataset.eventsAttached !==
@@ -3666,19 +4103,27 @@ function setupPostFeatures() {
             event => {
 
                 if (
-                    event.key === "Enter" &&
+                    event.key ===
+                    "Enter" &&
                     !event.shiftKey
                 ) {
 
                     event.preventDefault();
 
+
                     createPost();
+
                 }
 
             }
         );
+
     }
 
+
+    // =====================================================
+    // POST BUTTON
+    // =====================================================
 
     if (
         postButton &&
@@ -3694,8 +4139,13 @@ function setupPostFeatures() {
             "click",
             createPost
         );
+
     }
 
+
+    // =====================================================
+    // IMAGE INPUT
+    // =====================================================
 
     if (
         imageUpload &&
@@ -3711,19 +4161,58 @@ function setupPostFeatures() {
             "change",
             () => {
 
+                const file =
+                    imageUpload.files?.[0];
+
+
                 if (
-                    imageUpload.files.length &&
-                    videoUpload
+                    !file
+                ) {
+
+                    return;
+                }
+
+
+                // Prevent both media types.
+
+                if (
+                    videoUpload &&
+                    videoUpload.files.length
                 ) {
 
                     videoUpload.value =
                         "";
+
+                }
+
+
+                // Optional browser-level type check.
+
+                if (
+                    !file.type.startsWith(
+                        "image/"
+                    )
+                ) {
+
+                    alert(
+                        "Please select a valid image file."
+                    );
+
+
+                    imageUpload.value =
+                        "";
+
                 }
 
             }
         );
+
     }
 
+
+    // =====================================================
+    // VIDEO INPUT
+    // =====================================================
 
     if (
         videoUpload &&
@@ -3739,17 +4228,52 @@ function setupPostFeatures() {
             "change",
             () => {
 
+                const file =
+                    videoUpload.files?.[0];
+
+
                 if (
-                    videoUpload.files.length &&
-                    imageUpload
+                    !file
+                ) {
+
+                    return;
+                }
+
+
+                // Prevent both media types.
+
+                if (
+                    imageUpload &&
+                    imageUpload.files.length
                 ) {
 
                     imageUpload.value =
                         "";
+
+                }
+
+
+                // Optional browser-level type check.
+
+                if (
+                    !file.type.startsWith(
+                        "video/"
+                    )
+                ) {
+
+                    alert(
+                        "Please select a valid video file."
+                    );
+
+
+                    videoUpload.value =
+                        "";
+
                 }
 
             }
         );
+
     }
 
 
@@ -3814,7 +4338,9 @@ function updatePostCount() {
         );
 
 
-    if (!counter) {
+    if (
+        !counter
+    ) {
 
         return;
     }
@@ -3824,7 +4350,9 @@ function updatePostCount() {
         getCurrentUserId();
 
 
-    if (!currentUserId) {
+    if (
+        !currentUserId
+    ) {
 
         counter.textContent =
             "0";
@@ -3884,6 +4412,7 @@ function attachPostEvents(
 
     post.dataset.eventsAttached =
         "true";
+
 
 
     // =====================================================

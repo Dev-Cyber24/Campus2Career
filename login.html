@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -233,6 +232,79 @@
                     194,
                     0.12
                 );
+        }
+
+
+        /* ================================
+           PASSWORD SHOW / HIDE
+        ================================= */
+
+        .password-wrapper {
+            position: relative;
+
+            width: 100%;
+        }
+
+
+        .password-wrapper input {
+            width: 100%;
+
+            padding-right: 68px;
+        }
+
+
+        .show-password-btn {
+            position: absolute;
+
+            right: 10px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            width: auto;
+
+            min-height: auto;
+
+            padding: 4px 6px;
+
+            margin: 0;
+
+            background: transparent;
+
+            color: #0a66c2;
+
+            border: none;
+
+            border-radius: 4px;
+
+            font-size: 13px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            line-height: 1.2;
+        }
+
+
+        .show-password-btn:hover {
+            background: transparent;
+
+            color: #084f96;
+        }
+
+
+        .show-password-btn:active {
+            transform: translateY(-50%);
+        }
+
+
+        .show-password-btn:focus-visible {
+            outline:
+                2px solid #0a66c2;
+
+            outline-offset: 2px;
         }
 
 
@@ -523,14 +595,27 @@
                     Password
                 </label>
 
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="Enter your password"
-                    autocomplete="current-password"
-                    required
-                >
+                <div class="password-wrapper">
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="show-password-btn"
+                        id="togglePassword"
+                        aria-label="Show password"
+                    >
+                        Show
+                    </button>
+
+                </div>
 
             </div>
 
@@ -650,6 +735,66 @@
         </p>
 
     </footer>
+
+
+    <!-- =================================
+         SHOW / HIDE PASSWORD
+    ================================== -->
+
+    <script>
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const passwordInput =
+                    document.getElementById("password");
+
+                const togglePassword =
+                    document.getElementById("togglePassword");
+
+
+                if (
+                    passwordInput &&
+                    togglePassword
+                ) {
+
+                    togglePassword.addEventListener(
+                        "click",
+                        function () {
+
+                            const showPassword =
+                                passwordInput.type === "password";
+
+
+                            passwordInput.type =
+                                showPassword
+                                    ? "text"
+                                    : "password";
+
+
+                            togglePassword.textContent =
+                                showPassword
+                                    ? "Hide"
+                                    : "Show";
+
+
+                            togglePassword.setAttribute(
+                                "aria-label",
+                                showPassword
+                                    ? "Hide password"
+                                    : "Show password"
+                            );
+
+                        }
+                    );
+
+                }
+
+            }
+        );
+
+    </script>
 
 
 </body>

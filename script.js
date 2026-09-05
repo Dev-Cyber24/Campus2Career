@@ -2775,7 +2775,6 @@ function renderPortalCourses(
             }
         );
 }
-
 // =========================================================
 // LOAD POSTS
 // =========================================================
@@ -3193,7 +3192,7 @@ function createDatabasePostElement(
 
     // -----------------------------------------------------
     // IMPORTANT:
-    // server.js now returns these as API endpoints.
+    // server.js returns these as API endpoints.
     // -----------------------------------------------------
 
     const imageURL =
@@ -3223,7 +3222,7 @@ function createDatabasePostElement(
         );
 
 
-    const comments =
+    const commentsCount =
         Number(
             postData.comments_count ??
             postData.comment_count ??
@@ -3379,8 +3378,12 @@ function createDatabasePostElement(
 
 
             <span class="comment-count">
-                💬 ${comments}
-                ${comments === 1 ? "Comment" : "Comments"}
+                💬 ${commentsCount}
+                ${
+                    commentsCount === 1
+                        ? "Comment"
+                        : "Comments"
+                }
             </span>
 
 
@@ -3409,6 +3412,7 @@ function createDatabasePostElement(
             <button
                 type="button"
                 class="comment-btn"
+                aria-expanded="false"
             >
                 💬 Comment
             </button>
@@ -3432,7 +3436,55 @@ function createDatabasePostElement(
         </div>
 
 
-        <div class="comments"></div>
+        <!-- =================================================
+             COMMENTS DROPDOWN
+        ================================================== -->
+
+        <div
+            class="comments"
+            hidden
+        >
+
+            <div class="comments-list"></div>
+
+
+            <div
+                class="comments-loading"
+                hidden
+            >
+                Loading comments...
+            </div>
+
+
+            <div
+                class="comments-empty"
+                hidden
+            >
+                No comments yet.
+            </div>
+
+
+            <div class="comment-input-area">
+
+                <input
+                    type="text"
+                    class="comment-input"
+                    placeholder="Write a comment..."
+                    maxlength="1000"
+                    autocomplete="off"
+                >
+
+
+                <button
+                    type="button"
+                    class="comment-submit-btn"
+                >
+                    Post
+                </button>
+
+            </div>
+
+        </div>
 
     `;
 
@@ -3816,11 +3868,6 @@ async function createPost() {
     // =====================================================
     // CLIENT-SIDE SIZE CHECK
     // =====================================================
-    //
-    // The backend allows up to 100 MB.
-    // We enforce the same limit here to prevent
-    // unnecessary uploads.
-    // =====================================================
 
     const MAX_FILE_SIZE =
         100 *
@@ -3857,15 +3904,11 @@ async function createPost() {
         new FormData();
 
 
-    // Always send content, even when empty.
-
     formData.append(
         "content",
         text
     );
 
-
-    // Backend multer expects "image".
 
     if (
         imageFile
@@ -3876,10 +3919,9 @@ async function createPost() {
             imageFile,
             imageFile.name
         );
+
     }
 
-
-    // Backend multer expects "video".
 
     if (
         videoFile
@@ -3890,6 +3932,7 @@ async function createPost() {
             videoFile,
             videoFile.name
         );
+
     }
 
 
@@ -3917,17 +3960,6 @@ async function createPost() {
 
 
     try {
-
-        // =================================================
-        // IMPORTANT:
-        //
-        // Do NOT set Content-Type manually.
-        //
-        // The browser automatically creates:
-        //
-        // multipart/form-data;
-        // boundary=...
-        // =================================================
 
         const response =
             await authenticatedFetch(
@@ -4173,8 +4205,6 @@ function setupPostFeatures() {
                 }
 
 
-                // Prevent both media types.
-
                 if (
                     videoUpload &&
                     videoUpload.files.length
@@ -4185,8 +4215,6 @@ function setupPostFeatures() {
 
                 }
 
-
-                // Optional browser-level type check.
 
                 if (
                     !file.type.startsWith(
@@ -4240,8 +4268,6 @@ function setupPostFeatures() {
                 }
 
 
-                // Prevent both media types.
-
                 if (
                     imageUpload &&
                     imageUpload.files.length
@@ -4252,8 +4278,6 @@ function setupPostFeatures() {
 
                 }
 
-
-                // Optional browser-level type check.
 
                 if (
                     !file.type.startsWith(
@@ -4414,7 +4438,6 @@ function attachPostEvents(
         "true";
 
 
-
     // =====================================================
     // LIKE
     // =====================================================
@@ -4570,8 +4593,9 @@ function attachPostEvents(
         );
     }
 
+
     // =====================================================
-    // COMMENT
+    // COMMENTS
     // =====================================================
 
     const commentButton =
@@ -4580,9 +4604,32 @@ function attachPostEvents(
         );
 
 
+    const commentsContainer =
+        post.querySelector(
+            ".comments"
+        );
+
+
+    const commentInput =
+        post.querySelector(
+            ".comment-input"
+        );
+
+
+    const commentSubmitButton =
+        post.querySelector(
+            ".comment-submit-btn"
+        );
+
+
     if (
-        commentButton
+        commentButton &&
+        commentsContainer
     ) {
+
+        // ==============================================
+        // OPEN / CLOSE COMMENTS DROPDOWN
+        // ==============================================
 
         commentButton.addEventListener(
             "click",
@@ -4594,103 +4641,116 @@ function attachPostEvents(
 
                 if (!postId) {
 
+                    console.error(
+                        "Post ID not found for comments."
+                    );
+
+
                     return;
+
                 }
 
 
-                const comment =
-                    prompt(
-                        "Write your comment:"
+                const isOpen =
+                    !commentsContainer.hidden;
+
+
+                // =========================================
+                // CLOSE
+                // =========================================
+
+                if (isOpen) {
+
+                    commentsContainer.hidden =
+                        true;
+
+
+                    commentButton.setAttribute(
+                        "aria-expanded",
+                        "false"
                     );
 
+
+                    return;
+
+                }
+
+
+                // =========================================
+                // OPEN
+                // =========================================
+
+                commentsContainer.hidden =
+                    false;
+
+
+                commentButton.setAttribute(
+                    "aria-expanded",
+                    "true"
+                );
+
+
+                await loadPostComments(
+                    postId,
+                    post
+                );
+
+            }
+        );
+
+    }
+
+
+    // =====================================================
+    // SUBMIT COMMENT
+    // =====================================================
+
+    if (
+        commentSubmitButton &&
+        commentInput
+    ) {
+
+        commentSubmitButton.addEventListener(
+            "click",
+            async () => {
+
+                await submitPostComment(
+                    post,
+                    commentInput,
+                    commentSubmitButton
+                );
+
+            }
+        );
+
+
+        // ==============================================
+        // ENTER TO SUBMIT
+        // ==============================================
+
+        commentInput.addEventListener(
+            "keydown",
+            async event => {
 
                 if (
-                    !comment ||
-                    !comment.trim()
+                    event.key ===
+                    "Enter"
                 ) {
 
-                    return;
-                }
+                    event.preventDefault();
 
 
-                try {
-
-                    const response =
-                        await authenticatedFetch(
-                            `${POSTS_API}/${encodeURIComponent(
-                                postId
-                            )}/comments`,
-                            {
-                                method:
-                                    "POST",
-
-                                headers: {
-                                    "Content-Type":
-                                        "application/json"
-                                },
-
-                                body:
-                                    JSON.stringify({
-                                        content:
-                                            comment.trim()
-                                    })
-                            }
-                        );
-
-
-                    if (
-                        handleAuthError(
-                            response
-                        )
-                    ) {
-
-                        return;
-                    }
-
-
-                    const result =
-                        await readJsonResponse(
-                            response
-                        );
-
-
-                    if (!response.ok) {
-
-                        throw new Error(
-                            result.error ||
-                            result.message ||
-                            "Unable to save comment."
-                        );
-                    }
-
-
-                    await loadPostComments(
-                        postId
+                    await submitPostComment(
+                        post,
+                        commentInput,
+                        commentSubmitButton
                     );
 
-
-                    // Reload post data so the count is always
-                    // synchronized with MySQL.
-
-                    await loadPosts();
-
-
-                } catch (error) {
-
-                    console.error(
-                        "COMMENT ERROR:",
-                        error
-                    );
-
-
-                    alert(
-                        "Unable to save comment.\n\n" +
-                        error.message
-                    );
                 }
 
             }
         );
+
     }
 
 
@@ -4789,6 +4849,7 @@ function attachPostEvents(
                                     ? "Share"
                                     : "Shares"
                             }`;
+
                     }
 
 
@@ -4834,7 +4895,9 @@ function attachPostEvents(
                                     "Native sharing failed:",
                                     shareError
                                 );
+
                             }
+
                         }
 
                     } else if (
@@ -4851,6 +4914,7 @@ function attachPostEvents(
                         alert(
                             "Post link copied to clipboard."
                         );
+
                     }
 
 
@@ -4866,10 +4930,12 @@ function attachPostEvents(
                         "Unable to share post.\n\n" +
                         error.message
                     );
+
                 }
 
             }
         );
+
     }
 
 
@@ -4991,23 +5057,116 @@ function attachPostEvents(
                         "Unable to delete post.\n\n" +
                         error.message
                     );
+
                 }
 
             }
         );
+
     }
+
 }
 
 
 // =========================================================
-// LOAD COMMENTS
+// LOAD POST COMMENTS
 // =========================================================
 
 async function loadPostComments(
-    postId
+    postId,
+    post
 ) {
 
+    if (
+        !postId ||
+        !post
+    ) {
+
+        return;
+
+    }
+
+
+    const commentsContainer =
+        post.querySelector(
+            ".comments"
+        );
+
+
+    if (!commentsContainer) {
+
+        console.error(
+            "Comments container not found."
+        );
+
+
+        return;
+
+    }
+
+
+    const commentsList =
+        commentsContainer.querySelector(
+            ".comments-list"
+        );
+
+
+    const loading =
+        commentsContainer.querySelector(
+            ".comments-loading"
+        );
+
+
+    const empty =
+        commentsContainer.querySelector(
+            ".comments-empty"
+        );
+
+
+    if (
+        !commentsList
+    ) {
+
+        console.error(
+            "Comments list not found."
+        );
+
+
+        return;
+
+    }
+
+
+    // =====================================================
+    // SHOW LOADING
+    // =====================================================
+
+    if (loading) {
+
+        loading.hidden =
+            false;
+
+    }
+
+
+    if (empty) {
+
+        empty.hidden =
+            true;
+
+    }
+
+
+    commentsList.replaceChildren();
+
+
     try {
+
+        console.log(
+            "Loading comments for post:",
+            postId
+        );
+
 
         const response =
             await authenticatedFetch(
@@ -5028,6 +5187,7 @@ async function loadPostComments(
         ) {
 
             return;
+
         }
 
 
@@ -5037,49 +5197,29 @@ async function loadPostComments(
             );
 
 
-        if (!response.ok) {
+        if (
+            !response.ok
+        ) {
 
             throw new Error(
                 data.error ||
                 data.message ||
-                "Unable to load comments."
+                `Unable to load comments (${response.status}).`
             );
+
         }
 
 
-        const post =
-            Array.from(
-                document.querySelectorAll(
-                    ".post[data-post-id]"
-                )
-            ).find(
-                element =>
-                    String(
-                        element.dataset.postId
-                    ) ===
-                    String(
-                        postId
-                    )
-            );
-
-
-        if (!post) {
-
-            return;
-        }
-
-
-        const box =
-            post.querySelector(
-                ".comments"
-            );
-
-
-        if (!box) {
-
-            return;
-        }
-
+        // =================================================
+        // SERVER RESPONSE
+        // =================================================
+        //
+        // {
+        //     success: true,
+        //     comments: [...]
+        // }
+        //
+        // =================================================
 
         const comments =
             Array.isArray(
@@ -5097,35 +5237,54 @@ async function loadPostComments(
                     : [];
 
 
-        box.innerHTML =
-            "";
+        console.log(
+            `Loaded ${comments.length} comments for post ${postId}.`
+        );
 
+
+        // =================================================
+        // NO COMMENTS
+        // =================================================
+
+        if (
+            comments.length === 0
+        ) {
+
+            if (empty) {
+
+                empty.hidden =
+                    false;
+
+            }
+
+
+            return;
+
+        }
+
+
+        // =================================================
+        // RENDER COMMENTS
+        // =================================================
 
         comments.forEach(
             comment => {
 
-                const element =
-                    document.createElement(
-                        "p"
+                const commentElement =
+                    createCommentElement(
+                        comment
                     );
 
 
-                const author =
-                    comment.name ||
-                    comment.username ||
-                    "User";
+                if (
+                    commentElement
+                ) {
 
+                    commentsList.appendChild(
+                        commentElement
+                    );
 
-                element.textContent =
-                    `${author}: ${
-                        comment.content ||
-                        ""
-                    }`;
-
-
-                box.appendChild(
-                    element
-                );
+                }
 
             }
         );
@@ -5137,151 +5296,468 @@ async function loadPostComments(
             "COMMENTS LOAD ERROR:",
             error
         );
+
+
+        commentsList.innerHTML = `
+
+            <div class="comments-empty">
+
+                Unable to load comments.
+
+            </div>
+
+        `;
+
+
+    } finally {
+
+        if (loading) {
+
+            loading.hidden =
+                true;
+
+        }
+
     }
+
 }
 
 
 // =========================================================
-// INITIALIZE EXISTING POSTS
+// CREATE COMMENT ELEMENT
 // =========================================================
 
-function initializeExistingPosts() {
+function createCommentElement(
+    comment
+) {
 
-    document
-        .querySelectorAll(
-            ".post"
-        )
-        .forEach(
-            post => {
-
-                attachPostEvents(
-                    post
-                );
-
-            }
+    const item =
+        document.createElement(
+            "div"
         );
 
 
-    setupPostAuthorClicks();
+    item.className =
+        "comment-item";
 
 
-    updatePostCount();
-}
+    // =====================================================
+    // COMMENT HEADER
+    // =====================================================
 
-
-// =========================================================
-// SEARCH
-// =========================================================
-
-function setupSearch() {
-
-    const searchInput =
-        document.querySelector(
-            ".search-box input"
+    const header =
+        document.createElement(
+            "div"
         );
 
 
-    if (!searchInput) {
-
-        return;
-    }
+    header.className =
+        "comment-header";
 
 
-    createSearchResultsPanel(
-        searchInput
+    const profileImage =
+        document.createElement(
+            "img"
+        );
+
+
+    profileImage.className =
+        "comment-profile-pic";
+
+
+    profileImage.src =
+        comment.profilePic ||
+        comment.profile_pic ||
+        comment.user_profile_pic ||
+        "https://via.placeholder.com/36";
+
+
+    profileImage.alt =
+        comment.name ||
+        comment.username ||
+        "User";
+
+
+    profileImage.onerror =
+        () => {
+
+            profileImage.onerror =
+                null;
+
+
+            profileImage.src =
+                "https://via.placeholder.com/36";
+
+        };
+
+
+    const userInfo =
+        document.createElement(
+            "div"
+        );
+
+
+    userInfo.className =
+        "comment-user-info";
+
+
+    const username =
+        document.createElement(
+            "strong"
+        );
+
+
+    username.textContent =
+        comment.name ||
+        comment.username ||
+        comment.fullname ||
+        comment.author_name ||
+        "Campus2Career User";
+
+
+    const date =
+        document.createElement(
+            "span"
+        );
+
+
+    date.className =
+        "comment-time";
+
+
+    date.textContent =
+        formatCommentDate(
+            comment.createdAt ||
+            comment.created_at
+        );
+
+
+    userInfo.appendChild(
+        username
     );
+
+
+    userInfo.appendChild(
+        date
+    );
+
+
+    header.appendChild(
+        profileImage
+    );
+
+
+    header.appendChild(
+        userInfo
+    );
+
+
+    // =====================================================
+    // COMMENT TEXT
+    // =====================================================
+
+    const text =
+        document.createElement(
+            "p"
+        );
+
+
+    text.className =
+        "comment-text";
+
+
+    text.textContent =
+        comment.content ||
+        comment.comment ||
+        comment.text ||
+        "";
+
+
+    // =====================================================
+    // BUILD COMMENT
+    // =====================================================
+
+    item.appendChild(
+        header
+    );
+
+
+    item.appendChild(
+        text
+    );
+
+
+    return item;
+
+}
+
+
+// =========================================================
+// FORMAT COMMENT DATE
+// =========================================================
+
+function formatCommentDate(
+    value
+) {
+
+    if (!value) {
+
+        return "";
+
+    }
+
+
+    const date =
+        new Date(
+            value
+        );
 
 
     if (
-        searchInput.dataset.eventsAttached ===
-        "true"
+        Number.isNaN(
+            date.getTime()
+        )
     ) {
 
-        return;
+        return "";
+
     }
 
 
-    searchInput.dataset.eventsAttached =
-        "true";
+    return date.toLocaleString();
 
-
-    searchInput.addEventListener(
-        "input",
-        () => {
-
-            const query =
-                searchInput.value
-                    .trim()
-                    .toLowerCase();
-
-
-            if (!query) {
-
-                hideSearchResults();
-
-
-                document
-                    .querySelectorAll(
-                        ".post"
-                    )
-                    .forEach(
-                        post => {
-
-                            post.style.display =
-                                "";
-
-                        }
-                    );
-
-
-                return;
-            }
-
-
-            performGlobalSearch(
-                query
-            );
-
-        }
-    );
-
-
-    document.addEventListener(
-        "click",
-        event => {
-
-            const panel =
-                document.getElementById(
-                    "globalSearchResults"
-                );
-
-
-            if (!panel) {
-
-                return;
-            }
-
-
-            if (
-                event.target.closest(
-                    ".search-box"
-                ) ||
-                event.target.closest(
-                    "#globalSearchResults"
-                )
-            ) {
-
-                return;
-            }
-
-
-            hideSearchResults();
-
-        }
-    );
 }
 
 
+// =========================================================
+// SUBMIT POST COMMENT
+// =========================================================
+
+async function submitPostComment(
+    post,
+    commentInput,
+    submitButton
+) {
+
+    if (
+        !post ||
+        !commentInput ||
+        !submitButton
+    ) {
+
+        return;
+
+    }
+
+
+    const postId =
+        post.dataset.postId;
+
+
+    if (!postId) {
+
+        console.error(
+            "Post ID not found."
+        );
+
+
+        return;
+
+    }
+
+
+    const content =
+        commentInput.value.trim();
+
+
+    // =====================================================
+    // VALIDATE
+    // =====================================================
+
+    if (!content) {
+
+        return;
+
+    }
+
+
+    if (
+        content.length >
+        1000
+    ) {
+
+        alert(
+            "Comment cannot exceed 1000 characters."
+        );
+
+
+        return;
+
+    }
+
+
+    // =====================================================
+    // BUTTON STATE
+    // =====================================================
+
+    const originalText =
+        submitButton.textContent;
+
+
+    submitButton.disabled =
+        true;
+
+
+    submitButton.textContent =
+        "Posting...";
+
+
+    try {
+
+        console.log(
+            "Posting comment for post:",
+            postId
+        );
+
+
+        const response =
+            await authenticatedFetch(
+                `${POSTS_API}/${encodeURIComponent(
+                    postId
+                )}/comments`,
+                {
+                    method:
+                        "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            content:
+                                content
+                        })
+                }
+            );
+
+
+        if (
+            handleAuthError(
+                response
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        const result =
+            await readJsonResponse(
+                response
+            );
+
+
+        if (
+            !response.ok
+        ) {
+
+            throw new Error(
+                result.error ||
+                result.message ||
+                "Unable to save comment."
+            );
+
+        }
+
+
+        console.log(
+            "Comment saved successfully:",
+            result
+        );
+
+
+        // =================================================
+        // CLEAR INPUT
+        // =================================================
+
+        commentInput.value =
+            "";
+
+
+        // =================================================
+        // RELOAD ONLY COMMENTS
+        // =================================================
+
+        await loadPostComments(
+            postId,
+            post
+        );
+
+
+        // =================================================
+        // UPDATE COMMENT COUNT
+        // =================================================
+
+        const commentCount =
+            post.querySelector(
+                ".comment-count"
+            );
+
+
+        if (
+            commentCount
+        ) {
+
+            const currentCount =
+                extractNumber(
+                    commentCount.textContent
+                );
+
+
+            const newCount =
+                currentCount + 1;
+
+
+            commentCount.textContent =
+                `💬 ${newCount} ${
+                    newCount === 1
+                        ? "Comment"
+                        : "Comments"
+                }`;
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "COMMENT ERROR:",
+            error
+        );
+
+
+        alert(
+            "Unable to save comment.\n\n" +
+            error.message
+        );
+
+
+    } finally {
+
+        submitButton.disabled =
+            false;
+
+
+        submitButton.textContent =
+            originalText ||
+            "Post";
+
+    }
+
+}
 // =========================================================
 // CREATE SEARCH PANEL
 // =========================================================

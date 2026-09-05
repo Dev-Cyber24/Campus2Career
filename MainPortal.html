@@ -35,9 +35,189 @@
         rel="stylesheet"
     >
 
+
+    <!-- =====================================================
+         COMMENTS DROPDOWN STYLES
+    ====================================================== -->
+
+    <style>
+
+        /* =====================================
+           COMMENTS CONTAINER
+        ====================================== */
+
+        .comments {
+            margin-top: 12px;
+
+            border-top:
+                1px solid #e5e7eb;
+
+            padding-top: 12px;
+        }
+
+
+        .comments[hidden] {
+            display: none;
+        }
+
+
+        /* =====================================
+           COMMENTS LIST
+        ====================================== */
+
+        .comments-list {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 10px;
+
+            max-height: 350px;
+
+            overflow-y: auto;
+
+            padding-right: 3px;
+        }
+
+
+        /* =====================================
+           INDIVIDUAL COMMENT
+        ====================================== */
+
+        .comment-item {
+
+            background: #f4f7fb;
+
+            border-radius: 10px;
+
+            padding: 10px 12px;
+
+            border:
+                1px solid #e5e7eb;
+        }
+
+
+        .comment-user {
+
+            font-weight: 700;
+
+            color: #111827;
+
+            margin-bottom: 4px;
+
+            font-size: 14px;
+        }
+
+
+        .comment-text {
+
+            color: #374151;
+
+            font-size: 14px;
+
+            line-height: 1.5;
+
+            word-break: break-word;
+        }
+
+
+        .comment-time {
+
+            display: block;
+
+            margin-top: 5px;
+
+            font-size: 11px;
+
+            color: #6b7280;
+        }
+
+
+        /* =====================================
+           COMMENT STATES
+        ====================================== */
+
+        .comments-loading,
+        .comments-empty {
+
+            padding: 12px;
+
+            text-align: center;
+
+            color: #6b7280;
+
+            font-size: 14px;
+        }
+
+
+        /* =====================================
+           COMMENT BUTTON
+        ====================================== */
+
+        .comment-btn[aria-expanded="true"] {
+
+            background:
+                rgba(
+                    10,
+                    102,
+                    194,
+                    0.08
+                );
+
+            color: #0a66c2;
+        }
+
+
+        /* =====================================
+           COMMENT SCROLLBAR
+        ====================================== */
+
+        .comments-list::-webkit-scrollbar {
+
+            width: 6px;
+        }
+
+
+        .comments-list::-webkit-scrollbar-thumb {
+
+            background: #cbd5e1;
+
+            border-radius: 10px;
+        }
+
+
+        .comments-list::-webkit-scrollbar-track {
+
+            background: transparent;
+        }
+
+
+        /* =====================================
+           MOBILE
+        ====================================== */
+
+        @media (max-width: 600px) {
+
+            .comments-list {
+
+                max-height: 280px;
+            }
+
+            .comment-item {
+
+                padding: 9px 10px;
+            }
+
+        }
+
+    </style>
+
 </head>
 
+
 <body>
+
 
 <!-- =========================================================
      HEADER
@@ -60,7 +240,10 @@
 
     <div class="search-box">
 
-        <span class="search-icon" aria-hidden="true">
+        <span
+            class="search-icon"
+            aria-hidden="true"
+        >
             🔍
         </span>
 
@@ -139,11 +322,17 @@
                 Loading...
             </h2>
 
-            <p class="designation" id="designation">
+            <p
+                class="designation"
+                id="designation"
+            >
                 Loading profile...
             </p>
 
-            <p class="location" id="location"></p>
+            <p
+                class="location"
+                id="location"
+            ></p>
 
             <hr>
 
@@ -224,10 +413,9 @@
     </aside>
 
 
-
     <!-- =====================================================
          CENTER MAIN CONTENT
-    ====================================================== -->
+    ===================================================== -->
 
     <main>
 
@@ -278,7 +466,7 @@
                     <input
                         type="file"
                         id="imageUpload"
-                         accept="image/jpeg,image/png,image/gif,image/webp"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
                         hidden
                     >
 
@@ -322,7 +510,6 @@
         </div>
 
 
-
         <!-- =================================================
              POSTS
         ================================================== -->
@@ -341,7 +528,17 @@
                 This initial post is only fallback content.
             -->
 
-            <div class="post">
+
+            <!-- =================================================
+                 FALLBACK POST
+            ================================================== -->
+
+            <div
+                class="post"
+                data-post-id="welcome-post"
+            >
+
+                <!-- POST HEADER -->
 
                 <div class="post-header">
 
@@ -365,6 +562,8 @@
                 </div>
 
 
+                <!-- POST TEXT -->
+
                 <p class="post-text">
 
                     Welcome to Campus2Career.
@@ -377,7 +576,9 @@
                 </p>
 
 
-                <!-- POST STATISTICS -->
+                <!-- =================================================
+                     POST STATISTICS
+                ================================================== -->
 
                 <div class="post-stats">
 
@@ -396,7 +597,9 @@
                 </div>
 
 
-                <!-- POST ACTIONS -->
+                <!-- =================================================
+                     POST ACTIONS
+                ================================================== -->
 
                 <div class="actions">
 
@@ -407,12 +610,16 @@
                         👍 Like
                     </button>
 
+
                     <button
                         type="button"
                         class="comment-btn"
+                        aria-expanded="false"
+                        aria-controls="comments-welcome-post"
                     >
                         💬 Comment
                     </button>
+
 
                     <button
                         type="button"
@@ -420,6 +627,7 @@
                     >
                         🔄 Share
                     </button>
+
 
                     <button
                         type="button"
@@ -432,16 +640,52 @@
                 </div>
 
 
-                <!-- COMMENTS -->
+                <!-- =================================================
+                     COMMENTS DROPDOWN
+                ================================================== -->
 
-                <div class="comments"></div>
+                <div
+                    class="comments"
+                    id="comments-welcome-post"
+                    hidden
+                >
+
+                    <!-- COMMENT LIST -->
+
+                    <div class="comments-list">
+                        <!--
+                            Comments from other users
+                            will be inserted here by script.js
+                        -->
+                    </div>
+
+
+                    <!-- LOADING STATE -->
+
+                    <div
+                        class="comments-loading"
+                        hidden
+                    >
+                        Loading comments...
+                    </div>
+
+
+                    <!-- EMPTY STATE -->
+
+                    <div
+                        class="comments-empty"
+                        hidden
+                    >
+                        No comments yet.
+                    </div>
+
+                </div>
 
             </div>
 
         </section>
 
     </main>
-
 
 
     <!-- =====================================================
@@ -489,7 +733,6 @@
         </div>
 
 
-
         <!-- =================================================
              COURSES
         ================================================== -->
@@ -521,10 +764,6 @@
                 style="margin-top:15px;"
             >
 
-                <!-- IMPORTANT:
-                     File name is Courses.html, not courses.html
-                -->
-
                 <a href="Courses.html">
                     View All Courses →
                 </a>
@@ -532,7 +771,6 @@
             </div>
 
         </div>
-
 
 
         <!-- =================================================
@@ -574,7 +812,6 @@
         </div>
 
 
-
         <!-- =================================================
              ADVERTISEMENT
         ================================================== -->
@@ -595,7 +832,6 @@
     </aside>
 
 </div>
-
 
 
 <!-- =========================================================
@@ -655,7 +891,6 @@
         </div>
 
 
-
         <!-- CHAT MESSAGES -->
 
         <div
@@ -678,7 +913,6 @@
             </div>
 
         </div>
-
 
 
         <!-- CHAT INPUT -->
@@ -709,7 +943,6 @@
     </div>
 
 
-
     <!-- AI OPEN BUTTON -->
 
     <button
@@ -722,7 +955,6 @@
     </button>
 
 </div>
-
 
 
 <!-- =========================================================
@@ -764,18 +996,15 @@
 </footer>
 
 
-
 <!-- =========================================================
      MAIN PORTAL JAVASCRIPT
-
-     IMPORTANT:
-     defer ensures HTML is parsed before script.js runs.
 ========================================================= -->
 
 <script
     src="script.js"
     defer
 ></script>
+
 
 </body>
 </html>

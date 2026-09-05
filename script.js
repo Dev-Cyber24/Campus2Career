@@ -5355,42 +5355,6 @@ function createCommentElement(
         "comment-header";
  
  
-    const profileImage =
-        document.createElement(
-            "img"
-        );
- 
- 
-    profileImage.className =
-        "comment-profile-pic";
- 
- 
-    profileImage.src =
-        comment.profilePic ||
-        comment.profile_pic ||
-        comment.user_profile_pic ||
-        "https://via.placeholder.com/36";
- 
- 
-    profileImage.alt =
-        comment.name ||
-        comment.username ||
-        "User";
- 
- 
-    profileImage.onerror =
-        () => {
- 
-            profileImage.onerror =
-                null;
- 
- 
-            profileImage.src =
-                "https://via.placeholder.com/36";
- 
-        };
- 
- 
     const userInfo =
         document.createElement(
             "div"
@@ -5439,11 +5403,6 @@ function createCommentElement(
  
     userInfo.appendChild(
         date
-    );
- 
- 
-    header.appendChild(
-        profileImage
     );
  
  

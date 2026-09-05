@@ -302,10 +302,8 @@
     /* =========================================================
        CENTERED PROFILE PHOTO
     ========================================================= */
-
-   .profile-photo-container {
+.profile-photo-container {
     position: absolute;
-
     top: -88px;
     left: 50%;
     transform: translateX(-50%);
@@ -343,41 +341,40 @@
     width: 100%;
     height: 100%;
 
+    display: block;
+
     object-fit: contain;
-    object-position: center center;
+
+    /*
+       Adjust this percentage to move
+       the actual image content.
+    */
+    object-position: 60% center;
 
     border-radius: 50%;
 
     background: #ffffff;
 
-    display: block;
-
-    /*
-       Move image to the right.
-       Change 20px to 10px, 30px, etc.
-    */
-    transform: translateX(20px);
+    z-index: 2;
 }
 
 
-/* PLACEHOLDER TEXT */
+/* PLACEHOLDER */
 .placeholder {
     position: absolute;
 
-    top: 0;
-    left: 0;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     width: 100%;
     height: 100%;
 
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
+    padding: 20px;
 
     text-align: center;
-
-    padding: 20px;
 
     color: var(--muted);
 
@@ -388,17 +385,14 @@
 
     overflow-wrap: anywhere;
 
-    pointer-events: none;
+    z-index: 1;
 }
 
 
-/* Hide placeholder when image exists */
-.profile-photo-container:has(
-    img[src]:not([src=""])
-) .placeholder {
+/* Hide placeholder when image is loaded */
+.profile-photo-container img[src]:not([src=""]) + .placeholder {
     display: none;
 }
-
     /* =========================================================
        PROFILE INFORMATION
     ========================================================= */

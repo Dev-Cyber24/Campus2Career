@@ -3408,7 +3408,7 @@ function normalizeUserProfile(
             data.user_id ??
             null,
 
-        userId:
+         userId:
             data.userId ??
             data.user_id ??
             data.id ??
@@ -5113,7 +5113,6 @@ function calculatePercentage(
         Number(
             denominator
         ) || 0;
-
 
     if (bottom <= 0) {
         return 0;

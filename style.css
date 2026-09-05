@@ -824,7 +824,13 @@ nav a:active{
 
     height:112px;
 
+    display:block;
+
     object-fit:cover;
+
+    object-position:center center;
+
+    aspect-ratio:1 / 1;
 
     border-radius:50%;
 
@@ -833,6 +839,10 @@ nav a:active{
         #FFFFFF;
 
     margin-top:-56px;
+
+    margin-left:auto;
+
+    margin-right:auto;
 
     position:relative;
 

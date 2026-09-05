@@ -10,7 +10,8 @@
 // Backend endpoint:
 // GET /api/courses
 //
-// Expected server response:
+// Expected response:
+//
 // [
 //     {
 //         id,
@@ -114,7 +115,7 @@ async function loadCourses() {
 
 
         // =========================================
-        // CREATE REQUEST CONTROLLER
+        // REQUEST TIMEOUT
         // =========================================
 
         const controller =
@@ -190,7 +191,7 @@ async function loadCourses() {
 
 
         // =========================================
-        // PARSE JSON
+        // PARSE SERVER RESPONSE
         // =========================================
 
         let data = [];
@@ -251,7 +252,7 @@ async function loadCourses() {
 
 
         // =========================================
-        // VERIFY ARRAY
+        // VERIFY RESPONSE FORMAT
         // =========================================
 
         if (!Array.isArray(data)) {
@@ -270,7 +271,7 @@ async function loadCourses() {
 
 
         // =========================================
-        // NORMALIZE DATABASE RESULTS
+        // STORE COURSE DATA
         // =========================================
 
         allCourses =
@@ -285,7 +286,7 @@ async function loadCourses() {
 
 
         // =========================================
-        // POPULATE FILTERS
+        // BUILD FILTER OPTIONS
         // =========================================
 
         populateFieldFilter();
@@ -303,7 +304,7 @@ async function loadCourses() {
 
 
         // =========================================
-        // ACCESSIBILITY
+        // ACCESSIBILITY STATE
         // =========================================
 
         if (courseGrid) {
@@ -349,6 +350,10 @@ async function loadCourses() {
 
         }
 
+
+        // =========================================
+        // ERROR DISPLAY
+        // =========================================
 
         if (courseGrid) {
 
@@ -585,7 +590,7 @@ function setupFilters() {
 
 
     // =========================================
-    // RESET FILTER
+    // RESET
     // =========================================
 
     if (resetFilters) {
@@ -884,17 +889,20 @@ function getUniqueValues(
 ) {
 
     return [
+
         ...new Set(
 
             courses
 
                 .map(
                     course =>
+
                         String(
                             course?.[
                                 property
                             ] ?? ""
                         ).trim()
+
                 )
 
                 .filter(
@@ -904,8 +912,7 @@ function getUniqueValues(
 
         )
 
-    ]
-    .sort(
+    ].sort(
         (
             a,
             b
@@ -1024,6 +1031,13 @@ function applyFilters() {
                     .toLowerCase();
 
 
+                const institution =
+                    String(
+                        course.institution
+                    )
+                    .toLowerCase();
+
+
                 const field =
                     String(
                         course.field
@@ -1046,7 +1060,7 @@ function applyFilters() {
 
 
                 // =========================================
-                // SEARCH MATCH
+                // SEARCH
                 // =========================================
 
                 const searchMatch =
@@ -1059,11 +1073,15 @@ function applyFilters() {
 
                     description.includes(
                         searchValue
+                    ) ||
+
+                    institution.includes(
+                        searchValue
                     );
 
 
                 // =========================================
-                // FIELD MATCH
+                // FIELD
                 // =========================================
 
                 const fieldMatch =
@@ -1075,7 +1093,7 @@ function applyFilters() {
 
 
                 // =========================================
-                // LEVEL MATCH
+                // LEVEL
                 // =========================================
 
                 const levelMatch =
@@ -1087,7 +1105,7 @@ function applyFilters() {
 
 
                 // =========================================
-                // MODE MATCH
+                // MODE
                 // =========================================
 
                 const modeMatch =
@@ -1229,11 +1247,19 @@ function renderCourses(
     courseData.forEach(
         course => {
 
-            fragment.appendChild(
+            const card =
                 createCourseCard(
                     course
-                )
-            );
+                );
+
+
+            if (card) {
+
+                fragment.appendChild(
+                    card
+                );
+
+            }
 
         }
     );
@@ -1326,124 +1352,252 @@ function createCourseCard(
 
 
     // =========================================
-    // CREATE COMPLETE COURSE CONTENT
+    // COURSE HEADER
     // =========================================
 
-    const courseContent =
-        createCourseContent(
-            course,
-            courseId,
-            courseName,
-            field,
-            description,
-            institution,
-            level,
-            mode,
-            duration
+    const top =
+        document.createElement(
+            "div"
         );
 
 
-    card.appendChild(
-        courseContent
+    top.className =
+        "course-top";
+
+
+    const fieldBadge =
+        document.createElement(
+            "span"
+        );
+
+
+    fieldBadge.className =
+        "course-field";
+
+
+    fieldBadge.textContent =
+        field;
+
+
+    const title =
+        document.createElement(
+            "h3"
+        );
+
+
+    title.textContent =
+        courseName;
+
+
+    top.appendChild(
+        fieldBadge
+    );
+
+
+    top.appendChild(
+        title
     );
 
 
     // =========================================
-    // FIND COURSE BODY SAFELY
+    // COURSE BODY
     // =========================================
 
-    const courseBody =
-        card.querySelector(
-            ".course-body"
+    const body =
+        document.createElement(
+            "div"
         );
 
 
-    if (!courseBody) {
+    body.className =
+        "course-body";
 
-        console.error(
-            "Course body could not be created.",
-            course
+
+    // =========================================
+    // DESCRIPTION
+    // =========================================
+
+    const descriptionElement =
+        document.createElement(
+            "p"
         );
 
 
-        return card;
+    descriptionElement.className =
+        "course-description";
 
-    }
+
+    descriptionElement.textContent =
+        description;
+
+
+    // =========================================
+    // INSTITUTION
+    // =========================================
+
+    const institutionElement =
+        document.createElement(
+            "div"
+        );
+
+
+    institutionElement.className =
+        "institution";
+
+
+    institutionElement.textContent =
+        institution;
+
+
+    // =========================================
+    // COURSE DETAILS
+    // =========================================
+
+    const details =
+        document.createElement(
+            "div"
+        );
+
+
+    details.className =
+        "course-details";
+
+
+    details.appendChild(
+        createDetail(
+            "Level",
+            level
+        )
+    );
+
+
+    details.appendChild(
+        createDetail(
+            "Mode",
+            mode
+        )
+    );
+
+
+    details.appendChild(
+        createDetail(
+            "Duration",
+            duration
+        )
+    );
+
+
+    details.appendChild(
+        createDetail(
+            "Course ID",
+            String(
+                courseId ||
+                "-"
+            )
+        )
+    );
 
 
     // =========================================
     // COURSE LINK
     // =========================================
 
+    let courseButton;
+
+
     if (courseUrl) {
 
-        const link =
+        courseButton =
             document.createElement(
                 "a"
             );
 
 
-        link.className =
-            "view-course-btn";
-
-
-        link.href =
+        courseButton.href =
             courseUrl;
 
 
-        link.target =
+        courseButton.target =
             "_blank";
 
 
-        link.rel =
+        courseButton.rel =
             "noopener noreferrer";
 
 
-        link.textContent =
+        courseButton.textContent =
             "View Course";
-
-
-        courseBody.appendChild(
-            link
-        );
 
     } else {
 
-        const button =
+        courseButton =
             document.createElement(
                 "button"
             );
 
 
-        button.type =
+        courseButton.type =
             "button";
 
 
-        button.className =
-            "view-course-btn";
-
-
-        button.disabled =
+        courseButton.disabled =
             true;
 
 
-        button.textContent =
+        courseButton.textContent =
             "Course Link Unavailable";
 
 
-        button.style.opacity =
+        courseButton.style.opacity =
             "0.6";
 
 
-        button.style.cursor =
+        courseButton.style.cursor =
             "not-allowed";
 
-
-        courseBody.appendChild(
-            button
-        );
-
     }
+
+
+    courseButton.className =
+        "view-course-btn";
+
+
+    // =========================================
+    // ADD CONTENT TO BODY
+    // =========================================
+
+    body.appendChild(
+        descriptionElement
+    );
+
+
+    body.appendChild(
+        institutionElement
+    );
+
+
+    body.appendChild(
+        details
+    );
+
+
+    body.appendChild(
+        courseButton
+    );
+
+
+    // =========================================
+    // ADD TOP + BODY TO CARD
+    // =========================================
+
+    card.appendChild(
+        top
+    );
+
+
+    card.appendChild(
+        body
+    );
 
 
     return card;
@@ -1452,142 +1606,55 @@ function createCourseCard(
 
 
 // =========================================
-// CREATE COURSE CONTENT
+// CREATE COURSE DETAIL
 // =========================================
 
-function createCourseContent(
-    course,
-    courseId,
-    courseName,
-    field,
-    description,
-    institution,
-    level,
-    mode,
-    duration
+function createDetail(
+    label,
+    value
 ) {
 
-    const wrapper =
+    const detail =
         document.createElement(
             "div"
         );
 
 
-    wrapper.innerHTML = `
-
-        <div class="course-top">
-
-            <span class="course-field">
-                ${escapeHTML(field)}
-            </span>
-
-            <h3>
-                ${escapeHTML(courseName)}
-            </h3>
-
-        </div>
+    detail.className =
+        "detail";
 
 
-        <div class="course-body">
-
-            <p class="course-description">
-                ${escapeHTML(description)}
-            </p>
-
-
-            <div class="institution">
-                ${escapeHTML(institution)}
-            </div>
+    const labelElement =
+        document.createElement(
+            "span"
+        );
 
 
-            <div class="course-details">
-
-                <div class="detail">
-
-                    <span>
-                        Level
-                    </span>
-
-                    <strong>
-                        ${escapeHTML(level)}
-                    </strong>
-
-                </div>
+    labelElement.textContent =
+        label;
 
 
-                <div class="detail">
-
-                    <span>
-                        Mode
-                    </span>
-
-                    <strong>
-                        ${escapeHTML(mode)}
-                    </strong>
-
-                </div>
+    const valueElement =
+        document.createElement(
+            "strong"
+        );
 
 
-                <div class="detail">
-
-                    <span>
-                        Duration
-                    </span>
-
-                    <strong>
-                        ${escapeHTML(duration)}
-                    </strong>
-
-                </div>
+    valueElement.textContent =
+        value;
 
 
-                <div class="detail">
-
-                    <span>
-                        Course ID
-                    </span>
-
-                    <strong>
-                        ${escapeHTML(
-                            String(
-                                courseId ||
-                                "-"
-                            )
-                        )}
-                    </strong>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    `;
+    detail.appendChild(
+        labelElement
+    );
 
 
-    // =========================================
-    // IMPORTANT FIX
-    // =========================================
-    // Return the COMPLETE wrapper.
-    //
-    // Previously:
-    // return wrapper.firstElementChild;
-    //
-    // That returned only .course-top,
-    // causing:
-    //
-    // card.querySelector(".course-body")
-    //     -> null
-    //
-    // and then:
-    //
-    // null.appendChild(...)
-    //
-    // which caused the error:
-    // "Cannot read properties of null
-    //  (reading 'appendChild')"
+    detail.appendChild(
+        valueElement
+    );
 
-    return wrapper;
+
+    return detail;
 
 }
 
@@ -1626,7 +1693,7 @@ function normalizeCourseUrl(
 
 
         // =========================================
-        // ALLOW ONLY HTTP / HTTPS
+        // ONLY HTTP / HTTPS
         // =========================================
 
         if (

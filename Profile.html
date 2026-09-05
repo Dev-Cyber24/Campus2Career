@@ -319,8 +319,6 @@
     align-items: center;
     justify-content: center;
 
-    text-align: center;
-
     border: 7px solid var(--surface);
     border-radius: 50%;
 
@@ -335,21 +333,15 @@
 .profile-photo-container img {
     position: absolute;
 
-    top: 0;
-    left: 0;
+    inset: 0;
 
     width: 100%;
     height: 100%;
 
-    display: block;
+    display: none;
 
     object-fit: contain;
-
-    /*
-       Adjust this percentage to move
-       the actual image content.
-    */
-    object-position: 60% center;
+    object-position: center center;
 
     border-radius: 50%;
 
@@ -359,18 +351,18 @@
 }
 
 
-/* PLACEHOLDER */
-.placeholder {
+/* PLACEHOLDER TEXT */
+.profile-photo-container .placeholder {
     position: absolute;
 
     inset: 0;
 
+    width: 100%;
+    height: 100%;
+
     display: flex;
     align-items: center;
     justify-content: center;
-
-    width: 100%;
-    height: 100%;
 
     padding: 20px;
 
@@ -386,12 +378,6 @@
     overflow-wrap: anywhere;
 
     z-index: 1;
-}
-
-
-/* Hide placeholder when image is loaded */
-.profile-photo-container img[src]:not([src=""]) + .placeholder {
-    display: none;
 }
     /* =========================================================
        PROFILE INFORMATION

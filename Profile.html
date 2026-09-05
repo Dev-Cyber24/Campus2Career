@@ -303,9 +303,9 @@
        CENTERED PROFILE PHOTO
     ========================================================= */
 
-    .profile-photo-container {
+   .profile-photo-container {
+    position: absolute;
 
-        position: absolute;
     top: -88px;
     left: 50%;
     transform: translateX(-50%);
@@ -313,75 +313,91 @@
     width: 176px;
     height: 176px;
 
+    z-index: 20;
+
+    overflow: hidden;
+
     display: flex;
     align-items: center;
     justify-content: center;
 
-    overflow: hidden;
     text-align: center;
 
     border: 7px solid var(--surface);
     border-radius: 50%;
 
     background: #ffffff;
-      
-    }
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.18);
+}
 
 
-    .profile-photo-container img {
- display: block;
+/* PROFILE IMAGE */
+.profile-photo-container img {
+    position: absolute;
+
+    top: 0;
+    left: 0;
 
     width: 100%;
     height: 100%;
 
-    flex: 0 0 100%;
-
     object-fit: contain;
     object-position: center center;
 
-    aspect-ratio: 1 / 1;
-
     border-radius: 50%;
 
-    background: transparent;
+    background: #ffffff;
 
-    transform: translateX(15px);
-    }
+    display: block;
+
+    /*
+       Move image to the right.
+       Change 20px to 10px, 30px, etc.
+    */
+    transform: translateX(20px);
+}
 
 
-    .placeholder {
+/* PLACEHOLDER TEXT */
+.placeholder {
+    position: absolute;
 
-        display:
-            flex;
+    top: 0;
+    left: 0;
 
-        align-items:
-            center;
+    width: 100%;
+    height: 100%;
 
-        justify-content:
-            center;
+    display: flex;
 
-        width:
-            100%;
+    align-items: center;
+    justify-content: center;
 
-        height:
-            100%;
+    text-align: center;
 
-        padding:
-            20px;
+    padding: 20px;
 
-        text-align:
-            center;
+    color: var(--muted);
 
-        color:
-            var(--muted);
+    font-size: 14px;
+    font-weight: 650;
 
-        font-size:
-            14px;
+    line-height: 1.35;
 
-        font-weight:
-            650;
-    }
+    overflow-wrap: anywhere;
 
+    pointer-events: none;
+}
+
+
+/* Hide placeholder when image exists */
+.profile-photo-container:has(
+    img[src]:not([src=""])
+) .placeholder {
+    display: none;
+}
 
     /* =========================================================
        PROFILE INFORMATION

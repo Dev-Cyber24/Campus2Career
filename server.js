@@ -12,7 +12,76 @@ const jwt = require("jsonwebtoken");
 
 const db = require("./config/db");
 
+import multer from "multer";
 
+
+// ======================================================
+// MULTER - MEMORY STORAGE
+// ======================================================
+//
+// Uploaded images/videos are temporarily kept in memory
+// as Buffers and then stored directly in MySQL LONGBLOB.
+//
+// Maximum file size: 100 MB
+// ======================================================
+
+const upload = multer({
+
+    storage:
+        multer.memoryStorage(),
+
+    limits: {
+
+        fileSize:
+            100 * 1024 * 1024
+
+    },
+
+    fileFilter: (
+        req,
+        file,
+        cb
+    ) => {
+
+        const allowedTypes = [
+
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+
+            "video/mp4",
+            "video/webm",
+            "video/ogg",
+            "video/quicktime"
+
+        ];
+
+
+        if (
+            allowedTypes.includes(
+                file.mimetype
+            )
+        ) {
+
+            cb(
+                null,
+                true
+            );
+
+        } else {
+
+            cb(
+                new Error(
+                    "Unsupported image/video format."
+                )
+            );
+
+        }
+
+    }
+
+});
 
 
 // ======================================================

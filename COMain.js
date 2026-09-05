@@ -16,15 +16,17 @@
 const API_BASE_URL =
     "https://campus2career-0pi8.onrender.com/api";
 const COMPANY_API = `${API_BASE_URL}/company`;
-const COMPANY_PROFILE_API = `${COMPANY_API}/my-profile`;
+const COMPANY_PROFILE_API = `${API_BASE_URL}/company-profile`;
 const COMPANY_JOBS_API = `${COMPANY_API}/jobs`;
 const COMPANY_APPLICANTS_API = `${COMPANY_API}/applicants`;
 const COMPANY_APPLICATION_STATUS_API = `${COMPANY_API}/applications`;
-const COMPANY_CANDIDATES_API = `${COMPANY_API}/candidates/search`;
-const COMPANY_ANALYTICS_API = `${COMPANY_API}/analytics`;
+// The current backend does not expose separate candidate-search or analytics routes.
+// Candidate search is performed client-side from /api/user-profiles, and analytics
+// are calculated from the jobs/applicants already returned by the backend.
 const USER_PROFILE_API = `${API_BASE_URL}/user-profile`;
 const USER_PROFILES_API = `${API_BASE_URL}/user-profiles`;
-const TOKEN_KEY = "authToken";
+const TOKEN_KEY = "companyAuthToken";
+const COMPANY_ID_KEY = "companyId";
 
 let companyProfile = null;
 let jobs = [];
@@ -45,7 +47,7 @@ document.addEventListener("DOMContentLoaded", initializeCompanyPortal);
 async function initializeCompanyPortal() {
     try {
         if (!getAuthToken()) {
-            window.location.href = "login.html";
+            window.location.href = "company-signin.html";
             return;
         }
 
@@ -81,7 +83,7 @@ async function authenticatedFetch(url, options = {}) {
     const token = getAuthToken();
 
     if (!token) {
-        window.location.href = "login.html";
+        window.location.href = "company-signin.html";
         return null;
     }
 
@@ -109,9 +111,11 @@ async function authenticatedFetch(url, options = {}) {
 
     if (response.status === 401 || response.status === 403) {
         localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem("userId");
-        localStorage.removeItem("username");
-        localStorage.removeItem("loginEmail");
+        localStorage.removeItem(COMPANY_ID_KEY);
+        localStorage.removeItem("companyName");
+        localStorage.removeItem("companyGmail");
+        localStorage.removeItem("companyUserId");
+        localStorage.removeItem("companyUser");
 
         window.location.href = "login.html";
         return null;
@@ -153,6 +157,50 @@ async function parseResponse(response) {
     }
 
     return data;
+}
+
+/* =========================================================
+   COMPANY SESSION HELPERS
+========================================================= */
+
+function getCompanyId() {
+    const stored = Number(localStorage.getItem(COMPANY_ID_KEY));
+
+    if (Number.isInteger(stored) && stored > 0) {
+        return stored;
+    }
+
+    const token = getAuthToken();
+
+    if (!token) {
+        return null;
+    }
+
+    try {
+        const parts = token.split(".");
+        if (parts.length !== 3) {
+            return null;
+        }
+
+        const payload = JSON.parse(
+            decodeURIComponent(
+                atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))
+                    .split("")
+                    .map(char => "%" + ("00" + char.charCodeAt(0).toString(16)).slice(-2))
+                    .join("")
+            )
+        );
+
+        const companyId = Number(payload?.companyId);
+        if (Number.isInteger(companyId) && companyId > 0) {
+            localStorage.setItem(COMPANY_ID_KEY, String(companyId));
+            return companyId;
+        }
+    } catch (error) {
+        console.warn("Unable to read company ID from JWT:", error);
+    }
+
+    return null;
 }
 
 /* =========================================================
@@ -208,9 +256,17 @@ async function loadAllCompanyData() {
 ========================================================= */
 
 async function loadCompanyProfile() {
+    const companyId = getCompanyId();
+
+    if (!companyId) {
+        throw new Error(
+            "Company ID is missing. Please sign in again as a company."
+        );
+    }
+
     const response =
         await authenticatedFetch(
-            COMPANY_PROFILE_API
+            `${COMPANY_PROFILE_API}/${companyId}`
         );
 
     const data =
@@ -729,9 +785,17 @@ async function saveCompanyProfile() {
     }
 
     try {
+        const companyId = getCompanyId();
+
+        if (!companyId) {
+            throw new Error(
+                "Company ID is missing. Please sign in again as a company."
+            );
+        }
+
         const response =
             await authenticatedFetch(
-                COMPANY_PROFILE_API,
+                `${COMPANY_PROFILE_API}/${companyId}`,
                 {
                     method: "PUT",
                     body: JSON.stringify(
@@ -857,9 +921,28 @@ function normalizeJob(data) {
             (
                 data.salary_min !== undefined ||
                 data.salary_max !== undefined
-                    ? `${data.salary_min ?? ""} - ${data.salary_max ?? ""}`
+                    ? formatSalary(
+                        data.salary_min,
+                        data.salary_max,
+                        data.salary_currency
+                    )
                     : ""
             ),
+
+        salaryMin:
+            data.salary_min ??
+            data.salaryMin ??
+            null,
+
+        salaryMax:
+            data.salary_max ??
+            data.salaryMax ??
+            null,
+
+        salaryCurrency:
+            data.salary_currency ??
+            data.salaryCurrency ??
+            "INR",
 
         deadline:
             data.application_deadline ??
@@ -911,12 +994,31 @@ function normalizeSkills(value) {
     }
 
     if (typeof value === "string") {
-        return value
+        const text = value.trim();
+
+        if (!text) {
+            return [];
+        }
+
+        if (
+            (text.startsWith("[") && text.endsWith("]")) ||
+            (text.startsWith("{") && text.endsWith("}"))
+        ) {
+            try {
+                const parsed = JSON.parse(text);
+                if (Array.isArray(parsed)) {
+                    return parsed
+                        .map(skill => String(skill).trim())
+                        .filter(Boolean);
+                }
+            } catch (_) {
+                // Fall back to comma-separated parsing below.
+            }
+        }
+
+        return text
             .split(",")
-            .map(
-                skill =>
-                    skill.trim()
-            )
+            .map(skill => skill.trim())
             .filter(Boolean);
     }
 
@@ -1109,10 +1211,69 @@ function clearJobForm() {
     );
 }
 
+function parseSalaryRange(value) {
+    const text = String(value || "").trim();
+
+    if (!text) {
+        return { min: null, max: null };
+    }
+
+    const numbers = (text.match(/[\d,]+(?:\.\d+)?/g) || [])
+        .map(item => Number(item.replace(/,/g, "")))
+        .filter(Number.isFinite);
+
+    if (!numbers.length) {
+        return { min: null, max: null };
+    }
+
+    return {
+        min: numbers[0],
+        max: numbers.length > 1 ? numbers[1] : null
+    };
+}
+
+function formatSalary(min, max, currency = "INR") {
+    const minNumber = Number(min);
+    const maxNumber = Number(max);
+
+    const symbol =
+        String(currency).toUpperCase() === "INR" ? "₹" : String(currency).toUpperCase() + " ";
+
+    if (Number.isFinite(minNumber) && Number.isFinite(maxNumber)) {
+        return `${symbol}${minNumber} - ${symbol}${maxNumber}`;
+    }
+
+    if (Number.isFinite(minNumber)) {
+        return `${symbol}${minNumber}`;
+    }
+
+    if (Number.isFinite(maxNumber)) {
+        return `${symbol}${maxNumber}`;
+    }
+
+    return "";
+}
+
 async function handleJobSubmit(event) {
     event.preventDefault();
 
+    const companyId = getCompanyId();
+
+    if (!companyId) {
+        showToast(
+            "Company ID is missing. Please sign in again as a company."
+        );
+        return;
+    }
+
+    const salaryRange =
+        parseSalaryRange(
+            getInputValue("jobSalary")
+        );
+
     const payload = {
+        company_id: companyId,
+        companyId: companyId,
         title:
             getInputValue(
                 "jobTitle"
@@ -1158,6 +1319,15 @@ async function handleJobSubmit(event) {
                 "jobSalary"
             ).trim(),
 
+        salary_min:
+            salaryRange.min,
+
+        salary_max:
+            salaryRange.max,
+
+        salary_currency:
+            "INR",
+
         deadline:
             getInputValue(
                 "jobDeadline"
@@ -1173,7 +1343,7 @@ async function handleJobSubmit(event) {
                 getInputValue(
                     "jobSkills"
                 )
-            ),
+            ).join(", "),
 
         description:
             getInputValue(
@@ -1311,20 +1481,54 @@ async function toggleJobStatus(jobId) {
     const job =
         jobs.find(
             item =>
-                Number(item.id) ===
-                Number(jobId)
+                Number(item.id) === Number(jobId)
         );
 
     if (!job) {
+        showToast("Job not found.");
         return;
     }
 
     const newStatus =
-        normalizeStatus(
-            job.status
-        ) === "Active"
+        normalizeStatus(job.status) === "Active"
             ? "Closed"
             : "Active";
+
+    const salaryRange =
+        parseSalaryRange(job.salary);
+
+    const payload = {
+        company_id: getCompanyId(),
+        companyId: getCompanyId(),
+        title: job.title,
+        description: job.description || "",
+        job_type: job.type || "Full Time",
+        type: job.type || "Full Time",
+        location: job.location || "",
+        work_mode: job.workMode || "On-site",
+        workMode: job.workMode || "On-site",
+        experience_required: job.experience || "",
+        experienceRequired: job.experience || "",
+        salary_min:
+            job.salaryMin !== null && job.salaryMin !== undefined
+                ? job.salaryMin
+                : salaryRange.min,
+        salary_max:
+            job.salaryMax !== null && job.salaryMax !== undefined
+                ? job.salaryMax
+                : salaryRange.max,
+        salary_currency: job.salaryCurrency || "INR",
+        skills: normalizeSkills(job.skills).join(", "),
+        qualifications: job.qualifications || "",
+        application_deadline: job.deadline || null,
+        deadline: job.deadline || null,
+        status: newStatus
+    };
+
+    if (!payload.title) {
+        showToast("Job title is missing.");
+        return;
+    }
 
     try {
         const response =
@@ -1332,34 +1536,18 @@ async function toggleJobStatus(jobId) {
                 `${COMPANY_JOBS_API}/${jobId}`,
                 {
                     method: "PUT",
-                    body: JSON.stringify({
-                        status:
-                            newStatus
-                    })
+                    body: JSON.stringify(payload)
                 }
             );
 
-        await parseResponse(
-            response
-        );
-
+        await parseResponse(response);
         await loadJobs();
-
         renderEverything();
 
-        showToast(
-            `Job marked as ${newStatus}.`
-        );
-
+        showToast(`Job marked as ${newStatus}.`);
     } catch (error) {
-        console.error(
-            "Job status update error:",
-            error
-        );
-
-        showToast(
-            error.message
-        );
+        console.error("Job status update error:", error);
+        showToast(error.message || "Unable to update job status.");
     }
 }
 
@@ -1515,7 +1703,7 @@ function createJobCard(job) {
             .join("");
 
     return `
-        <article class="job-card">
+   <article class="job-card">
 
             <div class="job-card-top">
 
@@ -2718,130 +2906,98 @@ function setupCandidateSearch() {
 ========================================================= */
 
 async function searchCandidates() {
-
     const query =
-        getInputValue(
-            "candidateSearchInput"
-        ).trim();
+        getInputValue("candidateSearchInput")
+            .trim()
+            .toLowerCase();
 
     const location =
-        getInputValue(
-            "candidateLocationFilter"
-        );
+        getInputValue("candidateLocationFilter")
+            .trim()
+            .toLowerCase();
 
-    const experience =
-        getInputValue(
-            "candidateExperienceFilter"
-        );
+    const experienceFilter =
+        getInputValue("candidateExperienceFilter").trim();
 
-    if (
-        !query &&
-        (
-            location === "all" ||
-            !location
-        ) &&
-        (
-            experience === "all" ||
-            !experience
-        )
-    ) {
+    const hasFilter =
+        Boolean(query) ||
+        (location && location !== "all") ||
+        (experienceFilter && experienceFilter !== "all");
+
+    if (!hasFilter) {
         candidateResults = [];
-
         renderCandidateSearch();
-
         return;
     }
 
     try {
-
-        const params =
-            new URLSearchParams();
-
-        if (query) {
-            params.set(
-                "q",
-                query
-            );
+        if (!searchableUserProfiles.length) {
+            await loadSearchableUserProfiles();
         }
 
-        if (
-            location &&
-            location !== "all"
-        ) {
-            params.set(
-                "location",
-                location
-            );
-        }
+        const minimumExperience =
+            experienceFilter && experienceFilter !== "all"
+                ? Number(experienceFilter)
+                : null;
 
-        if (
-            experience &&
-            experience !== "all"
-        ) {
-            params.set(
-                "experience",
-                experience
-            );
-        }
+        candidateResults = searchableUserProfiles
+            .filter(profile => {
+                const searchableText = [
+                    profile.name,
+                    profile.headline,
+                    profile.tagline,
+                    profile.location,
+                    profile.education,
+                    profile.experience,
+                    profile.projects,
+                    profile.certifications,
+                    profile.achievements,
+                    ...(profile.skills || [])
+                ]
+                    .join(" ")
+                    .toLowerCase();
 
-        const response =
-            await authenticatedFetch(
-                `${COMPANY_CANDIDATES_API}?${params.toString()}`
-            );
+                const locationText = String(profile.location || "")
+                    .toLowerCase();
 
-        const data =
-            await parseResponse(
-                response
-            );
+                const experience = parseExperience(profile.experience);
 
-        const rawCandidates =
-            Array.isArray(data)
-                ? data
-                : (
-                    data?.candidates ||
-                    []
+                const matchesQuery =
+                    !query ||
+                    searchableText.includes(query);
+
+                const matchesLocation =
+                    !location ||
+                    location === "all" ||
+                    locationText.includes(location);
+
+                const matchesExperience =
+                    minimumExperience === null ||
+                    experience >= minimumExperience;
+
+                return (
+                    matchesQuery &&
+                    matchesLocation &&
+                    matchesExperience
                 );
-
-        candidateResults =
-            rawCandidates.map(
-                normalizeCandidate
-            );
+            })
+            .slice(0, 50)
+            .map(normalizeCandidate);
 
         renderCandidateSearch();
-
     } catch (error) {
-
-        console.error(
-            "Candidate search error:",
-            error
-        );
-
+        console.error("Candidate search error:", error);
         candidateResults = [];
 
         const container =
-            document.getElementById(
-                "candidateSearchResults"
-            );
+            document.getElementById("candidateSearchResults");
 
         if (container) {
-
             container.innerHTML = `
                 <div class="empty-state">
-
-                    <div class="empty-icon">
-                        ⚠
-                    </div>
-
-                    <h3>
-                        Search failed
-                    </h3>
-
-                    <p>
-                        ${escapeHTML(
-                            error.message
-                        )}
-                    </p>
-
+                    <div class="empty-icon">⚠</div>
+                    <h3>Search failed</h3>
+                    <p>${escapeHTML(error.message)}</p>
                 </div>
             `;
         }
@@ -4813,21 +4969,14 @@ function hideGlobalSearchResults() {
 ========================================================= */
 
 async function loadAnalytics() {
-
-    const response =
-        await authenticatedFetch(
-            COMPANY_ANALYTICS_API
-        );
-
-    const data =
-        await parseResponse(
-            response
-        );
-
-    analyticsData =
-        data?.analytics ||
-        data ||
-        null;
+    // Analytics are calculated from the same authenticated jobs and
+    // applicants already loaded from the backend. No separate analytics
+    // route exists in the current server.js.
+    analyticsData = {
+        generatedClientSide: true,
+        totalApplications: applicants.length,
+        totalJobs: jobs.length
+    };
 }
 
 /* =========================================================
@@ -4964,6 +5113,7 @@ function calculatePercentage(
         Number(
             denominator
         ) || 0;
+
 
     if (bottom <= 0) {
         return 0;
@@ -6150,6 +6300,22 @@ function logoutCompany() {
     );
 
     localStorage.removeItem(
+        COMPANY_ID_KEY
+    );
+
+    localStorage.removeItem(
+        "companyName"
+    );
+
+    localStorage.removeItem(
+        "companyGmail"
+    );
+
+    localStorage.removeItem(
+        "companyUserId"
+    );
+
+    localStorage.removeItem(
         "userId"
     );
 
@@ -6653,4 +6819,6 @@ window.openPublicCandidateProfile =
 
 window.closeReadOnlyProfileModal =
     closeReadOnlyProfileModal;
+
+
 

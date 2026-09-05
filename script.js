@@ -1648,6 +1648,7 @@ function loadPeopleBackup() {
                     person => {
 
                         const userId =
+
                             getPersonUserId(
                                 person
                             );
@@ -3297,6 +3298,7 @@ function createDatabasePostElement(
                 <source
                     src="${escapeHTML(videoURL)}"
                 >
+
 
                 Your browser does not support video playback.
 
@@ -4949,6 +4951,7 @@ function attachPostEvents(
         );
 
 
+
     if (
         deleteButton
     ) {
@@ -5762,6 +5765,30 @@ async function submitPostComment(
 // CREATE SEARCH PANEL
 // =========================================================
 
+function initializeExistingPosts() {
+
+    document
+        .querySelectorAll(
+            ".post"
+        )
+        .forEach(
+            post => {
+
+                attachPostEvents(
+                    post
+                );
+
+            }
+        );
+
+
+    setupPostAuthorClicks();
+
+
+    updatePostCount();
+}
+
+
 function createSearchResultsPanel(
     input
 ) {
@@ -6574,6 +6601,7 @@ function handleSearchResult(
 }
 
 
+
 // =========================================================
 // HIDE SEARCH RESULTS
 // =========================================================
@@ -6593,6 +6621,116 @@ function hideSearchResults() {
         panel.style.display =
             "none";
     }
+}
+
+
+
+function setupSearch() {
+
+    const searchInput =
+        document.querySelector(
+            ".search-box input"
+        );
+
+
+    if (!searchInput) {
+
+        return;
+    }
+
+
+    createSearchResultsPanel(
+        searchInput
+    );
+
+
+    if (
+        searchInput.dataset.eventsAttached ===
+        "true"
+    ) {
+
+        return;
+    }
+
+
+    searchInput.dataset.eventsAttached =
+        "true";
+
+
+    searchInput.addEventListener(
+        "input",
+        () => {
+
+            const query =
+                searchInput.value
+                    .trim()
+                    .toLowerCase();
+
+
+            if (!query) {
+
+                hideSearchResults();
+
+
+                document
+                    .querySelectorAll(
+                        ".post"
+                    )
+                    .forEach(
+                        post => {
+
+                            post.style.display =
+                                "";
+
+                        }
+                    );
+
+
+                return;
+            }
+
+
+            performGlobalSearch(
+                query
+            );
+
+        }
+    );
+
+
+    document.addEventListener(
+        "click",
+        event => {
+
+            const panel =
+                document.getElementById(
+                    "globalSearchResults"
+                );
+
+
+            if (!panel) {
+
+                return;
+            }
+
+
+            if (
+                event.target.closest(
+                    ".search-box"
+                ) ||
+                event.target.closest(
+                    "#globalSearchResults"
+                )
+            ) {
+
+                return;
+            }
+
+
+            hideSearchResults();
+
+        }
+    );
 }
 
 

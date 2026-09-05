@@ -12,7 +12,7 @@ const jwt = require("jsonwebtoken");
 
 const db = require("./config/db");
 
-import multer from "multer";
+const multer = require("multer");
 
 
 // ======================================================

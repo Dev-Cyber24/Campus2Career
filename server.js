@@ -6499,7 +6499,6 @@ app.delete(
 
     }
 );
-
 // ======================================================
 // POSTS - GET ALL
 // ======================================================
@@ -6510,7 +6509,11 @@ app.get(
     (req, res) => {
 
         const currentUserId =
-            req.user?.id || 0;
+            Number(
+                req.user?.id ??
+                req.user?.userId ??
+                0
+            );
 
 
         query(
@@ -6523,67 +6526,124 @@ app.get(
 
                     p.content,
 
-                    p.image_url,
-                    p.video_url,
+                    CASE
 
-                    p.created_at,
+                        WHEN
+                            p.image_data IS NOT NULL
 
-                    COALESCE(
-                        NULLIF(up.name, ''),
-                        u.username
-                    ) AS name,
+                        THEN
+                            CONCAT(
+                                '/api/posts/',
+                                p.id,
+                                '/image'
+                            )
 
-                    u.username,
+                        ELSE
+                            NULL
 
-                    up.profile_pic AS profilePic,
+                    END AS image_url,
 
-                    (
-                        SELECT COUNT(*)
-                        FROM post_likes pl
-                        WHERE pl.post_id = p.id
-                    ) AS likes_count,
-
-                    (
-                        SELECT COUNT(*)
-                        FROM post_shares ps
-                        WHERE ps.post_id = p.id
-                    ) AS shares_count,
-
-                    (
-                        SELECT COUNT(*)
-                        FROM comments c
-                        WHERE c.post_id = p.id
-                    ) AS comments_count,
 
                     CASE
 
                         WHEN
+                            p.video_data IS NOT NULL
+
+                        THEN
+                            CONCAT(
+                                '/api/posts/',
+                                p.id,
+                                '/video'
+                            )
+
+                        ELSE
+                            NULL
+
+                    END AS video_url,
+
+
+                    p.created_at,
+
+
+                    COALESCE(
+                        NULLIF(
+                            up.name,
+                            ''
+                        ),
+                        u.username
+                    ) AS name,
+
+
+                    u.username,
+
+
+                    up.profile_pic AS profilePic,
+
+
+                    (
+                        SELECT COUNT(*)
+                        FROM post_likes pl
+                        WHERE
+                            pl.post_id = p.id
+                    ) AS likes_count,
+
+
+                    (
+                        SELECT COUNT(*)
+                        FROM post_shares ps
+                        WHERE
+                            ps.post_id = p.id
+                    ) AS shares_count,
+
+
+                    (
+                        SELECT COUNT(*)
+                        FROM comments c
+                        WHERE
+                            c.post_id = p.id
+                    ) AS comments_count,
+
+
+                    CASE
+
+                        WHEN
+
                             ? > 0
 
                             AND EXISTS
                             (
                                 SELECT 1
+
                                 FROM post_likes mypl
 
                                 WHERE
                                     mypl.post_id = p.id
 
-                                    AND mypl.user_id = ?
+                                    AND
+                                    mypl.user_id = ?
                             )
 
-                        THEN 1
+                        THEN
+                            1
 
-                        ELSE 0
+                        ELSE
+                            0
 
                     END AS liked_by_current_user
 
+
                 FROM posts p
 
+
                 LEFT JOIN users u
-                    ON u.id = p.user_id
+                    ON
+                        u.id = p.user_id
+
 
                 LEFT JOIN user_profiles up
-                    ON up.user_id = p.user_id
+                    ON
+                        up.user_id = p.user_id
+
 
                 ORDER BY
                     p.created_at DESC,
@@ -6606,7 +6666,9 @@ app.get(
                     );
 
 
-                    return res.status(500).json({
+                    return res.status(
+                        500
+                    ).json({
 
                         success:
                             false,
@@ -6652,15 +6714,23 @@ app.get(
 
 
         const currentUserId =
-            req.user?.id || 0;
+            Number(
+                req.user?.id ??
+                req.user?.userId ??
+                0
+            );
 
 
         if (
-            !Number.isInteger(postId) ||
+            !Number.isInteger(
+                postId
+            ) ||
             postId <= 0
         ) {
 
-            return res.status(400).json({
+            return res.status(
+                400
+            ).json({
 
                 success:
                     false,
@@ -6683,69 +6753,129 @@ app.get(
 
                     p.content,
 
-                    p.image_url,
-                    p.video_url,
-
-                    p.created_at,
-
-                    COALESCE(
-                        NULLIF(up.name, ''),
-                        u.username
-                    ) AS name,
-
-                    u.username,
-
-                    up.profile_pic AS profilePic,
-
-                    (
-                        SELECT COUNT(*)
-                        FROM post_likes pl
-                        WHERE pl.post_id = p.id
-                    ) AS likes_count,
-
-                    (
-                        SELECT COUNT(*)
-                        FROM post_shares ps
-                        WHERE ps.post_id = p.id
-                    ) AS shares_count,
-
-                    (
-                        SELECT COUNT(*)
-                        FROM comments c
-                        WHERE c.post_id = p.id
-                    ) AS comments_count,
 
                     CASE
 
                         WHEN
+                            p.image_data IS NOT NULL
+
+                        THEN
+                            CONCAT(
+                                '/api/posts/',
+                                p.id,
+                                '/image'
+                            )
+
+                        ELSE
+                            NULL
+
+                    END AS image_url,
+
+
+                    CASE
+
+                        WHEN
+                            p.video_data IS NOT NULL
+
+                        THEN
+                            CONCAT(
+                                '/api/posts/',
+                                p.id,
+                                '/video'
+                            )
+
+                        ELSE
+                            NULL
+
+                    END AS video_url,
+
+
+                    p.created_at,
+
+
+                    COALESCE(
+                        NULLIF(
+                            up.name,
+                            ''
+                        ),
+                        u.username
+                    ) AS name,
+
+
+                    u.username,
+
+
+                    up.profile_pic AS profilePic,
+
+
+                    (
+                        SELECT COUNT(*)
+                        FROM post_likes pl
+                        WHERE
+                            pl.post_id = p.id
+                    ) AS likes_count,
+
+
+                    (
+                        SELECT COUNT(*)
+                        FROM post_shares ps
+                        WHERE
+                            ps.post_id = p.id
+                    ) AS shares_count,
+
+
+                    (
+                        SELECT COUNT(*)
+                        FROM comments c
+                        WHERE
+                            c.post_id = p.id
+                    ) AS comments_count,
+
+
+                    CASE
+
+                        WHEN
+
                             ? > 0
 
                             AND EXISTS
                             (
                                 SELECT 1
+
                                 FROM post_likes mypl
 
                                 WHERE
                                     mypl.post_id = p.id
 
-                                    AND mypl.user_id = ?
+                                    AND
+                                    mypl.user_id = ?
                             )
 
-                        THEN 1
+                        THEN
+                            1
 
-                        ELSE 0
+                        ELSE
+                            0
 
                     END AS liked_by_current_user
 
+
                 FROM posts p
 
+
                 LEFT JOIN users u
-                    ON u.id = p.user_id
+                    ON
+                        u.id = p.user_id
+
 
                 LEFT JOIN user_profiles up
-                    ON up.user_id = p.user_id
+                    ON
+                        up.user_id = p.user_id
 
-                WHERE p.id = ?
+
+                WHERE
+                    p.id = ?
+
 
                 LIMIT 1
             `,
@@ -6767,7 +6897,9 @@ app.get(
                     );
 
 
-                    return res.status(500).json({
+                    return res.status(
+                        500
+                    ).json({
 
                         success:
                             false,
@@ -6784,7 +6916,9 @@ app.get(
                     rows.length === 0
                 ) {
 
-                    return res.status(404).json({
+                    return res.status(
+                        404
+                    ).json({
 
                         success:
                             false,
@@ -6816,21 +6950,49 @@ app.get(
 
 // ======================================================
 // CREATE POST
-// ======================================================
-
-// =========================================
-// CREATE POST
 // POST /api/posts
-// =========================================
+// ======================================================
+//
+// Accepts:
+//
+// multipart/form-data
+//
+// Fields:
+//
+// content
+// image
+// video
+//
+// Only one media file is allowed per post.
+// ======================================================
 
 app.post(
     "/api/posts",
     authenticateToken,
+    upload.fields([
+
+        {
+            name:
+                "image",
+
+            maxCount:
+                1
+        },
+
+        {
+            name:
+                "video",
+
+            maxCount:
+                1
+        }
+
+    ]),
     (req, res) => {
 
-        // =====================================
-        // GET LOGGED-IN USER ID FROM JWT
-        // =====================================
+        // ==============================================
+        // GET USER ID FROM JWT
+        // ==============================================
 
         const userId =
             Number(
@@ -6839,122 +7001,219 @@ app.post(
             );
 
 
-        // =====================================
+        // ==============================================
         // VALIDATE USER ID
-        // =====================================
+        // ==============================================
 
         if (
-            !Number.isInteger(userId) ||
+            !Number.isInteger(
+                userId
+            ) ||
             userId <= 0
         ) {
 
-            return res.status(401).json({
+            return res.status(
+                401
+            ).json({
 
                 success:
                     false,
 
                 error:
                     "Invalid authenticated user."
+
             });
+
         }
 
 
-        // =====================================
-        // GET POST CONTENT
-        // =====================================
+        // ==============================================
+        // POST CONTENT
+        // ==============================================
 
         const content =
             clean(
-                req.body.content
+                req.body?.content
             );
 
 
-        // =====================================
-        // GET IMAGE URL
-        // =====================================
+        // ==============================================
+        // GET UPLOADED IMAGE
+        // ==============================================
 
-        const imageUrl =
-            clean(
-                req.body.image_url ??
-                req.body.imageUrl
-            ) || null;
+        const imageFile =
+            req.files?.image?.[0] ||
+            null;
 
 
-        // =====================================
-        // GET VIDEO URL
-        // =====================================
+        // ==============================================
+        // GET UPLOADED VIDEO
+        // ==============================================
 
-        const videoUrl =
-            clean(
-                req.body.video_url ??
-                req.body.videoUrl
-            ) || null;
+        const videoFile =
+            req.files?.video?.[0] ||
+            null;
 
 
-        // =====================================
-        // VALIDATE POST
-        // =====================================
+        // ==============================================
+        // ONLY ONE MEDIA TYPE
+        // ==============================================
 
         if (
-            !content &&
-            !imageUrl &&
-            !videoUrl
+            imageFile &&
+            videoFile
         ) {
 
-            return res.status(400).json({
+            return res.status(
+                400
+            ).json({
 
                 success:
                     false,
 
                 error:
-                    "Post content or media is required."
+                    "Please upload either an image or a video, not both."
+
             });
+
         }
 
 
-        // =====================================
+        // ==============================================
         // CONTENT LENGTH
-        // =====================================
+        // ==============================================
 
         if (
             content.length > 500
         ) {
 
-            return res.status(400).json({
+            return res.status(
+                400
+            ).json({
 
                 success:
                     false,
 
                 error:
                     "Post content cannot exceed 500 characters."
+
             });
+
         }
 
 
-        // =====================================
-        // INSERT POST
-        // =====================================
+        // ==============================================
+        // EMPTY POST VALIDATION
+        // ==============================================
+
+        if (
+            !content &&
+            !imageFile &&
+            !videoFile
+        ) {
+
+            return res.status(
+                400
+            ).json({
+
+                success:
+                    false,
+
+                error:
+                    "Post content or media is required."
+
+            });
+
+        }
+
+
+        // ==============================================
+        // IMAGE BUFFER
+        // ==============================================
+
+        const imageData =
+            imageFile
+                ? imageFile.buffer
+                : null;
+
+
+        // ==============================================
+        // IMAGE MIME TYPE
+        // ==============================================
+
+        const imageMimeType =
+            imageFile
+                ? imageFile.mimetype
+                : null;
+
+
+        // ==============================================
+        // VIDEO BUFFER
+        // ==============================================
+
+        const videoData =
+            videoFile
+                ? videoFile.buffer
+                : null;
+
+
+        // ==============================================
+        // VIDEO MIME TYPE
+        // ==============================================
+
+        const videoMimeType =
+            videoFile
+                ? videoFile.mimetype
+                : null;
+
+
+        // ==============================================
+        // INSERT INTO MYSQL
+        // ==============================================
 
         query(
             `
                 INSERT INTO posts
                 (
                     user_id,
+
                     content,
-                    image_url,
-                    video_url,
+
+                    image_data,
+                    image_mime_type,
+
+                    video_data,
+                    video_mime_type,
+
                     created_at
                 )
+
                 VALUES
                 (
-                    ?, ?, ?, ?, NOW()
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    ?,
+                    NOW()
                 )
             `,
             [
+
                 userId,
-                content || null,
-                imageUrl,
-                videoUrl
+
+                content ||
+                    null,
+
+                imageData,
+
+                imageMimeType,
+
+                videoData,
+
+                videoMimeType
+
             ],
             (
                 err,
@@ -6969,22 +7228,44 @@ app.post(
                     );
 
 
-                    return res.status(500).json({
+                    return res.status(
+                        500
+                    ).json({
 
                         success:
                             false,
 
                         error:
                             err.message
+
                     });
+
                 }
 
 
-                // =================================
-                // SUCCESS
-                // =================================
+                // ======================================
+                // MEDIA URLS
+                // ======================================
 
-                return res.status(201).json({
+                const imageUrl =
+                    imageData
+                        ? `/api/posts/${result.insertId}/image`
+                        : null;
+
+
+                const videoUrl =
+                    videoData
+                        ? `/api/posts/${result.insertId}/video`
+                        : null;
+
+
+                // ======================================
+                // SUCCESS
+                // ======================================
+
+                return res.status(
+                    201
+                ).json({
 
                     success:
                         true,
@@ -6996,13 +7277,289 @@ app.post(
                         result.insertId,
 
                     user_id:
-                        userId
+                        userId,
+
+                    image_url:
+                        imageUrl,
+
+                    video_url:
+                        videoUrl
+
                 });
 
             }
         );
+
     }
 );
+
+
+// ======================================================
+// GET POST IMAGE
+// GET /api/posts/:id/image
+// ======================================================
+
+app.get(
+    "/api/posts/:id/image",
+    (req, res) => {
+
+        const postId =
+            Number(
+                req.params.id
+            );
+
+
+        // ==============================================
+        // VALIDATE ID
+        // ==============================================
+
+        if (
+            !Number.isInteger(
+                postId
+            ) ||
+            postId <= 0
+        ) {
+
+            return res.status(
+                400
+            ).send(
+                "Invalid post ID."
+            );
+
+        }
+
+
+        // ==============================================
+        // GET BINARY IMAGE
+        // ==============================================
+
+        query(
+            `
+                SELECT
+
+                    image_data,
+
+                    image_mime_type
+
+                FROM posts
+
+                WHERE
+                    id = ?
+
+                LIMIT 1
+            `,
+            [
+                postId
+            ],
+            (
+                err,
+                rows
+            ) => {
+
+                if (err) {
+
+                    console.error(
+                        "GET POST IMAGE ERROR:",
+                        err
+                    );
+
+
+                    return res.status(
+                        500
+                    ).send(
+                        "Unable to retrieve image."
+                    );
+
+                }
+
+
+                // ======================================
+                // IMAGE NOT FOUND
+                // ======================================
+
+                if (
+                    rows.length === 0 ||
+                    !rows[0].image_data
+                ) {
+
+                    return res.status(
+                        404
+                    ).send(
+                        "Image not found."
+                    );
+
+                }
+
+
+                // ======================================
+                // SEND MIME TYPE
+                // ======================================
+
+                res.set(
+                    "Content-Type",
+                    rows[0].image_mime_type ||
+                    "application/octet-stream"
+                );
+
+
+                // ======================================
+                // CACHE
+                // ======================================
+
+                res.set(
+                    "Cache-Control",
+                    "public, max-age=31536000"
+                );
+
+
+                // ======================================
+                // SEND BINARY BUFFER
+                // ======================================
+
+                return res.send(
+                    rows[0].image_data
+                );
+
+            }
+        );
+
+    }
+);
+
+
+// ======================================================
+// GET POST VIDEO
+// GET /api/posts/:id/video
+// ======================================================
+
+app.get(
+    "/api/posts/:id/video",
+    (req, res) => {
+
+        const postId =
+            Number(
+                req.params.id
+            );
+
+
+        // ==============================================
+        // VALIDATE ID
+        // ==============================================
+
+        if (
+            !Number.isInteger(
+                postId
+            ) ||
+            postId <= 0
+        ) {
+
+            return res.status(
+                400
+            ).send(
+                "Invalid post ID."
+            );
+
+        }
+
+
+        // ==============================================
+        // GET BINARY VIDEO
+        // ==============================================
+
+        query(
+            `
+                SELECT
+
+                    video_data,
+
+                    video_mime_type
+
+                FROM posts
+
+                WHERE
+                    id = ?
+
+                LIMIT 1
+            `,
+            [
+                postId
+            ],
+            (
+                err,
+                rows
+            ) => {
+
+                if (err) {
+
+                    console.error(
+                        "GET POST VIDEO ERROR:",
+                        err
+                    );
+
+
+                    return res.status(
+                        500
+                    ).send(
+                        "Unable to retrieve video."
+                    );
+
+                }
+
+
+                // ======================================
+                // VIDEO NOT FOUND
+                // ======================================
+
+                if (
+                    rows.length === 0 ||
+                    !rows[0].video_data
+                ) {
+
+                    return res.status(
+                        404
+                    ).send(
+                        "Video not found."
+                    );
+
+                }
+
+
+                // ======================================
+                // SEND MIME TYPE
+                // ======================================
+
+                res.set(
+                    "Content-Type",
+                    rows[0].video_mime_type ||
+                    "application/octet-stream"
+                );
+
+
+                // ======================================
+                // CACHE
+                // ======================================
+
+                res.set(
+                    "Cache-Control",
+                    "public, max-age=31536000"
+                );
+
+
+                // ======================================
+                // SEND BINARY BUFFER
+                // ======================================
+
+                return res.send(
+                    rows[0].video_data
+                );
+
+            }
+        );
+
+    }
+);
+
+
 // ======================================================
 // DELETE POST
 // ======================================================

@@ -23,6 +23,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const APPLICATION_API_URL =
         `${API_BASE_URL}/api/applications`;
 
+    const JOBS_API_URL =
+        `${API_BASE_URL}/api/jobs`;
+
 
     // =========================================
     // HTML ELEMENTS
@@ -83,6 +86,11 @@ document.addEventListener("DOMContentLoaded", () => {
             "applyBtn"
         );
 
+    const jobIdSelect =
+        document.getElementById(
+            "jobIdSelect"
+        );
+
     const applicationMessage =
         document.getElementById(
             "applicationMessage"
@@ -96,6 +104,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let companies = [];
 
     let selectedCompany = null;
+
+    let companyJobs = [];
 
 
     // =========================================
@@ -492,7 +502,34 @@ document.addEventListener("DOMContentLoaded", () => {
     function getSelectedJobId() {
 
         // --------------------------------------
-        // 1. window.selectedJobId
+        // 1. Job ID dropdown
+        // --------------------------------------
+
+        if (jobIdSelect) {
+
+            const dropdownValue =
+                String(
+                    jobIdSelect.value ||
+                    ""
+                ).trim();
+
+            if (dropdownValue) {
+
+                const dropdownJobId =
+                    Number(dropdownValue);
+
+                if (
+                    Number.isInteger(dropdownJobId) &&
+                    dropdownJobId > 0
+                ) {
+                    return dropdownJobId;
+                }
+            }
+        }
+
+
+        // --------------------------------------
+        // 2. window.selectedJobId
         // --------------------------------------
 
         const windowValue =
@@ -802,6 +839,155 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =========================================
+    // LOAD JOBS FOR SELECTED COMPANY
+    // =========================================
+
+    async function loadCompanyJobs(companyId) {
+
+        if (!jobIdSelect) {
+            return;
+        }
+
+        companyJobs = [];
+
+        jobIdSelect.disabled = true;
+        jobIdSelect.innerHTML = `
+            <option value="">
+                Loading jobs...
+            </option>
+        `;
+
+        if (!Number.isInteger(companyId) || companyId <= 0) {
+            jobIdSelect.innerHTML = `
+                <option value="">
+                    Select a Job ID
+                </option>
+            `;
+            updateApplyButtonState();
+            return;
+        }
+
+        try {
+
+            const response = await fetch(
+                JOBS_API_URL,
+                {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    },
+                    cache: "no-store"
+                }
+            );
+
+            const data =
+                await readResponseData(response);
+
+            if (!response.ok) {
+                throw new Error(
+                    getErrorMessage(
+                        data,
+                        `Unable to load jobs (${response.status}).`
+                    )
+                );
+            }
+
+            const rawJobs =
+                Array.isArray(data)
+                    ? data
+                    : (data?.jobs || data?.data || []);
+
+            companyJobs = rawJobs
+                .filter(job => {
+                    const jobCompanyId = Number(
+                        job?.companyId ??
+                        job?.company_id
+                    );
+
+                    const status = String(
+                        job?.status ?? "Active"
+                    ).trim().toLowerCase();
+
+                    return (
+                        jobCompanyId === companyId &&
+                        status === "active"
+                    );
+                })
+                .sort(
+                    (a, b) =>
+                        Number(a?.id || 0) -
+                        Number(b?.id || 0)
+                );
+
+            jobIdSelect.innerHTML = `
+                <option value="">
+                    Select a Job ID
+                </option>
+                ${companyJobs.map(job => `
+                    <option value="${escapeHTML(Number(job.id))}">
+                        Job ID ${escapeHTML(Number(job.id))} — ${escapeHTML(
+                            job?.title ||
+                            job?.jobTitle ||
+                            "Untitled Job"
+                        )}
+                    </option>
+                `).join("")}
+            `;
+
+            if (!companyJobs.length) {
+
+                jobIdSelect.disabled = true;
+
+                jobIdSelect.innerHTML = `
+                    <option value="">
+                        No active jobs available
+                    </option>
+                `;
+
+                showApplicationMessage(
+                    "This company currently has no active jobs or internships.",
+                    false
+                );
+
+            } else {
+
+                jobIdSelect.disabled = false;
+
+                showApplicationMessage(
+                    "",
+                    true
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Company jobs loading error:",
+                error
+            );
+
+            companyJobs = [];
+            jobIdSelect.disabled = true;
+
+            jobIdSelect.innerHTML = `
+                <option value="">
+                    Unable to load jobs
+                </option>
+            `;
+
+            showApplicationMessage(
+                error.message ||
+                "Unable to load this company's jobs.",
+                false
+            );
+        }
+
+        updateApplyButtonState();
+    }
+
+
+    // =========================================
     // APPLY TO COMPANY
     // =========================================
 
@@ -934,15 +1120,32 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!jobId) {
 
             showApplicationMessage(
-                "Please open a specific job before applying. A job ID is required.",
+                "Please select a Job ID before applying.",
                 false
             );
 
-
             console.warn(
-                "Application blocked because no valid jobId was found."
+                "Application blocked because no valid jobId was selected."
             );
 
+            return;
+
+        }
+
+
+        if (
+            companyJobs.length &&
+            !companyJobs.some(
+                job =>
+                    Number(job?.id) ===
+                    Number(jobId)
+            )
+        ) {
+
+            showApplicationMessage(
+                "The selected Job ID does not belong to this company.",
+                false
+            );
 
             return;
 
@@ -1736,6 +1939,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         // =====================================
+        // LOAD COMPANY JOBS
+        // =====================================
+
+        const selectedCompanyId = Number(
+            company.id ??
+            company.company_id
+        );
+
+        loadCompanyJobs(
+            selectedCompanyId
+        );
+
+        // =====================================
         // APPLY BUTTON STATE
         // =====================================
 
@@ -1751,126 +1967,87 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateApplyButtonState() {
 
         if (!applyBtn) {
-
             return;
-
         }
 
-
-        // --------------------------------------
-        // Default state
-        // --------------------------------------
-
-        applyBtn.disabled =
-            false;
-
+        applyBtn.disabled = true;
 
         applyBtn.classList.remove(
             "applied"
         );
 
-
-        applyBtn.innerHTML =
-            `
+        applyBtn.innerHTML = `
             <i class="fas fa-paper-plane"></i>
             Apply Now
-            `;
-
-
-        // --------------------------------------
-        // No company
-        // --------------------------------------
+        `;
 
         if (!selectedCompany) {
-
-            applyBtn.disabled =
-                true;
-
             return;
-
         }
 
+        const selectedJobId =
+            getSelectedJobId();
 
-        // --------------------------------------
-        // Check previous application
-        // --------------------------------------
+        if (!selectedJobId) {
+            return;
+        }
+
+        if (
+            companyJobs.length &&
+            !companyJobs.some(
+                job =>
+                    Number(job?.id) ===
+                    Number(selectedJobId)
+            )
+        ) {
+            return;
+        }
 
         const lastApplication =
             sessionStorage.getItem(
                 "lastApplication"
             );
 
-
         if (!lastApplication) {
-
+            applyBtn.disabled = false;
             return;
-
         }
-
 
         try {
 
             const saved =
-                JSON.parse(
-                    lastApplication
-                );
+                JSON.parse(lastApplication);
 
-
-            const selectedCompanyId =
-                Number(
-                    selectedCompany.id ??
-                    selectedCompany.company_id
-                );
-
+            const selectedCompanyId = Number(
+                selectedCompany.id ??
+                selectedCompany.company_id
+            );
 
             const savedCompanyId =
-                Number(
-                    saved.companyId
-                );
-
-
-            const currentJobId =
-                getSelectedJobId();
-
+                Number(saved.companyId);
 
             const savedJobId =
                 saved.jobId
                     ? Number(saved.jobId)
                     : null;
 
-
-            const sameCompany =
-                selectedCompanyId ===
-                savedCompanyId;
-
-
-            const sameJob =
-                currentJobId &&
-                savedJobId &&
-                currentJobId ===
-                savedJobId;
-
-
             if (
-                sameCompany &&
-                sameJob
+                selectedCompanyId === savedCompanyId &&
+                selectedJobId === savedJobId
             ) {
 
-                applyBtn.disabled =
-                    true;
-
+                applyBtn.disabled = true;
 
                 applyBtn.classList.add(
                     "applied"
                 );
 
-
-                applyBtn.innerHTML =
-                    `
+                applyBtn.innerHTML = `
                     <i class="fas fa-check"></i>
                     Applied
-                    `;
+                `;
 
+                return;
             }
 
         } catch (error) {
@@ -1879,10 +2056,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Could not read application state:",
                 error
             );
-
         }
 
+        applyBtn.disabled = false;
+
     }
+
 
 
     // =========================================
@@ -2615,6 +2794,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 }
 
+            }
+        );
+
+    }
+
+
+    // =========================================
+    // JOB DROPDOWN EVENT
+    // =========================================
+
+    if (jobIdSelect) {
+
+        jobIdSelect.addEventListener(
+            "change",
+            () => {
+
+                showApplicationMessage(
+                    "",
+                    true
+                );
+
+                updateApplyButtonState();
             }
         );
 

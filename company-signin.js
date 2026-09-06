@@ -19,6 +19,9 @@ const API_BASE_URL =
 const SIGNIN_API =
     `${API_BASE_URL}/company/signin`;
 
+const COMPANY_PROFILE_API =
+    `${API_BASE_URL}/company-profile`;
+
 
 // =========================================================
 // STORAGE KEYS
@@ -39,14 +42,12 @@ const COMPANY_GMAIL_KEY =
 const COMPANY_USER_ID_KEY =
     "companyUserId";
 
+const COMPANY_DATA_KEY =
+    "companyData";
+
 
 // =========================================================
 // REDIRECT PAGE
-// =========================================================
-//
-// Actual project filename:
-// COMAIN.html
-//
 // =========================================================
 
 const COMPANY_PORTAL_PAGE =
@@ -110,27 +111,29 @@ if (togglePassword) {
 
             event.preventDefault();
 
-
             if (!passwordInput) {
                 return;
             }
 
-
             const isPassword =
-                passwordInput.type ===
-                "password";
-
+                passwordInput.type === "password";
 
             passwordInput.type =
                 isPassword
                     ? "text"
                     : "password";
 
-
             togglePassword.textContent =
                 isPassword
                     ? "Hide"
                     : "Show";
+
+            togglePassword.setAttribute(
+                "aria-label",
+                isPassword
+                    ? "Hide password"
+                    : "Show password"
+            );
 
         }
     );
@@ -172,16 +175,13 @@ function showMessage(
 
     }
 
-
     signinMessage.textContent =
         text || "";
-
 
     signinMessage.className =
         text
             ? `signin-message ${type}`
             : "signin-message";
-
 
     signinMessage.style.display =
         text
@@ -201,14 +201,11 @@ function clearMessage() {
         return;
     }
 
-
     signinMessage.textContent =
         "";
 
-
     signinMessage.style.display =
         "none";
-
 
     signinMessage.className =
         "signin-message";
@@ -228,7 +225,6 @@ function clearErrors() {
             "";
 
     }
-
 
     if (passwordError) {
 
@@ -266,6 +262,10 @@ function clearCompanySession() {
         COMPANY_USER_ID_KEY
     );
 
+    localStorage.removeItem(
+        COMPANY_DATA_KEY
+    );
+
 }
 
 
@@ -281,7 +281,6 @@ async function readResponse(
         response.headers.get(
             "content-type"
         ) || "";
-
 
     if (
         contentType
@@ -302,13 +301,11 @@ async function readResponse(
                 error
             );
 
-
             return {};
 
         }
 
     }
-
 
     try {
 
@@ -320,7 +317,6 @@ async function readResponse(
             "Failed to read response:",
             error
         );
-
 
         return "";
 
@@ -352,7 +348,6 @@ function getApiErrorMessage(
 
     }
 
-
     if (
         typeof data === "string" &&
         data.trim() !== ""
@@ -362,8 +357,267 @@ function getApiErrorMessage(
 
     }
 
-
     return fallback;
+
+}
+
+
+// =========================================================
+// GET COMPANY NAME FROM API RESPONSE
+// =========================================================
+
+function extractCompanyName(
+    data
+) {
+
+    if (
+        !data ||
+        typeof data !== "object"
+    ) {
+
+        return "";
+
+    }
+
+    const candidates = [
+
+        data.company?.company_name,
+
+        data.company?.name,
+
+        data.company?.companyName,
+
+        data.company_name,
+
+        data.companyName,
+
+        data.name
+
+    ];
+
+    for (
+        const value of candidates
+    ) {
+
+        if (
+            value !== undefined &&
+            value !== null &&
+            String(value).trim() !== ""
+        ) {
+
+            return String(value).trim();
+
+        }
+
+    }
+
+    return "";
+
+}
+
+
+// =========================================================
+// GET COMPANY ID FROM API RESPONSE
+// =========================================================
+
+function extractCompanyId(
+    data
+) {
+
+    if (
+        !data ||
+        typeof data !== "object"
+    ) {
+
+        return null;
+
+    }
+
+    const candidates = [
+
+        data.companyId,
+
+        data.company_id,
+
+        data.company?.id,
+
+        data.company?.company_id
+
+    ];
+
+    for (
+        const value of candidates
+    ) {
+
+        if (
+            value !== undefined &&
+            value !== null &&
+            String(value).trim() !== ""
+        ) {
+
+            const numericValue =
+                Number(value);
+
+            if (
+                Number.isInteger(
+                    numericValue
+                ) &&
+                numericValue > 0
+            ) {
+
+                return numericValue;
+
+            }
+
+        }
+
+    }
+
+    return null;
+
+}
+
+
+// =========================================================
+// GET USER ID FROM API RESPONSE
+// =========================================================
+
+function extractUserId(
+    data
+) {
+
+    if (
+        !data ||
+        typeof data !== "object"
+    ) {
+
+        return null;
+
+    }
+
+    const candidates = [
+
+        data.userId,
+
+        data.user_id,
+
+        data.company?.userId,
+
+        data.company?.user_id,
+
+        data.company?.recruiter_id
+
+    ];
+
+    for (
+        const value of candidates
+    ) {
+
+        if (
+            value !== undefined &&
+            value !== null &&
+            String(value).trim() !== ""
+        ) {
+
+            return value;
+
+        }
+
+    }
+
+    return null;
+
+}
+
+
+// =========================================================
+// FETCH COMPANY PROFILE AFTER LOGIN
+// =========================================================
+//
+// This is the important fallback.
+//
+// If /company/signin returns the token and company ID
+// but does NOT include company_name, we use the same
+// authenticated session to retrieve the company profile.
+// =========================================================
+
+async function fetchCompanyProfile(
+    token,
+    companyId
+) {
+
+    if (
+        !token ||
+        !companyId
+    ) {
+
+        return null;
+
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                `${COMPANY_PROFILE_API}/${companyId}`,
+                {
+                    method: "GET",
+
+                    headers: {
+                        "Accept":
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+        const data =
+            await readResponse(
+                response
+            );
+
+        if (
+            !response.ok
+        ) {
+
+            console.warn(
+                "Company profile request failed:",
+                response.status,
+                data
+            );
+
+            return null;
+
+        }
+
+        const profile =
+            data?.profile ||
+            data?.company ||
+            data;
+
+        if (
+            !profile ||
+            typeof profile !== "object"
+        ) {
+
+            return null;
+
+        }
+
+        return profile;
+
+    } catch (error) {
+
+        console.error(
+            "Unable to fetch company profile after login:",
+            error
+        );
+
+        return null;
+
+    }
 
 }
 
@@ -404,13 +658,12 @@ if (signinForm) {
                     "error"
                 );
 
-
                 console.error(
                     "gmail or password input not found."
                 );
 
-
                 return;
+
             }
 
 
@@ -422,7 +675,6 @@ if (signinForm) {
                 gmailInput.value
                     .trim()
                     .toLowerCase();
-
 
             const password =
                 passwordInput.value;
@@ -449,7 +701,6 @@ if (signinForm) {
 
                 }
 
-
                 valid =
                     false;
 
@@ -467,7 +718,6 @@ if (signinForm) {
                         "Please enter a valid Gmail ID.";
 
                 }
-
 
                 valid =
                     false;
@@ -488,16 +738,14 @@ if (signinForm) {
 
                 }
 
-
                 valid =
                     false;
+
             }
 
 
             if (!valid) {
-
                 return;
-
             }
 
 
@@ -509,12 +757,10 @@ if (signinForm) {
                 signinBtn?.textContent ||
                 "Sign In";
 
-
             if (signinBtn) {
 
                 signinBtn.disabled =
                     true;
-
 
                 signinBtn.textContent =
                     "Signing In...";
@@ -641,8 +887,8 @@ if (signinForm) {
                 const token =
                     data?.token ||
                     data?.accessToken ||
+                    data?.jwt ||
                     "";
-
 
                 if (
                     typeof token !== "string" ||
@@ -660,22 +906,101 @@ if (signinForm) {
                 // GET COMPANY ID
                 // =================================
 
-                const companyId =
-                    data?.companyId ??
-                    data?.company?.id ??
-                    data?.company_id;
+                let companyId =
+                    extractCompanyId(
+                        data
+                    );
 
 
-                if (
-                    companyId === undefined ||
-                    companyId === null ||
-                    String(
-                        companyId
-                    ).trim() === ""
-                ) {
+                // =================================
+                // FALLBACK: READ COMPANY ID
+                // FROM JWT
+                // =================================
+
+                if (!companyId) {
+
+                    try {
+
+                        const parts =
+                            token.split(".");
+
+                        if (
+                            parts.length === 3
+                        ) {
+
+                            const payload =
+                                JSON.parse(
+                                    decodeURIComponent(
+                                        atob(
+                                            parts[1]
+                                                .replace(
+                                                    /-/g,
+                                                    "+"
+                                                )
+                                                .replace(
+                                                    /_/g,
+                                                    "/"
+                                                )
+                                        )
+                                            .split("")
+                                            .map(
+                                                char =>
+                                                    "%" +
+                                                    (
+                                                        "00" +
+                                                        char
+                                                            .charCodeAt(
+                                                                0
+                                                            )
+                                                            .toString(
+                                                                16
+                                                            )
+                                                    )
+                                                        .slice(
+                                                            -2
+                                                        )
+                                            )
+                                            .join("")
+                                    )
+                                );
+
+                            const jwtCompanyId =
+                                Number(
+                                    payload?.companyId ??
+                                    payload?.company_id ??
+                                    payload?.company?.id
+                                );
+
+                            if (
+                                Number.isInteger(
+                                    jwtCompanyId
+                                ) &&
+                                jwtCompanyId > 0
+                            ) {
+
+                                companyId =
+                                    jwtCompanyId;
+
+                            }
+
+                        }
+
+                    } catch (error) {
+
+                        console.warn(
+                            "Unable to read company ID from JWT:",
+                            error
+                        );
+
+                    }
+
+                }
+
+
+                if (!companyId) {
 
                     throw new Error(
-                        "Login succeeded, but the server did not return a company ID."
+                        "Login succeeded, but the server did not return a valid company ID."
                     );
 
                 }
@@ -706,19 +1031,86 @@ if (signinForm) {
                 // =================================
 
                 const userId =
-                    data?.userId ??
-                    data?.company?.userId ??
-                    null;
+                    extractUserId(
+                        data
+                    );
 
 
                 // =================================
                 // GET COMPANY NAME
                 // =================================
 
-                const companyName =
-                    data?.company?.company_name ??
-                    data?.company_name ??
-                    "";
+                let companyName =
+                    extractCompanyName(
+                        data
+                    );
+
+
+                // =================================
+                // GET COMPLETE COMPANY OBJECT
+                // =================================
+
+                let companyData =
+                    (
+                        data?.company &&
+                        typeof data.company === "object"
+                    )
+                        ? {
+                            ...data.company
+                        }
+                        : null;
+
+
+                // =================================
+                // FALLBACK:
+                // FETCH COMPANY PROFILE
+                // =================================
+
+                if (
+                    !companyName
+                ) {
+
+                    console.log(
+                        "Company name not present in signin response. Fetching company profile..."
+                    );
+
+
+                    const profile =
+                        await fetchCompanyProfile(
+                            token.trim(),
+                            numericCompanyId
+                        );
+
+
+                    if (profile) {
+
+                        const profileName =
+                            extractCompanyName(
+                                profile
+                            );
+
+
+                        if (
+                            profileName
+                        ) {
+
+                            companyName =
+                                profileName;
+
+                        }
+
+
+                        companyData = {
+
+                            ...(companyData || {}),
+
+                            ...profile
+
+                        };
+
+                    }
+
+                }
 
 
                 // =================================
@@ -728,6 +1120,8 @@ if (signinForm) {
                 const companyEmail =
                     data?.email ??
                     data?.company?.email ??
+                    data?.company?.gmail ??
+                    data?.gmail ??
                     gmail;
 
 
@@ -810,15 +1204,15 @@ if (signinForm) {
                 // =================================
 
                 if (
-                    data?.company &&
-                    typeof data.company ===
+                    companyData &&
+                    typeof companyData ===
                         "object"
                 ) {
 
                     localStorage.setItem(
-                        "companyData",
+                        COMPANY_DATA_KEY,
                         JSON.stringify(
-                            data.company
+                            companyData
                         )
                     );
 
@@ -834,10 +1228,14 @@ if (signinForm) {
                         COMPANY_TOKEN_KEY
                     );
 
-
                 const savedCompanyId =
                     localStorage.getItem(
                         COMPANY_ID_KEY
+                    );
+
+                const savedCompanyName =
+                    localStorage.getItem(
+                        COMPANY_NAME_KEY
                     );
 
 
@@ -861,22 +1259,20 @@ if (signinForm) {
                     "Company login successful."
                 );
 
-
                 console.log(
                     "Company ID:",
                     savedCompanyId
                 );
-
 
                 console.log(
                     "Company User ID:",
                     userId
                 );
 
-
                 console.log(
                     "Company Name:",
-                    companyName
+                    savedCompanyName ||
+                    "(not returned by server)"
                 );
 
 
@@ -911,12 +1307,10 @@ if (signinForm) {
                     "========================================="
                 );
 
-
                 console.error(
                     "COMPANY SIGNIN ERROR:",
                     error
                 );
-
 
                 console.error(
                     "========================================="
@@ -951,7 +1345,6 @@ if (signinForm) {
 
                     signinBtn.disabled =
                         false;
-
 
                     signinBtn.textContent =
                         originalButtonText ||

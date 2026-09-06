@@ -35,6 +35,144 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     >
 
+
+    <!-- =====================================================
+         JOB APPLICATION STYLES
+    ====================================================== -->
+
+    <style>
+
+        /* =================================================
+           JOB APPLICATION
+        ================================================= */
+
+        .job-application-section {
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            flex-wrap: wrap;
+
+            margin-top: 18px;
+        }
+
+
+        .job-application-section label {
+            width: 100%;
+
+            margin-bottom: 2px;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            color: #374151;
+        }
+
+
+        .job-id-select {
+            min-width: 220px;
+
+            min-height: 44px;
+
+            padding:
+                10px 12px;
+
+            border:
+                1px solid #d1d5db;
+
+            border-radius: 8px;
+
+            background: #ffffff;
+
+            color: #111827;
+
+            font-size: 14px;
+
+            outline: none;
+
+            cursor: pointer;
+        }
+
+
+        .job-id-select:focus {
+            border-color: #0a66c2;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    10,
+                    102,
+                    194,
+                    0.12
+                );
+        }
+
+
+        .job-id-select:disabled {
+            background: #f3f4f6;
+
+            color: #6b7280;
+
+            cursor: not-allowed;
+        }
+
+
+        .apply-btn:disabled {
+            opacity: 0.55;
+
+            cursor: not-allowed;
+
+            transform: none;
+        }
+
+
+        .application-message {
+            display: none;
+
+            margin-top: 15px;
+
+            padding:
+                12px 15px;
+
+            border-radius: 10px;
+
+            font-size: 14px;
+
+            line-height: 1.4;
+        }
+
+
+        /* =================================================
+           MOBILE
+        ================================================= */
+
+        @media (max-width: 600px) {
+
+            .job-application-section {
+                flex-direction: column;
+
+                align-items: stretch;
+            }
+
+
+            .job-id-select {
+                width: 100%;
+
+                min-width: 0;
+            }
+
+
+            .job-application-section .apply-btn {
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
 </head>
 
 
@@ -232,7 +370,7 @@
 
 
                 <!-- =================================================
-                     ACTION BUTTONS
+                     WEBSITE / FOLLOW ACTIONS
                 ================================================== -->
 
                 <div class="action-buttons">
@@ -266,17 +404,44 @@
                         Follow Company
                     </button>
 
+                </div>
 
 
-                    <!-- =============================================
-                         APPLY
-                         Handled by CO.js
-                    ============================================== -->
+
+                <!-- =================================================
+                     JOB APPLICATION
+                ================================================== -->
+
+                <div
+                    class="job-application-section"
+                    id="jobApplicationSection"
+                >
+
+                    <label
+                        for="jobIdSelect"
+                    >
+                        Select Job / Internship
+                    </label>
+
+
+                    <select
+                        id="jobIdSelect"
+                        class="job-id-select"
+                        aria-label="Select a job or internship"
+                    >
+
+                        <option value="">
+                            Select a Job ID
+                        </option>
+
+                    </select>
+
 
                     <button
                         type="button"
                         id="applyBtn"
                         class="apply-btn"
+                        disabled
                     >
 
                         <i
@@ -294,21 +459,15 @@
 
                 <!-- =================================================
                      APPLICATION STATUS
-                     Handled by CO.js
                 ================================================== -->
 
                 <div
                     id="applicationMessage"
+                    class="application-message"
                     role="status"
                     aria-live="polite"
-                    style="
-                        display:none;
-                        margin-top:15px;
-                        padding:12px 15px;
-                        border-radius:10px;
-                        font-size:14px;
-                    "
                 ></div>
+
 
             </section>
 

@@ -2208,6 +2208,7 @@ app.get(
             `
                 SELECT
                     id,
+                    company_name,
                     company_name AS companyName,
                     logo,
                     about,
@@ -2293,7 +2294,9 @@ app.post(
         const values = [
 
             clean(
-                req.body.companyName
+                req.body.company_name ??
+                req.body.companyName ??
+                req.body.name
             ),
 
             clean(
@@ -2434,7 +2437,9 @@ app.put(
         const values = [
 
             clean(
-                req.body.companyName
+                req.body.company_name ??
+                req.body.companyName ??
+                req.body.name
             ),
 
             clean(
@@ -10122,4 +10127,3 @@ app.listen(
 
     }
 );
-
